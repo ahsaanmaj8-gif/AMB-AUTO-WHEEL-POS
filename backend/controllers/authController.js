@@ -81,7 +81,7 @@ const loginUser = async (req, res) => {
 
     // Find user by email
     const user = await User.findOne({ email });
-    console.log("User found in DB backend:", user);
+    // console.log("User found in DB backend:", user);
     if (!user) {
       return res.status(401).json({
         success: false,
@@ -91,7 +91,7 @@ const loginUser = async (req, res) => {
 
     // Check password
     const isPasswordMatch = await bcrypt.compare(password, user.password);
-    console.log("Password match:", isPasswordMatch);
+    // console.log("Password match:", isPasswordMatch);
     if (!isPasswordMatch) {
       return res.status(401).json({
         success: false,
@@ -115,7 +115,7 @@ const loginUser = async (req, res) => {
 
 
 
-    console.log("yaha arha k nhi")
+    // console.log("yaha arha k nhi")
 
 
 

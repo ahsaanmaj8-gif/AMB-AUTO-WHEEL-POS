@@ -24,7 +24,7 @@ const Transactions = () => {
       const sortedTransactions = response.data.transactions.sort((a, b) => 
         new Date(a.createdAt) - new Date(b.createdAt)
       );
-      console.log("transactions: ",response.data)
+      // console.log("transactions: ",response.data)
       setTransactions(sortedTransactions || []);
     } catch (error) {
       toast.error('Failed to fetch transactions');

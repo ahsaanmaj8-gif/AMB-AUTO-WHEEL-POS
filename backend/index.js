@@ -1,11 +1,18 @@
 const express = require("express");
 const cors = require("cors");
 
+const path = require("path")
+
 require("dotenv").config();
 require("./config/db");
 
 // Initialize express
 const app = express();
+
+
+
+//for deployement
+const _dirname = path.resolve();
 
 // ============ MIDDLEWARE ============
 app.use(cors());
@@ -33,6 +40,9 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 
+
+
+
 // ============ TEST ROUTE ============
 app.get("/", (req, res) => {
     res.send({
@@ -41,6 +51,15 @@ app.get("/", (req, res) => {
     });
 });
 
+
+
+
+//for deployement
+app.use(express.static(path.join(__dirname, "../frontend/dist")));
+
+app.get(/.*/, (_, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/dist/index.html"));
+});
 
 // ============ 404 ROUTE ============
 app.use((req, res) => {
@@ -59,6 +78,9 @@ app.use((err, req, res, next) => {
         error: err.message,
     });
 });
+
+
+
 
 // ============ START SERVER ============
 const PORT = process.env.PORT || 5000;
