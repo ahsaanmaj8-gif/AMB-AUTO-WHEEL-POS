@@ -27,7 +27,7 @@ const ForgotPassword = () => {
 
     try {
       // Check if user exists with this email
-      const response = await axios.post('http://localhost:5000/api/auth/check-email', {
+      const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/auth/check-email', {
         email
       });
 
@@ -55,7 +55,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-answer', {
+      const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/auth/verify-answer', {
         email,
         answer
       });
@@ -89,7 +89,7 @@ const ForgotPassword = () => {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/forgot-password', {
+      const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/auth/forgot-password', {
         email,
         answer,
         newPassword

@@ -15,7 +15,12 @@ const app = express();
 const _dirname = path.resolve();
 
 // ============ MIDDLEWARE ============
-app.use(cors());
+
+const corsOptions = {
+    origin: "https://amb-auto-wheel-pos.onrender.com",
+    credential:true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

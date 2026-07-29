@@ -46,7 +46,7 @@ const Profile = () => {
 
     try {
       const response = await axios.put(
-        'http://localhost:5000/api/users/profile',
+        'https://amb-auto-wheel-pos.onrender.com/api/users/profile',
         formData
       );
       
@@ -83,7 +83,7 @@ const Profile = () => {
 
     try {
       await axios.put(
-        'http://localhost:5000/api/users/password',
+        'https://amb-auto-wheel-pos.onrender.com/api/users/password',
         {
           currentPassword: passwordData.currentPassword,
           newPassword: passwordData.newPassword

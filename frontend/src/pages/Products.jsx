@@ -65,7 +65,7 @@ const Products = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/products');
+      const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/products');
       setProducts(response.data.products || []);
     } catch (error) {
       toast.error('Failed to fetch products');
@@ -76,7 +76,7 @@ const Products = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/categories');
+      const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
       console.error('Error fetching categories:', error);
@@ -103,10 +103,10 @@ const Products = () => {
         
         
       if (editingProduct) {
-        await axios.put(`http://localhost:5000/api/products/${editingProduct._id}`, formData);
+        await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/products/${editingProduct._id}`, formData);
         toast.success('Product updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/products', formData);
+        await axios.post('https://amb-auto-wheel-pos.onrender.com/api/products', formData);
         toast.success('Product created successfully');
       }
       fetchProducts();
@@ -120,7 +120,7 @@ const Products = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`);
+      await axios.delete(`https://amb-auto-wheel-pos.onrender.com/api/products/${id}`);
       toast.success('Product deleted successfully');
       fetchProducts();
     } catch (error) {
@@ -187,7 +187,7 @@ const handleSellProduct = async (product) => {
   if (!price) return;
   
   try {
-    await axios.put(`http://localhost:5000/api/products/${product._id}/stock`, {
+    await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/products/${product._id}/stock`, {
       quantity: parseInt(quantity),
       type: 'sale-out',
       notes: `Sold to customer at PKR ${price}`,
@@ -206,7 +206,7 @@ const handleReturnStock = async (product) => {
   if (!quantity) return;
   
   try {
-    await axios.put(`http://localhost:5000/api/products/${product._id}/stock`, {
+    await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/products/${product._id}/stock`, {
       quantity: parseInt(quantity),
       type: 'return-in',
       notes: 'Customer returned product'
@@ -234,7 +234,7 @@ const handleAdjustStock = async (product) => {
     
     try {
         // ✅ Use only "adjustment" type with positive or negative quantity
-        await axios.put(`http://localhost:5000/api/products/${product._id}/stock`, {
+        await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/products/${product._id}/stock`, {
             quantity: difference,  // Can be positive or negative
             type: 'adjustment',    // ✅ Single type
             notes: `Manual adjustment from ${product.quantity} to ${newQty}`
@@ -262,7 +262,7 @@ const handleWastage = async (product) => {
   if (!reason) return;
   
   try {
-    await axios.put(`http://localhost:5000/api/products/${product._id}/stock`, {
+    await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/products/${product._id}/stock`, {
       quantity: parseInt(quantity),
       type: 'wastage',
       notes: reason

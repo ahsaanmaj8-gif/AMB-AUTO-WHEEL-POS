@@ -31,7 +31,7 @@ const Header = () => {
     // ============ FETCH NOTIFICATIONS (ONLY UNREAD) ============
     const fetchNotifications = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/notifications');
+            const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/notifications');
             const notifs = response.data.notifications || [];
             const count = response.data.unreadCount || 0;
             
@@ -53,7 +53,7 @@ const Header = () => {
     const deleteNotification = async (id) => {
         try {
             // ✅ DELETE from database
-            await axios.delete(`http://localhost:5000/api/notifications/${id}`);
+            await axios.delete(`https://amb-auto-wheel-pos.onrender.com/api/notifications/${id}`);
             
             // ✅ Remove from local state
             const updated = notifications.filter(n => n._id !== id);
@@ -80,7 +80,7 @@ const Header = () => {
 
         try {
             // ✅ DELETE ALL from database
-            await axios.delete('http://localhost:5000/api/notifications');
+            await axios.delete('https://amb-auto-wheel-pos.onrender.com/api/notifications');
             
             // ✅ Clear local state
             setNotifications([]);
@@ -142,7 +142,7 @@ const Header = () => {
     const fetchSearch = async (query) => {
         setSearching(true);
         try {
-            const response = await axios.get(`http://localhost:5000/api/products?search=${query}`);
+            const response = await axios.get(`https://amb-auto-wheel-pos.onrender.com/api/products?search=${query}`);
             setSearchResults(response.data.products || []);
             setShowSearch(true);
         } catch (error) {

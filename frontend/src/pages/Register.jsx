@@ -31,7 +31,7 @@ const Register = () => {
     setLoading(true);
     
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/register', formData);
+      const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/auth/register', formData);
       
       const { token, user } = response.data;
       

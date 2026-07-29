@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }) => {
       try {
   const savedUser = localStorage.getItem('user');
 
-        const response = await axios.get('http://localhost:5000/api/auth/me');
+        const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/auth/me');
         // console.log("User data fetched auth me api:", response.data);
         // console.log("JSON.parse(savedUser) local storage:", JSON.parse(savedUser));
         setUser(response.data?.user ? response.data.user : savedUser ? JSON.parse(savedUser) : null);

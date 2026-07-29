@@ -19,7 +19,7 @@ const Transactions = () => {
   // ============ FETCH TRANSACTIONS ============
   const fetchTransactions = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/transactions');
+      const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/transactions');
       // ✅ Sort: Oldest first (ascending order)
       const sortedTransactions = response.data.transactions.sort((a, b) => 
         new Date(a.createdAt) - new Date(b.createdAt)

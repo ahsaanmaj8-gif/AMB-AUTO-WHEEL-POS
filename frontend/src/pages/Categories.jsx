@@ -21,7 +21,7 @@ const Categories = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/categories');
+      const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/categories');
       setCategories(response.data.categories || []);
     } catch (error) {
       toast.error('Failed to fetch categories');
@@ -41,10 +41,10 @@ const Categories = () => {
     e.preventDefault();
     try {
       if (editingCategory) {
-        await axios.put(`http://localhost:5000/api/categories/${editingCategory._id}`, formData);
+        await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/categories/${editingCategory._id}`, formData);
         toast.success('Category updated successfully');
       } else {
-        await axios.post('http://localhost:5000/api/categories', formData);
+        await axios.post('https://amb-auto-wheel-pos.onrender.com/api/categories', formData);
         toast.success('Category created successfully');
       }
       fetchCategories();
@@ -58,7 +58,7 @@ const Categories = () => {
   const handleDelete = async (id) => {
     if (!window.confirm('Are you sure you want to delete this category?')) return;
     try {
-      await axios.delete(`http://localhost:5000/api/categories/${id}`);
+      await axios.delete(`https://amb-auto-wheel-pos.onrender.com/api/categories/${id}`);
       toast.success('Category deleted successfully');
       fetchCategories();
     } catch (error) {

@@ -23,7 +23,7 @@ const Invoices = () => {
   // ============ FETCH INVOICES ============
   const fetchInvoices = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/invoices');
+      const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/invoices');
        // ✅ Sort: Oldest first (ascending order)
       const sortedInvoices = response.data.invoices.sort((a, b) => 
         new Date(a.createdAt) - new Date(b.createdAt)

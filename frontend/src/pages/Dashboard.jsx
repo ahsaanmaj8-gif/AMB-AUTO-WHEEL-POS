@@ -109,16 +109,16 @@ const navigate = useNavigate();
       setLoading(true);
       
       // Get products
-      const productsRes = await axios.get('http://localhost:5000/api/products');
+      const productsRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/products');
       
       // Get today's services
-      const servicesRes = await axios.get('http://localhost:5000/api/services/today');
+      const servicesRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/services/today');
       
       // Get low stock products
-      const lowStockRes = await axios.get('http://localhost:5000/api/products/low-stock');
+      const lowStockRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/products/low-stock');
       
       // Get all services for stats
-      const allServicesRes = await axios.get('http://localhost:5000/api/services');
+      const allServicesRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/services');
       const allServices = allServicesRes.data.services || [];
       
       console.log(allServices)

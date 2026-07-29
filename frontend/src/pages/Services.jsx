@@ -70,7 +70,7 @@ const Services = () => {
 
         try {
             const response = await axios.post(
-                `http://localhost:5000/api/services/${id}/pay-remaining`,
+                `https://amb-auto-wheel-pos.onrender.com/api/services/${id}/pay-remaining`,
                 {
                     paidAmount: payAmount,
                     paymentMethod: "cash" // You can add a dropdown for this
@@ -86,7 +86,7 @@ const Services = () => {
 
     const fetchServices = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/services');
+            const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/services');
             setServices(response.data.services || []);
             // console.log("set service is: ", response.data.services);
         } catch (error) {
@@ -98,7 +98,7 @@ const Services = () => {
 
     const fetchProducts = async () => {
         try {
-            const response = await axios.get('http://localhost:5000/api/products');
+            const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/products');
             setProducts(response.data.products || []);
         } catch (error) {
             console.error('Error fetching products:', error);
@@ -198,7 +198,7 @@ const Services = () => {
             return;
         }
         try {
-            const response = await axios.post('http://localhost:5000/api/services', formData);
+            const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/services', formData);
             toast.success('Service created successfully');
             fetchServices();
             setShowModal(false);
@@ -221,7 +221,7 @@ const Services = () => {
 
             console.log("paidAmount: ", paidAmount);
             const response = await axios.post(
-                `http://localhost:5000/api/services/${id}/generate-bill`,
+                `https://amb-auto-wheel-pos.onrender.com/api/services/${id}/generate-bill`,
                 {
                     paidAmount: paidAmount,
                     paymentMethod: "cash" // Can add dropdown later
@@ -241,7 +241,7 @@ const Services = () => {
     // ============ UPDATE SERVICE STATUS ============
     const updateStatus = async (id, newStatus) => {
         try {
-            const response = await axios.put(`http://localhost:5000/api/services/${id}`, {
+            const response = await axios.put(`https://amb-auto-wheel-pos.onrender.com/api/services/${id}`, {
                 status: newStatus
             });
 

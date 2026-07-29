@@ -25,8 +25,8 @@ const Reports = () => {
     try {
       setLoading(true);
       // Fetch data for reports
-      const servicesRes = await axios.get('http://localhost:5000/api/services');
-      const productsRes = await axios.get('http://localhost:5000/api/products');
+      const servicesRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/services');
+      const productsRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/products');
       
       // Process data for reports
       // ... data processing logic
