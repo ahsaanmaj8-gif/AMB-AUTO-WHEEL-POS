@@ -91,6 +91,6 @@ app.use((err, req, res, next) => {
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📦 Database: ${process.env.MONGO_URI}`);
+    // console.log(`📦 Database: ${process.env.MONGO_URI}`);
     console.log(`🔗 API: http://localhost:${PORT}/api`);
 });
