@@ -18,7 +18,7 @@ const _dirname = path.resolve();
 
 const corsOptions = {
     origin: "https://amb-auto-wheel-pos.onrender.com",
-    credential:true
+    credentials:true
 };
 app.use(cors(corsOptions));
 app.use(express.json());
@@ -49,12 +49,12 @@ app.use("/api/notifications", notificationRoutes);
 
 
 // ============ TEST ROUTE ============
-app.get("/", (req, res) => {
-    res.send({
-        success: true,
-        message: "Auto Workshop Inventory API is running",
-    });
-});
+// app.get("/", (req, res) => {
+//     res.send({
+//         success: true,
+//         message: "Auto Workshop Inventory API is running",
+//     });
+// });
 
 
 
