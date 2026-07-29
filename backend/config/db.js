@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
 
+console.log("Connecting with URI:", process.env.MONGO_URI ? "Loaded ✅" : "MISSING ❌");
+
 mongoose.connect(process.env.MONGO_URI).then(() => {
     console.log("Mongodb is connected!");
 }).catch((err) => {
