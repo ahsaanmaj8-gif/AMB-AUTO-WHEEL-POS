@@ -219,7 +219,7 @@ const Services = () => {
 
             const paidAmount = parseFloat(paidAmountInput) || 0;
 
-            console.log("paidAmount: ", paidAmount);
+            // console.log("paidAmount: ", paidAmount);
             const response = await axios.post(
                 `https://amb-auto-wheel-pos.onrender.com/api/services/${id}/generate-bill`,
                 {
@@ -228,7 +228,7 @@ const Services = () => {
                 }
             );
 
-            console.log("Generate Bill Result:", response.data);
+            // console.log("Generate Bill Result:", response.data);
             toast.success('Bill generated successfully');
             fetchServices();
         } catch (error) {

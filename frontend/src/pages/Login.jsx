@@ -24,7 +24,7 @@ const Login = () => {
 
       const { token, user } = response.data;
       
-      console.log("Login response:", user);
+      // console.log("Login response:", user);
       
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));

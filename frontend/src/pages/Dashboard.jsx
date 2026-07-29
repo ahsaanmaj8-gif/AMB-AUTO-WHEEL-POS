@@ -164,7 +164,7 @@ const monthlyServicess = allServices.filter((s) => {
         const date = new Date(s.createdAt);
         return date.getMonth() === currentMonth && s.status === 'completed';
       });
-      console.log("Monthly services:", monthlyServices);
+      // console.log("Monthly services:", monthlyServices);
       const monthlyRevenue = monthlyServices.reduce((sum, s) => sum + (s.billing?.totalAmount || 0), 0);
       
 
