@@ -121,7 +121,7 @@ const navigate = useNavigate();
       const allServicesRes = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/services');
       const allServices = allServicesRes.data.services || [];
       
-      console.log(allServices)
+      // console.log(allServices)
       // Calculate additional stats
 
 
