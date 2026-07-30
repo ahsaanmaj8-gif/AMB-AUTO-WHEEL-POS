@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaSearch, FaPrint, FaEye, FaDownload } from 'react-icons/fa';
+import { FaSearch, FaPrint, FaEye, FaDownload, FaTrash, FaCalendar } from 'react-icons/fa';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Modal from '../components/Common/Modal';
-// import { invoices } from './Invoices';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -15,6 +14,16 @@ const Invoices = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [exporting, setExporting] = useState(false);
+  
+  // ============ NEW FILTER STATES ============
+  const [dateRange, setDateRange] = useState({
+    start: '',
+    end: ''
+  });
+  const [showDateFilter, setShowDateFilter] = useState(false);
+  const [selectedInvoices, setSelectedInvoices] = useState([]);
+  const [selectAll, setSelectAll] = useState(false);
+  const [monthFilter, setMonthFilter] = useState('');
 
   useEffect(() => {
     fetchInvoices();
@@ -24,17 +33,124 @@ const Invoices = () => {
   const fetchInvoices = async () => {
     try {
       const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/invoices');
-       // ✅ Sort: Oldest first (ascending order)
       const sortedInvoices = response.data.invoices.sort((a, b) => 
         new Date(a.createdAt) - new Date(b.createdAt)
       );
       setInvoices(sortedInvoices || []);
-    //   setInvoices(response.data.invoices || []);
     } catch (error) {
       toast.error('Failed to fetch invoices');
     } finally {
       setLoading(false);
     }
+  };
+
+  // ============ DELETE SELECTED INVOICES ============
+  const deleteSelectedInvoices = async () => {
+    if (selectedInvoices.length === 0) {
+      toast.error('No invoices selected');
+      return;
+    }
+
+    if (!window.confirm(`Delete ${selectedInvoices.length} selected invoice(s)? This cannot be undone!`)) {
+      return;
+    }
+
+    try {
+      await Promise.all(
+        selectedInvoices.map(id => 
+          axios.delete(`https://amb-auto-wheel-pos.onrender.com/api/invoices/${id}`)
+        )
+      );
+      toast.success(`${selectedInvoices.length} invoices deleted successfully`);
+      setSelectedInvoices([]);
+      setSelectAll(false);
+      fetchInvoices();
+    } catch (error) {
+      toast.error('Failed to delete invoices');
+    }
+  };
+
+  // ============ DELETE SINGLE INVOICE ============
+  const deleteSingleInvoice = async (id) => {
+    if (!window.confirm('Delete this invoice? This cannot be undone!')) return;
+    try {
+      await axios.delete(`https://amb-auto-wheel-pos.onrender.com/api/invoices/${id}`);
+      toast.success('Invoice deleted successfully');
+      fetchInvoices();
+    } catch (error) {
+      toast.error('Failed to delete invoice');
+    }
+  };
+
+  // ============ DELETE INVOICES BY MONTH ============
+  const deleteInvoicesByMonth = async () => {
+    if (!monthFilter) {
+      toast.error('Please select a month');
+      return;
+    }
+
+    const [year, month] = monthFilter.split('-');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    
+    if (!window.confirm(`Delete ALL invoices from ${monthNames[parseInt(month) - 1]} ${year}? This cannot be undone!`)) {
+      return;
+    }
+
+    try {
+      const response = await axios.delete(
+        `https://amb-auto-wheel-pos.onrender.com/api/invoices/month/${year}/${month}`
+      );
+      toast.success(`${response.data.deletedCount} invoices deleted for ${monthNames[parseInt(month) - 1]} ${year}`);
+      fetchInvoices();
+      setMonthFilter('');
+    } catch (error) {
+      toast.error('Failed to delete invoices');
+    }
+  };
+
+  // ============ DELETE ALL INVOICES ============
+  const deleteAllInvoices = async () => {
+    if (!window.confirm('⚠️ Delete ALL invoices? This cannot be undone!')) return;
+
+    try {
+      await axios.delete('https://amb-auto-wheel-pos.onrender.com/api/invoices/all');
+      toast.success('All invoices deleted successfully');
+      fetchInvoices();
+    } catch (error) {
+      toast.error('Failed to delete invoices');
+    }
+  };
+
+  // ============ TOGGLE SELECT ALL ============
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedInvoices([]);
+    } else {
+      setSelectedInvoices(filteredInvoices.map(inv => inv._id));
+    }
+    setSelectAll(!selectAll);
+  };
+
+  // ============ TOGGLE SELECT INVOICE ============
+  const handleSelectInvoice = (id) => {
+    if (selectedInvoices.includes(id)) {
+      setSelectedInvoices(selectedInvoices.filter(ids => ids !== id));
+    } else {
+      setSelectedInvoices([...selectedInvoices, id]);
+    }
+  };
+
+  // ============ GET MONTH OPTIONS ============
+  const getMonthOptions = () => {
+    const months = [];
+    const currentDate = new Date();
+    for (let i = 0; i < 12; i++) {
+      const date = new Date(currentDate.getFullYear(), currentDate.getMonth() - i, 1);
+      const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const label = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+      months.push({ value, label });
+    }
+    return months;
   };
 
   // ============ EXPORT TO EXCEL ============
@@ -45,16 +161,15 @@ const Invoices = () => {
     }
 
     setExporting(true);
-// console.log("yess: ",invoices[0].createdAt)
+
     try {
-      // Prepare data for export
       const exportData = invoices.map((invoice, index) => ({
         'S.No': index + 1,
         'Invoice #': invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`,
         'Customer Name': invoice.customerName,
         'Customer Phone': invoice.customerPhone,
         'Vehicle Number': invoice.vehicleNumber,
-        'Vehicle Model': invoice.service?.vehicleModel || 'N/A',
+        'Vehicle Model': invoice.vehicleModel || 'N/A',
         'Total Amount': invoice.totalAmount || 0,
         'Paid Amount': invoice.paidAmount || 0,
         'Balance': invoice.balance || 0,
@@ -66,48 +181,28 @@ const Invoices = () => {
         'Subtotal': invoice.subtotal || 0,
         'Tax': invoice.tax || 0,
         'Discount': invoice.discount || 0,
-        'Notes': invoice.service?.notes || ''
+        'Notes': invoice.notes || ''
       }));
 
-      // Create worksheet
       const ws = XLSX.utils.json_to_sheet(exportData);
 
-      // Set column widths
       const colWidths = [
-        { wch: 8 },   // S.No
-        { wch: 18 },  // Invoice #
-        { wch: 25 },  // Customer Name
-        { wch: 18 },  // Customer Phone
-        { wch: 15 },  // Vehicle Number
-        { wch: 25 },  // Vehicle Model
-        { wch: 15 },  // Total Amount
-        { wch: 15 },  // Paid Amount
-        { wch: 15 },  // Balance
-        { wch: 15 },  // Payment Status
-        { wch: 15 },  // Payment Method
-        { wch: 15 },  // Date
-        { wch: 12 },  // Time
-        { wch: 12 },  // Items Count
-        { wch: 15 },  // Subtotal
-        { wch: 12 },  // Tax
-        { wch: 12 },  // Discount
-        { wch: 30 },  // Notes
+        { wch: 8 }, { wch: 18 }, { wch: 25 }, { wch: 18 },
+        { wch: 15 }, { wch: 25 }, { wch: 15 }, { wch: 15 },
+        { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 15 },
+        { wch: 12 }, { wch: 12 }, { wch: 15 }, { wch: 12 },
+        { wch: 12 }, { wch: 30 }
       ];
       ws['!cols'] = colWidths;
 
-      // Create workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
 
-      // Generate Excel file
       const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
       const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
 
-      // Generate filename with current date
       const date = new Date();
       const filename = `Invoices_${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.xlsx`;
-      
-      // Download file
       saveAs(data, filename);
       toast.success(`Exported ${invoices.length} invoices successfully!`);
     } catch (error) {
@@ -127,15 +222,7 @@ const Invoices = () => {
 
     setExporting(true);
 
-//  console.log("invoices",invoices)
-// console.log("yess: ",invoices[0].createdAt.toLocaleDateString())
-console.log(
-  "Date:",
-  new Date(invoices[0].createdAt).toLocaleDateString("en-GB")
-);
-
     try {
-      // Prepare data
       const exportData = invoices.map((invoice, index) => ({
         'S.No': index + 1,
         'Invoice #': invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`,
@@ -155,7 +242,6 @@ console.log(
       const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
       const date = new Date();
       const filename = `Invoices_${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}.csv`;
-      
       saveAs(blob, filename);
       toast.success(`Exported ${invoices.length} invoices as CSV!`);
     } catch (error) {
@@ -222,7 +308,7 @@ console.log(
             <div class="row"><strong>Customer Name:</strong> ${invoice.customerName}</div>
             <div class="row"><strong>Phone:</strong> ${invoice.customerPhone}</div>
             <div class="row"><strong>Vehicle:</strong> ${invoice.vehicleNumber}</div>
-            <div class="row"><strong>Vehicle Model:</strong> ${invoice.service?.vehicleModel || 'N/A'}</div>
+            <div class="row"><strong>Vehicle Model:</strong> ${invoice.vehicleModel || 'N/A'}</div>
           </div>
 
           <table class="table">
@@ -271,25 +357,36 @@ console.log(
     printWindow.print();
   };
 
-  // Filter invoices
+  // ============ FILTER INVOICES ============
   const filteredInvoices = invoices.filter(inv => {
     const matchesSearch = 
       inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
       inv.customerName?.toLowerCase().includes(search.toLowerCase()) ||
       inv.vehicleNumber?.toLowerCase().includes(search.toLowerCase());
+    
     const matchesFilter = filter === 'all' || inv.paymentStatus === filter;
-    return matchesSearch && matchesFilter;
+    
+    let matchesDate = true;
+    if (dateRange.start && dateRange.end) {
+      const invoiceDate = new Date(inv.createdAt);
+      const start = new Date(dateRange.start);
+      const end = new Date(dateRange.end);
+      end.setHours(23, 59, 59, 999);
+      matchesDate = invoiceDate >= start && invoiceDate <= end;
+    }
+    
+    return matchesSearch && matchesFilter && matchesDate;
   });
 
   return (
     <div>
-      {/* Header */}
+      {/* ============ HEADER ============ */}
       <div className="flex justify-between items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-gray-800">Invoices</h2>
           <p className="text-gray-500">Manage all customer invoices</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 flex-wrap">
           <button 
             onClick={handleExportCSV}
             className="btn-outline btn-sm"
@@ -304,10 +401,18 @@ console.log(
           >
             <FaDownload /> {exporting ? 'Exporting...' : 'Excel'}
           </button>
+          {selectedInvoices.length > 0 && (
+            <button 
+              onClick={deleteSelectedInvoices}
+              className="btn-danger btn-sm"
+            >
+              <FaTrash /> Delete ({selectedInvoices.length})
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Filters */}
+      {/* ============ FILTERS ============ */}
       <div className="flex flex-wrap gap-4 mb-6">
         <div className="flex-1 min-w-[200px]">
           <div className="relative">
@@ -321,6 +426,7 @@ console.log(
             />
           </div>
         </div>
+
         <div className="w-48">
           <select
             value={filter}
@@ -328,17 +434,93 @@ console.log(
             className="input-field"
           >
             <option value="all">All Status</option>
-            <option value="paid">Paid</option>
-            <option value="partial">Partial</option>
-            <option value="unpaid">Unpaid</option>
+            <option value="paid">✅ Paid</option>
+            <option value="partial">⏳ Partial</option>
+            <option value="unpaid">❌ Unpaid</option>
           </select>
         </div>
+
+        <button
+          onClick={() => setShowDateFilter(!showDateFilter)}
+          className="btn-outline btn-sm"
+        >
+          <FaCalendar /> {showDateFilter ? 'Hide Date' : 'Date Range'}
+        </button>
+
+        <div className="relative group">
+          <button className="btn-danger btn-sm flex items-center gap-2">
+            <FaTrash /> Delete
+          </button>
+          <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border hidden group-hover:block z-50">
+            <div className="p-3 space-y-2">
+              <div className="border-b pb-2">
+                <label className="text-xs text-gray-500 block mb-1">Delete by Month</label>
+                <div className="flex gap-2">
+                  <select
+                    value={monthFilter}
+                    onChange={(e) => setMonthFilter(e.target.value)}
+                    className="flex-1 input-field text-sm py-1"
+                  >
+                    <option value="">Select Month</option>
+                    {getMonthOptions().map((m) => (
+                      <option key={m.value} value={m.value}>{m.label}</option>
+                    ))}
+                  </select>
+                  <button
+                    onClick={deleteInvoicesByMonth}
+                    className="btn-danger btn-sm text-xs px-2"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+              
+              <button
+                onClick={deleteAllInvoices}
+                className="w-full text-left text-sm px-3 py-2 hover:bg-red-50 rounded-lg text-red-600 flex items-center gap-2"
+              >
+                <FaTrash /> Delete All Invoices
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div className="text-sm text-gray-500 self-center">
           {filteredInvoices.length} invoices found
         </div>
       </div>
 
-      {/* Invoices Table */}
+      {/* ============ DATE RANGE FILTER ============ */}
+      {showDateFilter && (
+        <div className="bg-gray-50 p-4 rounded-lg mb-6 flex flex-wrap items-end gap-4">
+          <div>
+            <label className="text-sm text-gray-600">Start Date</label>
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+              className="input-field"
+            />
+          </div>
+          <div>
+            <label className="text-sm text-gray-600">End Date</label>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+              className="input-field"
+            />
+          </div>
+          <button
+            onClick={() => setDateRange({ start: '', end: '' })}
+            className="btn-outline btn-sm"
+          >
+            Clear
+          </button>
+        </div>
+      )}
+
+      {/* ============ INVOICES TABLE ============ */}
       <div className="card">
         {loading ? (
           <div className="flex justify-center py-8">
@@ -349,6 +531,14 @@ console.log(
             <table className="table">
               <thead>
                 <tr>
+                  <th className="w-10">
+                    <input
+                      type="checkbox"
+                      checked={selectAll}
+                      onChange={handleSelectAll}
+                      className="rounded border-gray-300"
+                    />
+                  </th>
                   <th>Invoice #</th>
                   <th>Customer</th>
                   <th>Vehicle</th>
@@ -362,6 +552,14 @@ console.log(
               <tbody>
                 {filteredInvoices.map((invoice) => (
                   <tr key={invoice._id}>
+                    <td>
+                      <input
+                        type="checkbox"
+                        checked={selectedInvoices.includes(invoice._id)}
+                        onChange={() => handleSelectInvoice(invoice._id)}
+                        className="rounded border-gray-300"
+                      />
+                    </td>
                     <td className="font-medium text-blue-600">
                       {invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`}
                     </td>
@@ -406,6 +604,13 @@ console.log(
                         >
                           <FaPrint />
                         </button>
+                        <button
+                          onClick={() => deleteSingleInvoice(invoice._id)}
+                          className="text-red-600 hover:text-red-800"
+                          title="Delete Invoice"
+                        >
+                          <FaTrash />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -422,7 +627,7 @@ console.log(
         )}
       </div>
 
-      {/* Invoice Details Modal */}
+      {/* ============ INVOICE DETAILS MODAL ============ */}
       <Modal
         isOpen={showDetailsModal}
         onClose={() => {
@@ -437,7 +642,7 @@ console.log(
             handlePrint(selectedInvoice);
           }
         }}
-        confirmText="Print Invoice"
+        confirmText="🖨️ Print Invoice"
         confirmVariant="success"
       >
         {selectedInvoice && (
@@ -450,7 +655,7 @@ console.log(
                     {selectedInvoice.invoiceNumber || `INV-${selectedInvoice._id.slice(-6)}`}
                   </h4>
                   <p className="text-sm text-gray-500">
-                    Date: {new Date(selectedInvoice.createdAt).toLocaleString()}
+                    📅 {new Date(selectedInvoice.createdAt).toLocaleString()}
                   </p>
                 </div>
                 <span className={`badge ${
@@ -466,21 +671,21 @@ console.log(
             {/* Customer & Vehicle */}
             <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
               <div>
-                <p className="text-sm text-gray-500">Customer</p>
+                <p className="text-sm text-gray-500">👤 Customer</p>
                 <p className="font-medium">{selectedInvoice.customerName}</p>
                 <p className="text-sm">{selectedInvoice.customerPhone}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-500">Vehicle</p>
+                <p className="text-sm text-gray-500">🚗 Vehicle</p>
                 <p className="font-medium">{selectedInvoice.vehicleNumber}</p>
-                <p className="text-sm">{selectedInvoice.service?.vehicleModel || 'N/A'}</p>
+                <p className="text-sm">{selectedInvoice.vehicleModel || 'N/A'}</p>
               </div>
             </div>
 
             {/* Items */}
             {selectedInvoice.items && selectedInvoice.items.length > 0 && (
               <div>
-                <h5 className="font-semibold text-gray-700 mb-2">Items</h5>
+                <h5 className="font-semibold text-gray-700 mb-2">📋 Items</h5>
                 <div className="table-container">
                   <table className="table">
                     <thead>
@@ -510,6 +715,7 @@ console.log(
 
             {/* Billing Summary */}
             <div className="bg-blue-50 p-4 rounded-lg">
+              <h5 className="font-semibold text-gray-700 mb-2">💰 Billing Summary</h5>
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <p className="text-sm text-gray-500">Subtotal</p>
@@ -542,7 +748,7 @@ console.log(
 
             {selectedInvoice.notes && (
               <div className="bg-yellow-50 p-3 rounded-lg border border-yellow-200">
-                <p className="text-sm text-gray-500">Notes</p>
+                <p className="text-sm text-gray-500">📝 Notes</p>
                 <p className="text-sm text-gray-700">{selectedInvoice.notes}</p>
               </div>
             )}
