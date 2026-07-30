@@ -8,10 +8,10 @@ const {
     forgotPassword,
     checkEmail,
     verifyAnswer,
-    getPendingUsers,
-    approveUser,
-    rejectUser,
-    getAllUsers
+    // getPendingUsers,
+    // approveUser,
+    // rejectUser,
+    // getAllUsers
 } = require("../controllers/authController");
 
 // ============ PUBLIC ROUTES ============
@@ -33,10 +33,10 @@ router.post("/verify-answer", verifyAnswer);
 
 
 
-router.get("/pending-users",  isAdmin, getPendingUsers);
-router.get("/all-users",  isAdmin, getAllUsers);
-router.put("/approve-user/:userId",  isAdmin, approveUser);
-router.delete("/reject-user/:userId",  isAdmin, rejectUser);
+// router.get("/pending-users",  isAdmin, getPendingUsers);
+// router.get("/all-users",  isAdmin, getAllUsers);
+// router.put("/approve-user/:userId",  isAdmin, approveUser);
+// router.delete("/reject-user/:userId",  isAdmin, rejectUser);
 
 
 module.exports = router;
