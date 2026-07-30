@@ -1,49 +1,49 @@
 const mongoose = require("mongoose");
 
 const userSchema = mongoose.Schema({
-    // Full name of the user
     name: {
         type: String,
         required: true,
-        trim: true // removes extra spaces
+        trim: true
     },
-    
-    // Email address for login
     email: {
         type: String,
         required: true,
-        unique: true // no two users can have same email
+        unique: true
     },
-    
-    // Password (will be encrypted)
     password: {
         type: String,
-        required: true
+        required: true,
     },
-    
-    // Phone number
     phone: {
         type: String,
-        required: true
+        required: true,
     },
-    
-    // Complete address
     address: {
         type: {},
-        required: true
+        required: true,
     },
-    
-    // Security answer for password reset
     answer: {
         type: String,
         required: true
     },
-    
-    // User role: 0 = staff, 1 = admin
     role: {
         type: Number,
-        default: 0
+        default: 0 // 0 = staff, 1 = admin
+    },
+   
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationToken: {
+        type: String,
+        default: null
+    },
+    rejectionReason: {
+        type: String,
+        default: ""
     }
-}, { timestamps: true }); // auto adds createdAt & updatedAt
+}, { timestamps: true });
 
 module.exports = mongoose.model("users", userSchema);
