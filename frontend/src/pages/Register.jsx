@@ -52,6 +52,7 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
         <div className="text-center mb-6">
+          <p className='text-red-400 p-1 bg-red-100'>Currently Not Available!</p>
           <h1 className="text-2xl font-bold text-gray-800">Create Account</h1>
           <p className="text-gray-500 text-sm">Join AutoWorkshop Inventory System</p>
         </div>
@@ -155,7 +156,8 @@ const Register = () => {
 
           <button
             type="submit"
-            disabled={loading}
+            // disabled={loading}
+            disabled="true"
             className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium flex items-center justify-center gap-2"
           >
             {loading ? (
