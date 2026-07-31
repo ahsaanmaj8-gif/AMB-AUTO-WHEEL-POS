@@ -40,7 +40,7 @@ const Sidebar = () => {
     return (
         <div className="w-64 bg-white shadow-lg flex flex-col h-full fixed left-0 top-0 bottom-0 z-30">
             <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
-  <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+  <h1 className="text-2xl font-bold text-white items-center gap-3">
     <img
       src="/amblogoblack.jpg"
       alt="AMB Logo"
