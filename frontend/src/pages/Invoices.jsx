@@ -135,6 +135,8 @@ const Invoices = () => {
   const handleSelectInvoice = (id) => {
     if (selectedInvoices.includes(id)) {
       setSelectedInvoices(selectedInvoices.filter(ids => ids !== id));
+
+      console.log(selectedInvoice)
     } else {
       setSelectedInvoices([...selectedInvoices, id]);
     }
