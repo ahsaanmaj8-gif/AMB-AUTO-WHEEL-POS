@@ -40,11 +40,19 @@ const Sidebar = () => {
     return (
         <div className="w-64 bg-white shadow-lg flex flex-col h-full fixed left-0 top-0 bottom-0 z-30">
             <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
-                <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                    🚗 Amb Auto Wheel
-                </h1>
-                <p className="text-blue-100 text-xs mt-1">Performance Meet Perfection</p>
-            </div>
+  <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+    <img
+      src="/amb-logo.png"
+      alt="AMB Logo"
+      className="w-10 h-10 object-contain rounded-lg bg-white p-1"
+    />
+    <span>AMB Auto Wheel</span>
+  </h1>
+
+  <p className="text-blue-100 text-xs mt-2">
+    Performance Meets Perfection
+  </p>
+</div>
 
             <div className="px-4 py-3 border-b bg-gray-50">
                 <p className="text-sm font-medium text-gray-700">{user?.name}</p>

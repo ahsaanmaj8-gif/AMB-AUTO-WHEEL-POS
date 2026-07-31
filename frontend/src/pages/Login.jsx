@@ -15,7 +15,7 @@ const Login = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    
+
     try {
       const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/auth/login', {
         email,
@@ -23,15 +23,15 @@ const Login = () => {
       });
 
       const { token, user } = response.data;
-      
+
       // console.log("Login response:", user);
-      
+
       localStorage.setItem('token', token);
       localStorage.setItem('user', JSON.stringify(user));
 
       setToken(token);
       setUser(user);
-      
+
       toast.success(`Welcome back, ${user.name}!`);
       navigate('/dashboard');
     } catch (error) {
@@ -46,8 +46,12 @@ const Login = () => {
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <FaCar className="text-3xl text-white" />
+            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg">
+              <img
+                src="/AmbLogo.jpg"
+                alt="AMB Logo"
+                className="w-full h-full object-cover"
+              />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-800">Amb Auto Workshop</h1>
@@ -87,9 +91,9 @@ const Login = () => {
 
 
 
- <div className="text-right">
-            <Link 
-              to="/forgot-password" 
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
               className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
             >
               Forgot Password?
