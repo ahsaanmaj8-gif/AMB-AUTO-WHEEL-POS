@@ -136,7 +136,7 @@ const Invoices = () => {
     if (selectedInvoices.includes(id)) {
       setSelectedInvoices(selectedInvoices.filter(ids => ids !== id));
 
-      console.log(selectedInvoice)
+      // console.log(selectedInvoice)
     } else {
       setSelectedInvoices([...selectedInvoices, id]);
     }
@@ -641,6 +641,8 @@ const Invoices = () => {
         showFooter={true}
         onConfirm={() => {
           if (selectedInvoice) {
+
+            console.log(selectedInvoice)
             handlePrint(selectedInvoice);
           }
         }}
