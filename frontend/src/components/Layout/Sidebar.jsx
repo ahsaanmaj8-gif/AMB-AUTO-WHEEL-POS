@@ -44,8 +44,9 @@ const Sidebar = () => {
     <img
       src="/amblogoblack.jpg"
       alt="AMB Logo"
-      className="w-10 h-10 object-contain rounded-lg bg-white p-1"
+      className="w-14 h-14 object-contain rounded-full bg-white p-1"
     />
+    <br/>
     <span>AMB Auto Wheel</span>
   </h1>
 
