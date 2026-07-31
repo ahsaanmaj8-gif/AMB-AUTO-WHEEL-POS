@@ -8,7 +8,10 @@ const Invoice = require("../models/invoiceModel");
 // Get all invoices
 const getInvoices = async (req, res) => {
   try {
-    const invoices = await Invoice.find().sort({ createdAt: -1 });
+    const invoices = await Invoice.find()
+      .populate('service', 'vehicleModel vehicleNumber customerName customerPhone') 
+      .sort({ createdAt: -1 });
+    
     res.status(200).json({
       success: true,
       count: invoices.length,

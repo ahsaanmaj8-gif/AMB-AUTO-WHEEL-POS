@@ -310,7 +310,7 @@ const Invoices = () => {
             <div class="row"><strong>Customer Name:</strong> ${invoice.customerName}</div>
             <div class="row"><strong>Phone:</strong> ${invoice.customerPhone}</div>
             <div class="row"><strong>Vehicle:</strong> ${invoice.vehicleNumber}</div>
-            <div class="row"><strong>Vehicle Model:</strong> ${invoice.vehicleModel || 'N/A'}</div>
+            <div class="row"><strong>Vehicle Model:</strong> ${invoice.service?.vehicleModel || 'N/A'}</div>
           </div>
 
           <table class="table">
@@ -642,7 +642,7 @@ const Invoices = () => {
         onConfirm={() => {
           if (selectedInvoice) {
 
-            console.log(selectedInvoice)
+            // console.log(selectedInvoice)
             handlePrint(selectedInvoice);
           }
         }}
