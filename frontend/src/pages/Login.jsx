@@ -42,93 +42,149 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
+  <div
+    className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center px-4"
+    style={{ backgroundImage: "url('/backgroundLoginImg.jpg')" }}
+  >
+    {/* Dark Overlay */}
+    <div className="absolute inset-0 bg-black/70"></div>
+
+    {/* Content */}
+    <div className="relative z-10 w-full max-w-6xl grid lg:grid-cols-2 gap-10 items-center">
+
+      {/* Left Side */}
+      <div className="hidden lg:flex flex-col text-white">
+        <img
+          src="/AmbLogo.jpg"
+          alt="AMB Logo"
+          className="w-24 h-24 rounded-full border-4 border-white shadow-xl mb-6"
+        />
+
+        <h1 className="text-5xl font-extrabold leading-tight">
+          AMB Auto Wheel
+        </h1>
+
+        <p className="text-xl mt-4 text-gray-200 max-w-lg">
+          Professional Auto Workshop Management System for
+          invoices, inventory, services, customers, and
+          transactions.
+        </p>
+
+        <div className="mt-10 space-y-3 text-lg">
+          <div>✔ Professional Workshop Management</div>
+          <div>✔ Inventory & Product Tracking</div>
+          <div>✔ Invoice & Billing System</div>
+          <div>✔ Customer & Service Records</div>
+        </div>
+      </div>
+
+      {/* Right Side Login Card */}
+      <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8 md:p-10 border border-white/20">
+
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-lg">
-              <img
-                src="/AmbLogo.jpg"
-                alt="AMB Logo"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800">Amb Auto Workshop</h1>
-          <p className="text-gray-500 mt-1">Performance Meets Perfection</p>
+
+          <img
+            src="/AmbLogo.jpg"
+            alt="AMB Logo"
+            className="w-20 h-20 mx-auto rounded-full border-4 border-blue-600 shadow-lg"
+          />
+
+          <h2 className="text-3xl font-bold text-gray-800 mt-5">
+            Welcome Back
+          </h2>
+
+          <p className="text-gray-500 mt-2">
+            Login to continue to your dashboard
+          </p>
+
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
+
+          {/* Email */}
           <div>
-            <label className="label">Email Address</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Email Address
+            </label>
+
             <div className="relative">
-              <FaEnvelope className="absolute left-3 top-3.5 text-gray-400" />
+              <FaEnvelope className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="input-field pl-10"
                 placeholder="Enter your email"
                 required
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
           </div>
 
+          {/* Password */}
           <div>
-            <label className="label">Password</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Password
+            </label>
+
             <div className="relative">
-              <FaLock className="absolute left-3 top-3.5 text-gray-400" />
+              <FaLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="input-field pl-10"
                 placeholder="Enter your password"
                 required
+                className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-300 focus:border-blue-600 focus:ring-2 focus:ring-blue-200 outline-none transition"
               />
             </div>
           </div>
 
-
-
+          {/* Forgot Password */}
           <div className="text-right">
             <Link
               to="/forgot-password"
-              className="text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              className="text-blue-600 hover:text-blue-800 font-medium hover:underline"
             >
               Forgot Password?
             </Link>
           </div>
 
-
-
+          {/* Login Button */}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium text-lg flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white font-semibold text-lg transition-all duration-300 hover:scale-[1.02] shadow-lg disabled:opacity-70"
           >
             {loading ? (
-              <>
+              <div className="flex items-center justify-center gap-2">
                 <span className="spinner w-5 h-5"></span>
                 Logging in...
-              </>
+              </div>
             ) : (
-              'Login'
+              "Login"
             )}
           </button>
+
         </form>
 
-        <div className="mt-6 text-center">
+        <div className="mt-8 text-center border-t pt-6">
           <p className="text-gray-600">
-            Don't have an account?{' '}
-            <Link to="/register" className="text-blue-600 hover:underline font-medium">
+            Don't have an account?{" "}
+            <Link
+              to="/register"
+              className="text-blue-600 font-semibold hover:underline"
+            >
               Register here
             </Link>
           </p>
         </div>
+
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Login;
