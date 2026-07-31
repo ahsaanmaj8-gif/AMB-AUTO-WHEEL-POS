@@ -55,7 +55,7 @@ const Login = () => {
       {/* Left Side */}
       <div className="hidden lg:flex flex-col text-white">
         <img
-          src="/AmbLogo.jpg"
+          src="/amblogoblack.jpg"
           alt="AMB Logo"
           className="w-24 h-24 rounded-full border-4 border-white shadow-xl mb-6"
         />
