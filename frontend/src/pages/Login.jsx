@@ -46,6 +46,11 @@ const Login = () => {
     className="min-h-screen bg-cover bg-center bg-no-repeat relative flex items-center justify-center px-4"
     style={{ backgroundImage: "url('/backgroundLoginImg.jpg')" }}
   >
+
+
+      
+
+
     {/* Dark Overlay */}
     <div className="absolute inset-0 bg-black/70"></div>
 
