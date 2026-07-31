@@ -4,10 +4,10 @@ const Home = () => {
   return (
     <div className="text-center py-12">
       <h1 className="text-4xl font-bold text-gray-800 mb-4">
-        Welcome to AutoWorkshop
+        Welcome to Amb Auto Wheels
       </h1>
       <p className="text-xl text-gray-600 mb-8">
-        Inventory Management System
+        Performance Meets Perfection
       </p>
       <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
         <div className="bg-white p-6 rounded-lg shadow-md">

@@ -48,6 +48,9 @@ export const AuthProvider = ({ children }) => {
       } catch (error) {
         console.error('Error loading user:', error);
         localStorage.removeItem('token');
+         localStorage.removeItem("user");
+
+  setUser(null);
         setToken('');
         delete axios.defaults.headers.common['Authorization'];
       } finally {

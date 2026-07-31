@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Layout
 import Layout from './components/Layout/Layout';
@@ -19,6 +19,15 @@ import Profile from './pages/Profile';
 import ForgotPassword from './pages/auth/ForgotPassword';
 
 function App() {
+
+
+    const { isAuthenticated, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+
   return (
     <AuthProvider>
       <Toaster
@@ -31,16 +40,19 @@ function App() {
           },
         }}
       />
-      
+
       <Routes>
         {/* Public Routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        
+
         {/* Protected Routes with Layout */}
-        <Route path="/" element={<Layout />}>
-          <Route index element={<Dashboard/>}/>
+        <Route path="/"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          }>
+          <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<Products />} />
           <Route path="categories" element={<Categories />} />
@@ -49,7 +61,7 @@ function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="profile" element={<Profile />} />
         </Route>
-        
+
         {/* 404 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

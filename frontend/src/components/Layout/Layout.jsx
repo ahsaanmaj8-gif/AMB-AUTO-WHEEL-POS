@@ -29,7 +29,7 @@ const Layout = () => {
         </main>
         <footer className="bg-white border-t px-6 py-3">
           <div className="flex justify-between items-center text-sm text-gray-500">
-            <p>© 2026 Amb AutoWorkshop. All rights reserved.</p>
+            <p>© 2026 Amb Auto Wheels. All rights reserved.</p>
             <p>Version 1.0.0</p>
           </div>
         </footer>

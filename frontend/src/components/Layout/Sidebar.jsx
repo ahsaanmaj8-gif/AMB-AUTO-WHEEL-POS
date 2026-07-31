@@ -41,9 +41,9 @@ const Sidebar = () => {
         <div className="w-64 bg-white shadow-lg flex flex-col h-full fixed left-0 top-0 bottom-0 z-30">
             <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
                 <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-                    🚗 AutoWorkshop
+                    🚗 Amb Auto Wheel
                 </h1>
-                <p className="text-blue-100 text-xs mt-1">Inventory Management</p>
+                <p className="text-blue-100 text-xs mt-1">Performance Meet Perfection</p>
             </div>
 
             <div className="px-4 py-3 border-b bg-gray-50">

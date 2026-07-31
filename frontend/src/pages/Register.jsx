@@ -54,7 +54,7 @@ const Register = () => {
         <div className="text-center mb-6">
           <p className='text-red-400 p-1 bg-red-100'>Currently Not Available!</p>
           <h1 className="text-2xl font-bold text-gray-800">Create Account</h1>
-          <p className="text-gray-500 text-sm">Join AutoWorkshop Inventory System</p>
+          <p className="text-gray-500 text-sm">Join Amb Auto Workshop</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -288,8 +288,8 @@ const Invoices = () => {
         </head>
         <body>
           <div class="header">
-            <div class="title">🚗 AutoWorkshop</div>
-            <div class="subtitle">Professional Auto Services & Inventory Management</div>
+            <div class="title">🚗 Amb Auto Workshop</div>
+            <div class="subtitle">Professional Auto Services </div>
           </div>
 
           <div class="invoice-info">
@@ -346,8 +346,8 @@ const Invoices = () => {
           ${invoice.notes ? `<div style="margin-top: 20px; padding: 15px; background: #fef9e7; border-radius: 8px; border-left: 4px solid #f59e0b;"><strong>Notes:</strong> ${invoice.notes}</div>` : ''}
 
           <div class="footer">
-            <p class="thank-you">Thank you for choosing AutoWorkshop!</p>
-            <p>For inquiries, please contact us at: info@autoworkshop.com | +92-300-1234567</p>
+            <p class="thank-you">Thank you for choosing Amb Auto Workshop!</p>
+            <p>For inquiries, please contact us at: noumanbajwa418@gmail.com | 0302-5434437</p>
             <p>Generated on: ${new Date().toLocaleString()}</p>
           </div>
         </body>

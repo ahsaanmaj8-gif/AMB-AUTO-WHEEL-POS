@@ -42,7 +42,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo">
       <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-gray-100">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
@@ -50,8 +50,8 @@ const Login = () => {
               <FaCar className="text-3xl text-white" />
             </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-800">AutoWorkshop</h1>
-          <p className="text-gray-500 mt-1">Inventory Management System</p>
+          <h1 className="text-3xl font-bold text-gray-800">Amb Auto Workshop</h1>
+          <p className="text-gray-500 mt-1">Performance Meets Perfection</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-5">
