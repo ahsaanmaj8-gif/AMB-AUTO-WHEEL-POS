@@ -21,7 +21,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 function App() {
 
 
-    const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
@@ -44,15 +44,22 @@ function App() {
 
       <Routes>
         {/* Public Routes */}
-        <Route path="/login" element={<Login />} />
+        <Route
+          path="/login"
+          element={
+            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
+          }
+        />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Protected Routes with Layout */}
-        <Route path="/"
+        <Route
+          path="/"
           element={
-            isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
-          }>
+            isAuthenticated ? <Layout /> : <Navigate to="/login" replace />
+          }
+        >
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<Products />} />
@@ -66,7 +73,7 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    {/* </AuthProvider> */}
+      {/* </AuthProvider> */}
     </>
   );
 }
