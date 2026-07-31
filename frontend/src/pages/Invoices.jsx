@@ -678,7 +678,8 @@ const Invoices = () => {
               <div>
                 <p className="text-sm text-gray-500">🚗 Vehicle</p>
                 <p className="font-medium">{selectedInvoice.vehicleNumber}</p>
-                <p className="text-sm">{selectedInvoice.vehicleModel || 'N/A'}</p>
+                {/* <p className="text-sm">{selectedInvoice.vehicleModel || 'N/A'}</p> */}
+                <p className="text-sm">{selectedInvoice.service?.vehicleModel || 'N/A'}</p>
               </div>
             </div>
 
