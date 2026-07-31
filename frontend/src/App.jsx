@@ -29,7 +29,8 @@ function App() {
 
 
   return (
-    <AuthProvider>
+    // <AuthProvider>
+    <>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -65,7 +66,8 @@ function App() {
         {/* 404 */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
-    </AuthProvider>
+    {/* </AuthProvider> */}
+    </>
   );
 }
 
