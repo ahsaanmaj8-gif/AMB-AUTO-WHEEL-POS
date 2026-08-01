@@ -36,6 +36,8 @@ const Invoices = () => {
       const sortedInvoices = response.data.invoices.sort((a, b) => 
         new Date(a.createdAt) - new Date(b.createdAt)
       );
+
+      console.log("Fetched invoices: ", sortedInvoices)
       setInvoices(sortedInvoices || []);
     } catch (error) {
       toast.error('Failed to fetch invoices');
@@ -322,7 +324,7 @@ const handlePrint = (invoice) => {
             <div><span class="font-medium">Contact Number:</span> ${invoice.customerPhone}</div>
             <div><span class="font-medium">Email Address:</span> ${invoice.customerEmail || 'N/A'}</div>
             <div><span class="font-medium">Vehicle Registration:</span> ${invoice.vehicleNumber}</div>
-            <div class="col-span-2"><span class="font-medium">Vehicle Make :</span> ${invoice.vehicleModel || 'N/A'}</div>
+            <div class="col-span-2"><span class="font-medium">Vehicle Make :</span> ${invoice.service?.vehicleModel || 'N/A'}</div>
             <div class="col-span-2"><span class="font-medium">Vehicle Model:</span> ${invoice.vehicleModel || 'N/A'}</div>
           </div>
         </div>
