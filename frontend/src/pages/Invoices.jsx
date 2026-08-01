@@ -322,7 +322,8 @@ const handlePrint = (invoice) => {
             <div><span class="font-medium">Contact Number:</span> ${invoice.customerPhone}</div>
             <div><span class="font-medium">Email Address:</span> ${invoice.customerEmail || 'N/A'}</div>
             <div><span class="font-medium">Vehicle Registration:</span> ${invoice.vehicleNumber}</div>
-            <div class="col-span-2"><span class="font-medium">Vehicle Make & Model:</span> ${invoice.vehicleModel || 'N/A'}</div>
+            <div class="col-span-2"><span class="font-medium">Vehicle Make :</span> ${invoice.vehicleModel || 'N/A'}</div>
+            <div class="col-span-2"><span class="font-medium">Vehicle Model:</span> ${invoice.vehicleModel || 'N/A'}</div>
           </div>
         </div>
 
@@ -406,7 +407,7 @@ const handlePrint = (invoice) => {
               <tr class="bg-blue-900 text-white">
                 <th class="p-2 text-left">S No.</th>
                 <th class="p-2 text-left">Description of Work</th>
-                <th class="p-2 text-center">Hours</th>
+                <th class="p-2 text-center">Qty</th>
                 <th class="p-2 text-right">Total Price</th>
               </tr>
             </thead>
@@ -456,16 +457,7 @@ const handlePrint = (invoice) => {
           </ol>
         </div>
 
-        <!-- ============ PAYMENT DETAILS ============ -->
-        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
-          <h3 class="font-bold text-gray-700 mb-2">Payment Details:</h3>
-          <div class="grid grid-cols-2 gap-2">
-            <div><span class="font-medium">Bank Name:</span> Faysal Islamic Bank</div>
-            <div><span class="font-medium">Account Name:</span> AMB AUTO WHEELS</div>
-            <div><span class="font-medium">Account Number:</span> 3622499000002922</div>
-            <div><span class="font-medium">IBAN/Swift Code:</span> PK85FAYS3622499000002922</div>
-          </div>
-        </div>
+        
 
         <!-- ============ AUTHORIZED SIGNATURE ============ -->
         <div class="flex justify-between items-center mt-6 pt-4 border-t">

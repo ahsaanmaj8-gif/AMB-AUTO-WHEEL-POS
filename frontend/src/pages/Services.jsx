@@ -763,7 +763,7 @@ const Services = () => {
                     {/* Additional Charges */}
                     <div className="border-b border-gray-400 pb-4">
                         <div className="flex justify-between items-center mb-3">
-                            <h4 className="font-semibold text-gray-700">Additional Charges</h4>
+                            <h4 className="font-semibold text-gray-700">Additional Charges (Sublets)</h4>
                             <button type="button" onClick={addCharge} className="text-sm text-blue-600 hover:underline">
                                 + Add Charge
                             </button>
