@@ -9,7 +9,7 @@ const Invoice = require("../models/invoiceModel");
 const getInvoices = async (req, res) => {
   try {
     const invoices = await Invoice.find()
-      .populate('service', 'vehicleModel vehicleNumber customerName customerPhone') 
+      .populate('service', 'vehicleModel vehicleNumber vehicleMake customerName customerPhone customerAddress') 
       .sort({ createdAt: -1 });
     
     res.status(200).json({
