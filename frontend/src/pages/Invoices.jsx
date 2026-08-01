@@ -296,7 +296,7 @@ const handlePrint = (invoice) => {
         <!-- ============ HEADER ============ -->
         <div class="flex items-center justify-between border-b-2 border-blue-900 pb-4 mb-4">
           <div class="flex items-center gap-3">
-            <img src="./amblogowhite.jpg" class="w-16 h-16 object-contain" alt="Logo" />
+            <img src="/amblogowhite.jpg" class="w-16 h-16 object-contain" alt="Logo" />
             <div>
               <h1 class="text-2xl font-bold text-blue-900">Amb Auto Workshop</h1>
               <p class="text-gray-500 text-sm">Professional Auto Services</p>
