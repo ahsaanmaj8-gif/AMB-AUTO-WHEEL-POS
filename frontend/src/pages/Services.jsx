@@ -190,23 +190,52 @@ const Services = () => {
         }
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // console.log(formData)
-        if (!formData.assignedTo || formData.assignedTo.trim() === '') {
-            toast.error('Please enter staff name');
-            return;
-        }
-        try {
-            const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/services', formData);
-            toast.success('Service created successfully');
-            fetchServices();
-            setShowModal(false);
-            resetForm();
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to create service');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate assignedTo
+    if (!formData.assignedTo || formData.assignedTo.trim() === '') {
+        toast.error('Please enter staff name');
+        return;
+    }
+    
+    // ============ ✅ FIX: Process parts ============
+    const processedParts = formData.partsUsed.map(part => {
+        const quantity = parseFloat(part.quantity) || 0;
+        const unitPrice = parseFloat(part.unitPrice) || 0;
+        
+        return {
+            product: part.fromInventory && part.product ? part.product : null, // ✅ null instead of ""
+            productName: part.productName || 'Custom Item',
+            quantity: quantity,
+            unitPrice: unitPrice,
+            totalPrice: quantity * unitPrice,
+            fromInventory: part.fromInventory
+        };
+    });
+    
+    const dataToSend = {
+        ...formData,
+        partsUsed: processedParts,
+        billing: {
+            ...formData.billing,
+            paidAmount: parseFloat(formData.billing.paidAmount) || 0,
+            taxRate: parseFloat(formData.billing.taxRate) || 0,
+            discount: parseFloat(formData.billing.discount) || 0
         }
     };
+    
+    try {
+        const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/services', dataToSend);
+        toast.success('Service created successfully');
+        fetchServices();
+        setShowModal(false);
+        resetForm();
+    } catch (error) {
+        console.error('Error:', error.response?.data);
+        toast.error(error.response?.data?.message || 'Failed to create service');
+    }
+};
 
     const handleGenerateBill = async (id) => {
         try {

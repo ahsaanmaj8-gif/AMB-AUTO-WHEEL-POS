@@ -112,14 +112,7 @@ const createService = async (req, res) => {
     const paidAmount = billing?.paidAmount || 0;
     const balance = totalAmount - paidAmount;
 
-    // ============ DETERMINE STATUSES ============
-    // Service Status: If fully paid, mark as completed, else pending
-    let serviceStatus = "pending";
-    if (balance <= 0 && totalAmount > 0) {
-      serviceStatus = "completed"; // ✅ Fully paid = Completed
-    }
-
-    // Payment Status
+    // Determine payment status
     let paymentStatus;
     if (balance <= 0) {
       paymentStatus = "paid";
@@ -129,7 +122,23 @@ const createService = async (req, res) => {
       paymentStatus = "unpaid";
     }
 
-    // ============ CREATE SERVICE ============
+    // ============ ✅ FIX: Process parts BEFORE creating service ============
+    const processedParts = partsUsed?.map(part => {
+      const quantity = parseFloat(part.quantity) || 0;
+      const unitPrice = parseFloat(part.unitPrice) || 0;
+      
+      return {
+        // ✅ If fromInventory is true AND product exists → use product ID, else null
+        product: part.fromInventory && part.product ? part.product : null,
+        productName: part.productName || 'Custom Item',
+        quantity: quantity,
+        unitPrice: unitPrice,
+        totalPrice: quantity * unitPrice,
+        fromInventory: part.fromInventory || false
+      };
+    }) || [];
+
+    // Create service WITH processed parts
     const service = new Service({
       customerName,
       customerPhone,
@@ -139,7 +148,7 @@ const createService = async (req, res) => {
       vehicleMake,
       mileage,
       services: services || [],
-      partsUsed: partsUsed || [],
+      partsUsed: processedParts, // ✅ Use processed parts
       additionalCharges: additionalCharges || [],
       billing: {
         subtotal: billingTotals.subtotal,
@@ -147,22 +156,21 @@ const createService = async (req, res) => {
         taxRate: billing?.taxRate || 0,
         discount: billingTotals.discount,
         discountType: billing?.discountType || "fixed",
-        totalAmount: totalAmount,
-        paidAmount: paidAmount,
-        balance: balance,
+        totalAmount: billingTotals.totalAmount,
+        paidAmount: billing?.paidAmount || 0,
+        balance: billingTotals.totalAmount - (billing?.paidAmount || 0),
         paymentStatus: paymentStatus,
         paymentMethod: billing?.paymentMethod || "cash",
       },
       notes: notes || "",
       assignedTo: assignedTo || req.user._id || "Staff",
       performedBy: req.user._id ? req.user._id : req.user.id,
-      status: serviceStatus, // ✅ Set status based on payment
-      completedAt: serviceStatus === "completed" ? new Date() : null, // ✅ Set completed date if fully paid
     });
 
     // ============ DEDUCT INVENTORY FOR PARTS USED ============
     if (partsUsed && partsUsed.length > 0) {
       for (let part of partsUsed) {
+        // ✅ Only deduct if fromInventory is true AND product exists
         if (part.fromInventory && part.product) {
           const product = await Product.findById(part.product);
           if (!product) {
@@ -211,10 +219,10 @@ const createService = async (req, res) => {
       }
     }
 
-    // ============ SAVE SERVICE ============
+    // Save service
     await service.save();
 
-    // ============ CREATE NOTIFICATION FOR NEW SERVICE ============
+    // Create notification for new service
     await createNotification(
       req.user.id,
       "🔧 New Service Created",
@@ -223,7 +231,7 @@ const createService = async (req, res) => {
       "/services"
     );
 
-    // ============ GENERATE INVOICE NUMBER ============
+    // Generate Invoice Number
     const year = new Date().getFullYear();
     const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 });
     let nextNumber = 1;
@@ -235,7 +243,7 @@ const createService = async (req, res) => {
 
     const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(5, "0")}`;
 
-    // ============ CREATE INVOICE ============
+    // Generate invoice
     const invoice = new Invoice({
       invoiceNumber,
       service: service._id,
@@ -277,13 +285,13 @@ const createService = async (req, res) => {
       paymentStatus: service.billing.paymentStatus,
       paymentMethod: service.billing.paymentMethod,
       issuedBy: req.user._id ? req.user._id : req.user.id,
-      status: service.billing.balance <= 0 ? "paid" : "issued",
+      status: "issued",
       notes: service.notes
     });
 
     await invoice.save();
 
-    // ============ NOTIFICATION FOR BILL GENERATED ============
+    // Notification for bill generated
     await createNotification(
       req.user.id,
       "📄 Bill Generated",
@@ -294,9 +302,7 @@ const createService = async (req, res) => {
 
     res.status(201).json({
       success: true,
-      message: serviceStatus === "completed" 
-        ? "Service created and paid successfully" 
-        : "Service created successfully",
+      message: "Service created successfully",
       service: service,
       invoice: invoice,
     });
