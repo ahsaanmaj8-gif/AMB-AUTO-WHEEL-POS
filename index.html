@@ -1,0 +1,228 @@
+ <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Invoice - ${invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`}</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <style>
+        @media print {
+          body { print-color-adjust: exact; }
+          .no-print { display: none; }
+        }
+        body { font-family: Arial, sans-serif; padding: 40px; background: #fff; }
+        .border-bottom { border-bottom: 2px solid #1e3a8a; }
+        .bg-light { background: #f8fafc; }
+        .bg-primary { background: #1e3a8a; }
+        .text-primary { color: #1e3a8a; }
+        .grand-total { font-size: 22px; color: #1e3a8a; border-top: 2px solid #1e3a8a; padding-top: 10px; margin-top: 10px; }
+        .status-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+        .status-paid { background: #d4edda; color: #155724; }
+        .status-unpaid { background: #f8d7da; color: #721c24; }
+        .status-partial { background: #fff3cd; color: #856404; }
+        .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+      </style>
+    </head>
+    <body>
+      <div class="max-w-5xl mx-auto bg-white p-8">
+        
+        <!-- ============ HEADER ============ -->
+        <div class="flex items-center justify-between border-b-2 border-blue-900 pb-4 mb-4">
+          <div class="flex items-center gap-3">
+            <img src="./frontend/public/amblogoblack.jpg" class="w-16 h-16 object-contain" alt="Logo" />
+            <div>
+              <h1 class="text-2xl font-bold text-blue-900">Amb Auto Workshop</h1>
+              <p class="text-gray-500 text-sm">Professional Auto Services</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-500">Invoice #: <span class="font-bold text-gray-800">${invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`}</span></p>
+            <p class="text-sm text-gray-500">Date: <span class="font-bold text-gray-800">${new Date(invoice.createdAt).toLocaleDateString()}</span></p>
+          </div>
+        </div>
+
+        <!-- ============ BILLING HEADER ============ -->
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-gray-800">Billing Invoice</h2>
+          <span class="status-badge status-${invoice.paymentStatus || 'unpaid'}">
+            ${(invoice.paymentStatus || 'UNPAID').toUpperCase()}
+          </span>
+        </div>
+
+        <!-- ============ CUSTOMER DETAILS ============ -->
+        <div class="bg-gray-50 p-4 rounded-lg mb-4">
+          <h3 class="font-bold text-gray-700 mb-2">Customer Details</h3>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div><span class="font-medium">Name:</span> ${invoice.customerName}</div>
+            <div><span class="font-medium">Contact Number:</span> ${invoice.customerPhone}</div>
+            <div><span class="font-medium">Email Address:</span> ${invoice.customerEmail || 'N/A'}</div>
+            <div><span class="font-medium">Vehicle Registration:</span> ${invoice.vehicleNumber}</div>
+            <div class="col-span-2"><span class="font-medium">Vehicle Make & Model:</span> ${invoice.vehicleModel || 'N/A'}</div>
+          </div>
+        </div>
+
+        <!-- ============ PARTS DETAILS ============ -->
+        <div class="mb-4">
+          <h3 class="font-bold text-gray-700 mb-2">Parts Details</h3>
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-blue-900 text-white">
+                <th class="p-2 text-left">S No.</th>
+                <th class="p-2 text-left">Part Name</th>
+                <th class="p-2 text-center">Quantity</th>
+                <th class="p-2 text-right">Unit Price</th>
+                <th class="p-2 text-right">Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.items?.filter(i => i.type === 'part').map((item, index) => `
+                <tr class="border-b">
+                  <td class="p-2">${index + 1}</td>
+                  <td class="p-2">${item.description}</td>
+                  <td class="p-2 text-center">${item.quantity}</td>
+                  <td class="p-2 text-right">PKR ${item.unitPrice.toLocaleString()}</td>
+                  <td class="p-2 text-right">PKR ${item.totalPrice.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              ${!invoice.items?.filter(i => i.type === 'part').length ? `
+                <tr><td colspan="5" class="p-2 text-center text-gray-400">No parts listed</td></tr>
+              ` : ''}
+            </tbody>
+            <tfoot>
+              <tr class="font-bold">
+                <td colspan="4" class="p-2 text-right">Total</td>
+                <td class="p-2 text-right">PKR ${invoice.items?.filter(i => i.type === 'part').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- ============ LABOR DETAILS ============ -->
+        <div class="mb-4">
+          <h3 class="font-bold text-gray-700 mb-2">Labor Details</h3>
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-blue-900 text-white">
+                <th class="p-2 text-left">S No.</th>
+                <th class="p-2 text-left">Work Description</th>
+                <th class="p-2 text-center">Hrs</th>
+                <th class="p-2 text-right">Rate</th>
+                <th class="p-2 text-right">Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.items?.filter(i => i.type === 'service').map((item, index) => `
+                <tr class="border-b">
+                  <td class="p-2">${index + 1}</td>
+                  <td class="p-2">${item.description}</td>
+                  <td class="p-2 text-center">${item.quantity || 1}</td>
+                  <td class="p-2 text-right">PKR ${item.unitPrice.toLocaleString()}</td>
+                  <td class="p-2 text-right">PKR ${item.totalPrice.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              ${!invoice.items?.filter(i => i.type === 'service').length ? `
+                <tr><td colspan="5" class="p-2 text-center text-gray-400">No labor listed</td></tr>
+              ` : ''}
+            </tbody>
+            <tfoot>
+              <tr class="font-bold">
+                <td colspan="4" class="p-2 text-right">Total</td>
+                <td class="p-2 text-right">PKR ${invoice.items?.filter(i => i.type === 'service').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- ============ SUBLET DETAILS ============ -->
+        <div class="mb-4">
+          <h3 class="font-bold text-gray-700 mb-2">Sublet</h3>
+          <table class="w-full border-collapse text-sm">
+            <thead>
+              <tr class="bg-blue-900 text-white">
+                <th class="p-2 text-left">S No.</th>
+                <th class="p-2 text-left">Description of Work</th>
+                <th class="p-2 text-center">Hours</th>
+                <th class="p-2 text-right">Total Price</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${invoice.items?.filter(i => i.type === 'charge').map((item, index) => `
+                <tr class="border-b">
+                  <td class="p-2">${index + 1}</td>
+                  <td class="p-2">${item.description}</td>
+                  <td class="p-2 text-center">${item.quantity || 1}</td>
+                  <td class="p-2 text-right">PKR ${item.totalPrice.toLocaleString()}</td>
+                </tr>
+              `).join('')}
+              ${!invoice.items?.filter(i => i.type === 'charge').length ? `
+                <tr><td colspan="4" class="p-2 text-center text-gray-400">No sublet listed</td></tr>
+              ` : ''}
+            </tbody>
+            <tfoot>
+              <tr class="font-bold">
+                <td colspan="3" class="p-2 text-right">Total</td>
+                <td class="p-2 text-right">PKR ${invoice.items?.filter(i => i.type === 'charge').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- ============ CEO CATEGORY (Summary) ============ -->
+        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
+          <h3 class="font-bold text-gray-700 mb-2">CEO Category</h3>
+          <div class="grid grid-cols-2 gap-2 text-sm">
+            <div><span class="font-medium">Total Parts:</span> PKR ${invoice.items?.filter(i => i.type === 'part').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
+            <div><span class="font-medium">Total Labor:</span> PKR ${invoice.items?.filter(i => i.type === 'service').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
+            <div><span class="font-medium">Sublet:</span> PKR ${invoice.items?.filter(i => i.type === 'charge').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
+            <div class="font-bold text-blue-600 text-lg"><span class="font-medium">Grand Total:</span> PKR ${invoice.totalAmount?.toLocaleString() || 0}</div>
+          </div>
+        </div>
+
+        <!-- ============ TERMS & CONDITIONS ============ -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
+          <h3 class="font-bold text-gray-700 mb-2">Terms and Conditions:</h3>
+          <ol class="list-decimal list-inside space-y-1 text-gray-600">
+            <li>Payments must be made in full by the due date specified on the invoice.</li>
+            <li>All products and services are provided "as-is" and are subject to availability.</li>
+            <li>Claims regarding defective goods or services must be submitted within 7 days of receipt.</li>
+            <li>Warranties are only applicable as per manufacturer's policy.</li>
+            <li>Custom orders and special services are non-refundable.</li>
+            <li>For support or queries, please contact us at [+92-3025434437, 311-4234211].</li>
+          </ol>
+        </div>
+
+        <!-- ============ PAYMENT DETAILS ============ -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
+          <h3 class="font-bold text-gray-700 mb-2">Payment Details:</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <div><span class="font-medium">Bank Name:</span> Faysal Islamic Bank</div>
+            <div><span class="font-medium">Account Name:</span> AMB AUTO WHEELS</div>
+            <div><span class="font-medium">Account Number:</span> 3622499000002922</div>
+            <div><span class="font-medium">IBAN/Swift Code:</span> PK85FAYS3622499000002922</div>
+          </div>
+        </div>
+
+        <!-- ============ AUTHORIZED SIGNATURE ============ -->
+        <div class="flex justify-between items-center mt-6 pt-4 border-t">
+          <div>
+            <p class="text-sm font-medium">Muhammad Nauman Majeed</p>
+            <p class="text-xs text-gray-500">Authorized Signature</p>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-500">Thank you for choosing Amb Auto Workshop!</p>
+          </div>
+        </div>
+
+        <!-- ============ FOOTER ============ -->
+        <div class="footer">
+          <p>Generated on: ${new Date().toLocaleString()}</p>
+        </div>
+
+        <!-- ============ PRINT BUTTON ============ -->
+        <div class="text-center mt-6 no-print">
+          <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+            🖨️ Print Invoice
+          </button>
+        </div>
+
+      </div>
+    </body>
+    </html>
