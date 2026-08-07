@@ -420,7 +420,41 @@ const payRemaining = async (req, res) => {
 
 
 
-
+// ============ GET CUSTOMER BY PHONE ============
+const getCustomerByPhone = async (req, res) => {
+    try {
+        const { phone } = req.params;
+        
+        // Find latest service by this customer
+        const service = await Service.findOne({ customerPhone: phone })
+            .sort({ createdAt: -1 }); // Latest first
+        
+        if (!service) {
+            return res.status(404).json({
+                success: false,
+                message: "Customer not found"
+            });
+        }
+        
+        res.status(200).json({
+            success: true,
+            service: {
+                customerName: service.customerName,
+                customerPhone: service.customerPhone,
+                customerAddress: service.customerAddress,
+                vehicleNumber: service.vehicleNumber,
+                vehicleModel: service.vehicleModel,
+                vehicleMake: service.vehicleMake,
+                mileage: service.mileage
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 
 // @desc    Get all services
@@ -786,4 +820,5 @@ module.exports = {
   generateBill,
   getServiceStats,
   payRemaining,
+  getCustomerByPhone
 };

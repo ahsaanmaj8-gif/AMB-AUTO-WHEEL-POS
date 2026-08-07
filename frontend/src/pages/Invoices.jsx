@@ -401,7 +401,7 @@ const handlePrint = (invoice) => {
           </table>
         </div>
 
-        <!-- ============ SUBLET DETAILS ============ -->
+        <!-- ============ SUBLET (Additional Charges) DETAILS ============ -->
         <div class="mb-4">
           <h3 class="font-bold text-gray-700 mb-2">Sublet</h3>
           <table class="w-full border-collapse text-sm">

@@ -190,52 +190,87 @@ const Services = () => {
         }
     };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate assignedTo
-    if (!formData.assignedTo || formData.assignedTo.trim() === '') {
-        toast.error('Please enter staff name');
-        return;
-    }
-    
-    // ============ ✅ FIX: Process parts ============
-    const processedParts = formData.partsUsed.map(part => {
-        const quantity = parseFloat(part.quantity) || 0;
-        const unitPrice = parseFloat(part.unitPrice) || 0;
-        
-        return {
-            product: part.fromInventory && part.product ? part.product : null, // ✅ null instead of ""
-            productName: part.productName || 'Custom Item',
-            quantity: quantity,
-            unitPrice: unitPrice,
-            totalPrice: quantity * unitPrice,
-            fromInventory: part.fromInventory
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        // Validate assignedTo
+        if (!formData.assignedTo || formData.assignedTo.trim() === '') {
+            toast.error('Please enter staff name');
+            return;
+        }
+
+        // ============ ✅ FIX: Process parts ============
+        const processedParts = formData.partsUsed.map(part => {
+            const quantity = parseFloat(part.quantity) || 0;
+            const unitPrice = parseFloat(part.unitPrice) || 0;
+
+            return {
+                product: part.fromInventory && part.product ? part.product : null, // ✅ null instead of ""
+                productName: part.productName || 'Custom Item',
+                quantity: quantity,
+                unitPrice: unitPrice,
+                totalPrice: quantity * unitPrice,
+                fromInventory: part.fromInventory
+            };
+        });
+
+        const dataToSend = {
+            ...formData,
+            partsUsed: processedParts,
+            billing: {
+                ...formData.billing,
+                paidAmount: parseFloat(formData.billing.paidAmount) || 0,
+                taxRate: parseFloat(formData.billing.taxRate) || 0,
+                discount: parseFloat(formData.billing.discount) || 0
+            }
         };
-    });
-    
-    const dataToSend = {
-        ...formData,
-        partsUsed: processedParts,
-        billing: {
-            ...formData.billing,
-            paidAmount: parseFloat(formData.billing.paidAmount) || 0,
-            taxRate: parseFloat(formData.billing.taxRate) || 0,
-            discount: parseFloat(formData.billing.discount) || 0
+
+        try {
+            const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/services', dataToSend);
+            toast.success('Service created successfully');
+            fetchServices();
+            setShowModal(false);
+            resetForm();
+        } catch (error) {
+            console.error('Error:', error.response?.data);
+            toast.error(error.response?.data?.message || 'Failed to create service');
         }
     };
-    
-    try {
-        const response = await axios.post('https://amb-auto-wheel-pos.onrender.com/api/services', dataToSend);
-        toast.success('Service created successfully');
-        fetchServices();
-        setShowModal(false);
-        resetForm();
-    } catch (error) {
-        console.error('Error:', error.response?.data);
-        toast.error(error.response?.data?.message || 'Failed to create service');
-    }
-};
+
+
+
+
+    // ============ FETCH CUSTOMER INFO BY PHONE ============
+    const fetchCustomerInfo = async (phone) => {
+        if (!phone || phone.length < 10) return;
+
+        try {
+            const response = await axios.get(
+                `https://amb-auto-wheel-pos.onrender.com/api/services/customer/${phone}`
+            );
+
+            if (response.data.success && response.data.service) {
+                const service = response.data.service;
+
+                // ✅ Auto-fill customer info
+                setFormData(prev => ({
+                    ...prev,
+                    customerName: service.customerName || prev.customerName,
+                    customerPhone: service.customerPhone || prev.customerPhone,
+                    customerAddress: service.customerAddress || prev.customerAddress,
+                    vehicleNumber: service.vehicleNumber || prev.vehicleNumber,
+                    vehicleModel: service.vehicleModel || prev.vehicleModel,
+                    vehicleMake: service.vehicleMake || prev.vehicleMake,
+                    mileage: service.mileage || prev.mileage
+                }));
+
+                toast.success('Customer info loaded!');
+            }
+        } catch (error) {
+            // No previous customer found - ignore
+            console.log('New customer');
+        }
+    };
 
     const handleGenerateBill = async (id) => {
         try {
@@ -400,9 +435,9 @@ const Services = () => {
                                                 value={service.status}
                                                 onChange={(e) => updateStatus(service._id, e.target.value)}
                                                 className={`text-xs px-2 py-1 rounded-full border-0 font-medium cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-1 ${service.status === 'completed' ? 'bg-green-100 text-green-700 focus:ring-green-500 appearance-none ' :
-                                                        service.status === 'in-progress' ? 'bg-yellow-100 text-yellow-700 focus:ring-yellow-500' :
-                                                            service.status === 'pending' ? 'bg-blue-100 text-blue-700 focus:ring-blue-500' :
-                                                                'bg-gray-100 text-gray-700 focus:ring-gray-500'
+                                                    service.status === 'in-progress' ? 'bg-yellow-100 text-yellow-700 focus:ring-yellow-500' :
+                                                        service.status === 'pending' ? 'bg-blue-100 text-blue-700 focus:ring-blue-500' :
+                                                            'bg-gray-100 text-gray-700 focus:ring-gray-500'
                                                     }`}
                                                 disabled={service.status === 'completed'}
                                             >
@@ -523,12 +558,12 @@ const Services = () => {
                                 <label className="label">Phone</label>
                                 <input
                                     type="text"
-                                    placeholder='Customer Phone No'
-
                                     name="customerPhone"
                                     value={formData.customerPhone}
                                     onChange={handleChange}
+                                    onBlur={(e) => fetchCustomerInfo(e.target.value)} 
                                     className="input-field"
+                                    placeholder="0300-1234567"
                                     required
                                 />
                             </div>

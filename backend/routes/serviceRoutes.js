@@ -10,7 +10,8 @@ const {
     generateBill,
     getServiceStats,
     getAllServicesWithInvoice,
-    payRemaining
+    payRemaining,
+    getCustomerByPhone
 } = require("../controllers/serviceController");
 
 // ============ ALL ROUTES REQUIRE LOGIN ============
@@ -39,5 +40,7 @@ router.post("/:id/generate-bill", generateBill);
 
 // Pay remaining balance
 router.post("/:id/pay-remaining", payRemaining);
+
+router.get("/customer/:phone" , getCustomerByPhone);
 
 module.exports = router;
