@@ -17,6 +17,7 @@ import Invoices from './pages/Invoices';
 import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/auth/ForgotPassword';
+import Revenue from './pages/Revenue';
 
 function App() {
 
@@ -69,6 +70,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<Products />} />
           <Route path="categories" element={<Categories />} />
+          <Route path="revenue" element={<Revenue />} />
           <Route path="services" element={<Services />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="transactions" element={<Transactions />} />

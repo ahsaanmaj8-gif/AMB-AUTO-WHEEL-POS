@@ -124,9 +124,10 @@ const deleteTransaction = async (req, res) => {
   try {
     const transaction = await Transaction.findById(req.params.id);
     if (!transaction) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Transaction not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Transaction not found",
+      });
     }
     await transaction.deleteOne();
     res

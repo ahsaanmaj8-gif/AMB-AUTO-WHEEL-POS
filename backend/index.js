@@ -33,7 +33,7 @@ const transactionRoutes = require("./routes/transactionRoutes");
 const invoiceRoutes = require("./routes/invoiceRoutes");
 const userRoutes = require("./routes/userRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
-
+const revenueRoutes = require("./routes/revenueRoutes");
 
 // ============ ROUTES ============
 app.use("/api/auth", authRoutes);
@@ -44,7 +44,7 @@ app.use("/api/invoices", invoiceRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
-
+app.use("/api/revenue", revenueRoutes);
 
 
 

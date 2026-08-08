@@ -22,9 +22,10 @@ const Sidebar = () => {
         { path: '/products', icon: FaBox, label: 'Products' },
         { path: '/services', icon: FaWrench, label: 'Services' },
         { path: '/invoices', icon: FaFileInvoice, label: 'Invoices' },
+        { path: '/revenue', icon: FaDollarSign, label: 'Revenue' },
         { path: '/categories', icon: FaTags, label: 'Categories' },
         { path: '/transactions', icon: FaHistory, label: 'Transactions' },
-        { path: '/paymentDetails', icon: FaHistory, label: 'Payment Details' },
+        // { path: '/paymentDetails', icon: FaHistory, label: 'Payment Details' },
         { path: '/profile', icon: FaUser, label: 'Profile' },
     ];
 
