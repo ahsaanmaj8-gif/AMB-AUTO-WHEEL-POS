@@ -24,6 +24,7 @@ const Sidebar = () => {
         { path: '/invoices', icon: FaFileInvoice, label: 'Invoices' },
         { path: '/categories', icon: FaTags, label: 'Categories' },
         { path: '/transactions', icon: FaHistory, label: 'Transactions' },
+        { path: '/paymentDetails', icon: FaHistory, label: 'Payment Details' },
         { path: '/profile', icon: FaUser, label: 'Profile' },
     ];
 
