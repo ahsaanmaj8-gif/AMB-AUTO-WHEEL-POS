@@ -25,6 +25,11 @@ const Invoices = () => {
   const [selectAll, setSelectAll] = useState(false);
   const [monthFilter, setMonthFilter] = useState('');
 
+const [dateFilter, setDateFilter] = useState('all');
+const [startDate, setStartDate] = useState('');
+const [endDate, setEndDate] = useState('');
+
+
   useEffect(() => {
     fetchInvoices();
   }, []);
@@ -493,26 +498,54 @@ const handlePrint = (invoice) => {
   setTimeout(() => printWindow.print(), 500);
 };
 
-  // ============ FILTER INVOICES ============
-  const filteredInvoices = invoices.filter(inv => {
+
+
+
+
+
+// Add this function before filteredInvoices
+const getDateFilter = (invoiceDate) => {
+    const date = new Date(invoiceDate);
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay());
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    switch(dateFilter) {
+        case 'today':
+            return date.toDateString() === today.toDateString();
+        case 'week':
+            return date >= weekStart && date <= today;
+        case 'month':
+            return date >= monthStart && date <= today;
+        case 'custom':
+            if (startDate && endDate) {
+                const start = new Date(startDate);
+                const end = new Date(endDate);
+                end.setHours(23, 59, 59, 999);
+                return date >= start && date <= end;
+            }
+            return true;
+        default:
+            return true;
+    }
+};
+
+// Update filteredInvoices
+const filteredInvoices = invoices.filter(inv => {
     const matchesSearch = 
-      inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
-      inv.customerName?.toLowerCase().includes(search.toLowerCase()) ||
-      inv.vehicleNumber?.toLowerCase().includes(search.toLowerCase());
+        inv.invoiceNumber?.toLowerCase().includes(search.toLowerCase()) ||
+        inv.customerName?.toLowerCase().includes(search.toLowerCase()) ||
+        inv.vehicleNumber?.toLowerCase().includes(search.toLowerCase());
     
     const matchesFilter = filter === 'all' || inv.paymentStatus === filter;
-    
-    let matchesDate = true;
-    if (dateRange.start && dateRange.end) {
-      const invoiceDate = new Date(inv.createdAt);
-      const start = new Date(dateRange.start);
-      const end = new Date(dateRange.end);
-      end.setHours(23, 59, 59, 999);
-      matchesDate = invoiceDate >= start && invoiceDate <= end;
-    }
+    const matchesDate = getDateFilter(inv.createdAt);
     
     return matchesSearch && matchesFilter && matchesDate;
-  });
+});
+
+
+ 
 
   return (
     <div>
@@ -549,83 +582,98 @@ const handlePrint = (invoice) => {
       </div>
 
       {/* ============ FILTERS ============ */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        <div className="flex-1 min-w-[200px]">
-          <div className="relative">
+      {/* Filters */}
+{/* Filters */}
+<div className="flex flex-wrap gap-4 mb-6">
+    {/* Search */}
+    <div className="flex-1 min-w-[200px]">
+        <div className="relative">
             <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
             <input
-              type="text"
-              placeholder="Search by invoice #, customer, or vehicle..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="input-field pl-10"
+                type="text"
+                placeholder="Search by invoice #, customer, or vehicle..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="input-field pl-10"
             />
-          </div>
         </div>
+    </div>
 
-        <div className="w-48">
-          <select
+    {/* Status Filter */}
+    <div className="w-48">
+        <select
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="input-field"
-          >
+        >
             <option value="all">All Status</option>
             <option value="paid">✅ Paid</option>
             <option value="partial">⏳ Partial</option>
             <option value="unpaid">❌ Unpaid</option>
-          </select>
-        </div>
+        </select>
+    </div>
 
-        <button
-          onClick={() => setShowDateFilter(!showDateFilter)}
-          className="btn-outline btn-sm"
+    {/* Date Filter */}
+    <div className="w-48">
+        <select
+            value={dateFilter}
+            onChange={(e) => setDateFilter(e.target.value)}
+            className="input-field"
         >
-          <FaCalendar /> {showDateFilter ? 'Hide Date' : 'Date Range'}
-        </button>
+            <option value="all">📅 All Dates</option>
+            <option value="today">📅 Today</option>
+            <option value="week">📅 This Week</option>
+            <option value="month">📅 This Month</option>
+            <option value="custom">📅 Custom Range</option>
+        </select>
+    </div>
 
-        <div className="relative group">
-          <button className="btn-danger btn-sm flex items-center gap-2">
-            <FaTrash /> Delete
-          </button>
-          <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-xl border hidden group-hover:block z-50">
-            <div className="p-3 space-y-2">
-              <div className="border-b pb-2">
-                <label className="text-xs text-gray-500 block mb-1">Delete by Month</label>
-                <div className="flex gap-2">
-                  <select
-                    value={monthFilter}
-                    onChange={(e) => setMonthFilter(e.target.value)}
-                    className="flex-1 input-field text-sm py-1"
-                  >
-                    <option value="">Select Month</option>
-                    {getMonthOptions().map((m) => (
-                      <option key={m.value} value={m.value}>{m.label}</option>
-                    ))}
-                  </select>
-                  <button
-                    onClick={deleteInvoicesByMonth}
-                    className="btn-danger btn-sm text-xs px-2"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              
-              <button
-                onClick={deleteAllInvoices}
-                className="w-full text-left text-sm px-3 py-2 hover:bg-red-50 rounded-lg text-red-600 flex items-center gap-2"
-              >
-                <FaTrash /> Delete All Invoices
-              </button>
+    {/* Custom Date Range */}
+    {dateFilter === 'custom' && (
+        <div className="flex gap-2 items-end">
+            <div>
+                <label className="text-xs text-gray-500">From</label>
+                <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="input-field py-1 text-sm"
+                />
             </div>
-          </div>
+            <div>
+                <label className="text-xs text-gray-500">To</label>
+                <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="input-field py-1 text-sm"
+                />
+            </div>
+            <button
+                onClick={() => {
+                    setDateFilter('all');
+                    setStartDate('');
+                    setEndDate('');
+                }}
+                className="btn-outline btn-sm"
+            >
+                Clear
+            </button>
         </div>
+    )}
 
-        <div className="text-sm text-gray-500 self-center">
-          {filteredInvoices.length} invoices found
-        </div>
-      </div>
+    {/* Delete Button (if selected invoices) */}
+    {selectedInvoices.length > 0 && (
+        <button onClick={deleteSelectedInvoices} className="btn-danger btn-sm">
+            <FaTrash /> Delete ({selectedInvoices.length})
+        </button>
+    )}
 
+    {/* Count */}
+    <div className="text-sm text-gray-500 self-center">
+        {filteredInvoices.length} invoices found
+    </div>
+</div>
       {/* ============ DATE RANGE FILTER ============ */}
       {showDateFilter && (
         <div className="bg-gray-50 p-4 rounded-lg mb-6 flex flex-wrap items-end gap-4">
@@ -682,6 +730,7 @@ const handlePrint = (invoice) => {
                   <th>Paid</th>
                   <th>Balance</th>
                   <th>Status</th>
+                  <th>Date</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -721,6 +770,12 @@ const handlePrint = (invoice) => {
                         {invoice.paymentStatus || 'unpaid'}
                       </span>
                     </td>
+
+
+<td className="text-sm text-gray-500">
+    {new Date(invoice.createdAt).toLocaleDateString()}
+</td>
+
                     <td>
                       <div className="flex gap-2">
                         <button
