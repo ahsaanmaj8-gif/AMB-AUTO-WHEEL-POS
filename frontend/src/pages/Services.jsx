@@ -178,21 +178,98 @@ const Services = () => {
     };
 
     // ============ SUBMIT EDIT ============
-    const handleEditSubmit = async (e) => {
-        e.preventDefault();
+   // ============ SUBMIT EDIT ============
+const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    
+    try {
+        // ✅ Calculate billing totals before sending
+        const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
+            // Calculate services total
+            let servicesTotal = 0;
+            services.forEach(service => {
+                servicesTotal += parseFloat(service.servicePrice) || 0;
+            });
 
-        try {
-            await axios.put(
-                `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
-                editFormData
-            );
-            toast.success('Service updated successfully!');
-            setShowEditModal(false);
-            fetchServices();
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to update service');
-        }
-    };
+            // Calculate parts total
+            let partsTotal = 0;
+            parts.forEach(part => {
+                partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
+            });
+
+            // Calculate additional charges
+            let chargesTotal = 0;
+            charges.forEach(charge => {
+                chargesTotal += parseFloat(charge.amount) || 0;
+            });
+
+            // Subtotal
+            let subtotal = servicesTotal + partsTotal + chargesTotal;
+
+            // Tax
+            let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
+
+            // Total before discount
+            let total = subtotal + tax;
+
+            // Discount
+            let discountAmount = 0;
+            if (parseFloat(discount) > 0) {
+                if (discountType === "percentage") {
+                    discountAmount = (total * parseFloat(discount)) / 100;
+                } else {
+                    discountAmount = parseFloat(discount);
+                }
+            }
+
+            // Final total
+            let finalTotal = total - discountAmount;
+
+            return {
+                subtotal: subtotal,
+                tax: tax,
+                discount: discountAmount,
+                totalAmount: finalTotal
+            };
+        };
+
+        // Calculate billing
+        const billingTotals = calculateBillingTotals(
+            editFormData.services || [],
+            editFormData.partsUsed || [],
+            editFormData.additionalCharges || [],
+            editFormData.billing?.taxRate || 0,
+            editFormData.billing?.discount || 0,
+            editFormData.billing?.discountType || "fixed"
+        );
+
+        // ✅ Prepare data with calculated billing
+        const dataToSend = {
+            ...editFormData,
+            billing: {
+                ...editFormData.billing,
+                subtotal: billingTotals.subtotal,
+                tax: billingTotals.tax,
+                discount: billingTotals.discount,
+                totalAmount: billingTotals.totalAmount,
+                paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
+                balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0)
+            }
+        };
+
+        await axios.put(
+            `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
+            dataToSend
+        );
+        
+        toast.success('Service updated successfully!');
+        setShowEditModal(false);
+        fetchServices();
+    } catch (error) {
+        console.error('Edit error:', error.response?.data);
+        toast.error(error.response?.data?.message || 'Failed to update service');
+    }
+};
 
 
 
