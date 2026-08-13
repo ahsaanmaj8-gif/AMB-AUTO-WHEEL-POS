@@ -282,40 +282,38 @@ const handlePrint = (invoice) => {
           body { print-color-adjust: exact; }
           .no-print { display: none; }
         }
-        body { font-family: Arial, sans-serif; padding: 40px; background: #fff; }
-        .border-bottom { border-bottom: 2px solid #1e3a8a; }
+        body { font-family: Arial, sans-serif; background: #fff; margin: 0; }
+        .letterhead-header, .letterhead-footer { width: 100%; display: block; }
+        .border-bottom { border-bottom: 2px solid #dc2626; }
         .bg-light { background: #f8fafc; }
-        .bg-primary { background: #1e3a8a; }
-        .text-primary { color: #1e3a8a; }
-        .grand-total { font-size: 22px; color: #1e3a8a; border-top: 2px solid #1e3a8a; padding-top: 10px; margin-top: 10px; }
+        .bg-primary { background: #dc2626; }
+        .text-primary { color: #dc2626; }
+        .grand-total { font-size: 22px; color: #dc2626; border-top: 2px solid #dc2626; padding-top: 10px; margin-top: 10px; }
         .status-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; }
         .status-paid { background: #d4edda; color: #155724; }
         .status-unpaid { background: #f8d7da; color: #721c24; }
         .status-partial { background: #fff3cd; color: #856404; }
-        .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+        .footer-note { text-align: center; margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
       </style>
     </head>
     <body>
-      <div class="max-w-5xl mx-auto bg-white p-8">
-        
-        <!-- ============ HEADER ============ -->
-        <div class="flex items-center justify-between border-b-2 border-blue-900 pb-4 mb-4">
-          <div class="flex items-center gap-3">
-            <img src="/amblogowhite.jpg" class="w-16 h-16 object-contain" alt="Logo" />
-            <div>
-              <h1 class="text-2xl font-bold text-blue-900">Amb Auto Workshop</h1>
-              <p class="text-gray-500 text-sm">Professional Auto Services</p>
-            </div>
-          </div>
+
+      <!-- ============ LETTERHEAD HEADER ============ -->
+      <img src="/invoice_header.png" class="letterhead-header" alt="Amb Auto Wheels Letterhead Header" />
+
+      <div class="max-w-5xl mx-auto bg-white px-8 pt-6 pb-2">
+
+        <!-- ============ INVOICE META ============ -->
+        <div class="flex items-center justify-between border-b-2 border-red-600 pb-4 mb-4">
+          <h2 class="text-xl font-bold text-gray-800">Billing Invoice</h2>
           <div class="text-right">
             <p class="text-sm text-gray-500">Invoice #: <span class="font-bold text-gray-800">${invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`}</span></p>
             <p class="text-sm text-gray-500">Date: <span class="font-bold text-gray-800">${new Date(invoice.createdAt).toLocaleDateString()}</span></p>
           </div>
         </div>
 
-        <!-- ============ BILLING HEADER ============ -->
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-xl font-bold text-gray-800">Billing Invoice</h2>
+        <!-- ============ STATUS ============ -->
+        <div class="flex justify-end mb-4">
           <span class="status-badge status-${invoice.paymentStatus || 'unpaid'}">
             ${(invoice.paymentStatus || 'UNPAID').toUpperCase()}
           </span>
@@ -327,7 +325,7 @@ const handlePrint = (invoice) => {
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div><span class="font-medium">Name:</span> ${invoice.customerName}</div>
             <div><span class="font-medium">Contact Number:</span> ${invoice.customerPhone}</div>
-            <div><span class="font-medium">Email Address:</span> ${invoice.service?.customerAddress || 'N/A'}</div>
+            <div><span class="font-medium">Address:</span> ${invoice.service?.customerAddress || 'N/A'}</div>
             <div><span class="font-medium">Vehicle Registration:</span> ${invoice.vehicleNumber}</div>
             <div><span class="font-medium">Vehicle Make :</span> ${invoice.service?.vehicleMake || 'N/A'}</div>
             <div><span class="font-medium">Vehicle Model:</span> ${invoice.service?.vehicleModel || 'N/A'}</div>
@@ -339,7 +337,7 @@ const handlePrint = (invoice) => {
           <h3 class="font-bold text-gray-700 mb-2">Parts Details</h3>
           <table class="w-full border-collapse text-sm">
             <thead>
-              <tr class="bg-blue-900 text-white">
+              <tr class="bg-red-600 text-white">
                 <th class="p-2 text-left">S No.</th>
                 <th class="p-2 text-left">Part Name</th>
                 <th class="p-2 text-center">Quantity</th>
@@ -375,7 +373,7 @@ const handlePrint = (invoice) => {
           <h3 class="font-bold text-gray-700 mb-2">Labor Details</h3>
           <table class="w-full border-collapse text-sm">
             <thead>
-              <tr class="bg-blue-900 text-white">
+              <tr class="bg-red-600 text-white">
                 <th class="p-2 text-left">S No.</th>
                 <th class="p-2 text-left">Work Description</th>
                 <th class="p-2 text-center">Hrs</th>
@@ -411,7 +409,7 @@ const handlePrint = (invoice) => {
           <h3 class="font-bold text-gray-700 mb-2">Sublet</h3>
           <table class="w-full border-collapse text-sm">
             <thead>
-              <tr class="bg-blue-900 text-white">
+              <tr class="bg-red-600 text-white">
                 <th class="p-2 text-left">S No.</th>
                 <th class="p-2 text-left">Description of Work</th>
                 <th class="p-2 text-center">Qty</th>
@@ -440,14 +438,14 @@ const handlePrint = (invoice) => {
           </table>
         </div>
 
-        <!-- ============ CEO CATEGORY (Summary) ============ -->
-        <div class="bg-blue-50 p-4 rounded-lg border border-blue-200 mb-4">
-          <h3 class="font-bold text-gray-700 mb-2">CEO Category</h3>
+        <!-- ============ COST SUMMARY ============ -->
+        <div class="bg-red-50 p-4 rounded-lg border border-red-200 mb-4">
+          <h3 class="font-bold text-gray-700 mb-2">Cost Summary</h3>
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div><span class="font-medium">Total Parts:</span> PKR ${invoice.items?.filter(i => i.type === 'part').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
             <div><span class="font-medium">Total Labor:</span> PKR ${invoice.items?.filter(i => i.type === 'service').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
             <div><span class="font-medium">Sublet:</span> PKR ${invoice.items?.filter(i => i.type === 'charge').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
-            <div class="font-bold text-blue-600 text-lg"><span class="font-medium">Grand Total:</span> PKR ${invoice.totalAmount?.toLocaleString() || 0}</div>
+            <div class="font-bold text-red-600 text-lg"><span class="font-medium">Grand Total:</span> PKR ${invoice.totalAmount?.toLocaleString() || 0}</div>
           </div>
         </div>
 
@@ -464,8 +462,6 @@ const handlePrint = (invoice) => {
           </ol>
         </div>
 
-        
-
         <!-- ============ AUTHORIZED SIGNATURE ============ -->
         <div class="flex justify-between items-center mt-6 pt-4 border-t">
           <div>
@@ -473,25 +469,30 @@ const handlePrint = (invoice) => {
             <p class="text-xs text-gray-500">Authorized Signature</p>
           </div>
           <div class="text-right">
-            <p class="text-sm text-gray-500">Thank you for choosing Amb Auto Workshop!</p>
+            <p class="text-sm text-gray-500">Thank you for choosing Amb Auto Wheels!</p>
           </div>
         </div>
 
-        <!-- ============ FOOTER ============ -->
-        <div class="footer">
+        <!-- ============ GENERATED NOTE ============ -->
+        <div class="footer-note">
           <p>Generated on: ${new Date().toLocaleString()}</p>
         </div>
 
         <!-- ============ PRINT BUTTON ============ -->
-        <div class="text-center mt-6 no-print">
-          <button onclick="window.print()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700">
+        <div class="text-center mt-6 mb-6 no-print">
+          <button onclick="window.print()" class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
             🖨️ Print Invoice
           </button>
         </div>
 
       </div>
+
+      <!-- ============ LETTERHEAD FOOTER ============ -->
+      <img src="/invoice_footer.png" class="letterhead-footer" alt="Amb Auto Wheels Letterhead Footer" />
+
     </body>
     </html>
+
   `);
   
   printWindow.document.close();
