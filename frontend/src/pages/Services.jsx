@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { FaPlus, FaEye, FaPrint, FaSearch, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaPlus, FaEye, FaPrint, FaSearch, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
 import Modal from '../components/Common/Modal';
 
 const Services = () => {
@@ -33,6 +33,168 @@ const Services = () => {
         status: 'pending',
         assignedTo: '',
     });
+
+
+
+    // ============ EDIT SERVICE STATE ============
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [editingService, setEditingService] = useState(null);
+    const [editFormData, setEditFormData] = useState({
+        customerName: '',
+        customerPhone: '',
+        customerAddress: '',
+        vehicleNumber: '',
+        vehicleModel: '',
+        vehicleMake: '',
+        mileage: '',
+        services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
+        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }],
+        additionalCharges: [{ description: '', amount: '' }],
+        billing: {
+            taxRate: '0',
+            discount: '0',
+            discountType: 'fixed',
+            paidAmount: '0'
+        },
+        notes: '',
+        assignedTo: ''
+    });
+
+
+
+
+
+
+    // ============ OPEN EDIT MODAL ============
+    const openEditModal = (service) => {
+        setEditingService(service);
+        setEditFormData({
+            customerName: service.customerName || '',
+            customerPhone: service.customerPhone || '',
+            customerAddress: service.customerAddress || '',
+            vehicleNumber: service.vehicleNumber || '',
+            vehicleModel: service.vehicleModel || '',
+            vehicleMake: service.vehicleMake || '',
+            mileage: service.mileage || '',
+            services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
+            partsUsed: service.partsUsed || [{ product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }],
+            additionalCharges: service.additionalCharges || [{ description: '', amount: '' }],
+            billing: {
+                taxRate: service.billing?.taxRate?.toString() || '0',
+                discount: service.billing?.discount?.toString() || '0',
+                discountType: service.billing?.discountType || 'fixed',
+                paidAmount: service.billing?.paidAmount?.toString() || '0'
+            },
+            notes: service.notes || '',
+            assignedTo: service.assignedTo || ''
+        });
+        setShowEditModal(true);
+    };
+
+    // ============ HANDLE EDIT CHANGE ============
+    const handleEditChange = (e) => {
+        setEditFormData({
+            ...editFormData,
+            [e.target.name]: e.target.value
+        });
+    };
+
+    // ============ HANDLE EDIT SERVICE ============
+    const handleEditServiceChange = (index, field, value) => {
+        const updatedServices = [...editFormData.services];
+        updatedServices[index][field] = value;
+        setEditFormData({ ...editFormData, services: updatedServices });
+    };
+
+    // ============ HANDLE EDIT PART CHANGE ============
+    const handleEditPartChange = (index, field, value) => {
+        const updatedParts = [...editFormData.partsUsed];
+        updatedParts[index][field] = value;
+
+        if (field === 'product' && value) {
+            const product = products.find(p => p._id === value);
+            if (product) {
+                updatedParts[index].productName = product.name;
+                updatedParts[index].unitPrice = product.price;
+            }
+        }
+
+        setEditFormData({ ...editFormData, partsUsed: updatedParts });
+    };
+
+    // ============ HANDLE EDIT CHARGE CHANGE ============
+    const handleEditChargeChange = (index, field, value) => {
+        const updatedCharges = [...editFormData.additionalCharges];
+        updatedCharges[index][field] = value;
+        setEditFormData({ ...editFormData, additionalCharges: updatedCharges });
+    };
+
+    // ============ ADD EDIT SERVICE ROW ============
+    const addEditService = () => {
+        setEditFormData({
+            ...editFormData,
+            services: [...editFormData.services, { serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }]
+        });
+    };
+
+    // ============ REMOVE EDIT SERVICE ROW ============
+    const removeEditService = (index) => {
+        if (editFormData.services.length > 1) {
+            const updated = editFormData.services.filter((_, i) => i !== index);
+            setEditFormData({ ...editFormData, services: updated });
+        }
+    };
+
+    // ============ ADD EDIT PART ROW ============
+    const addEditPart = () => {
+        setEditFormData({
+            ...editFormData,
+            partsUsed: [...editFormData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }]
+        });
+    };
+
+    // ============ REMOVE EDIT PART ROW ============
+    const removeEditPart = (index) => {
+        if (editFormData.partsUsed.length > 0) {
+            const updated = editFormData.partsUsed.filter((_, i) => i !== index);
+            setEditFormData({ ...editFormData, partsUsed: updated });
+        }
+    };
+
+    // ============ ADD EDIT CHARGE ROW ============
+    const addEditCharge = () => {
+        setEditFormData({
+            ...editFormData,
+            additionalCharges: [...editFormData.additionalCharges, { description: '', amount: '' }]
+        });
+    };
+
+    // ============ REMOVE EDIT CHARGE ROW ============
+    const removeEditCharge = (index) => {
+        if (editFormData.additionalCharges.length > 0) {
+            const updated = editFormData.additionalCharges.filter((_, i) => i !== index);
+            setEditFormData({ ...editFormData, additionalCharges: updated });
+        }
+    };
+
+    // ============ SUBMIT EDIT ============
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            await axios.put(
+                `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
+                editFormData
+            );
+            toast.success('Service updated successfully!');
+            setShowEditModal(false);
+            fetchServices();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update service');
+        }
+    };
+
+
 
     useEffect(() => {
         fetchServices();
@@ -481,32 +643,35 @@ const Services = () => {
                                                     <FaEye />
                                                 </button>
 
-                                                {/* ============ BUTTON LOGIC ============ */}
-
-                                                {/* 1. Service NOT completed → Show Generate Bill */}
+                                                {/* ✅ Edit Button */}
                                                 {service.status !== 'completed' && (
+                                                    <button
+                                                        onClick={() => openEditModal(service)}
+                                                        className="text-yellow-600 hover:text-yellow-800 p-1.5 hover:bg-yellow-50 rounded-lg transition-colors"
+                                                        title="Edit Service"
+                                                    >
+                                                        <FaEdit />
+                                                    </button>
+                                                )}
+
+                                                {/* Generate Bill OR Pay Remaining OR Paid */}
+                                                {service.status !== 'completed' ? (
                                                     <button
                                                         onClick={() => handleGenerateBill(service._id)}
                                                         className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded-md transition-colors text-sm"
                                                     >
                                                         <FaCheck className="text-xs" />
-                                                        Finish & Pay
+                                                        Complete & Pay
                                                     </button>
-                                                )}
-
-                                                {/* 2. Service COMPLETED + Payment NOT paid → Show Pay Remaining */}
-                                                {service.status === 'completed' && service.billing?.paymentStatus !== 'paid' && (
+                                                ) : service.billing?.paymentStatus !== 'paid' ? (
                                                     <button
                                                         onClick={() => handlePayRemaining(service._id)}
                                                         className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1.5 rounded-md transition-colors text-sm"
                                                     >
                                                         <span>💰</span>
-                                                        Pay {service.billing?.balance > 0 ? `PKR ${service.billing.balance.toLocaleString()}` : 'Remaining'}
+                                                        Pay PKR {service.billing?.balance?.toLocaleString() || 0}
                                                     </button>
-                                                )}
-
-                                                {/* 3. Service COMPLETED + Payment PAID → Show Paid Badge */}
-                                                {service.status === 'completed' && service.billing?.paymentStatus === 'paid' && (
+                                                ) : (
                                                     <span className="text-xs px-3 py-1.5 rounded-md border font-medium text-green-600 bg-green-50 border-green-200">
                                                         ✅ Paid
                                                     </span>
@@ -561,7 +726,7 @@ const Services = () => {
                                     name="customerPhone"
                                     value={formData.customerPhone}
                                     onChange={handleChange}
-                                    onBlur={(e) => fetchCustomerInfo(e.target.value)} 
+                                    onBlur={(e) => fetchCustomerInfo(e.target.value)}
                                     className="input-field"
                                     placeholder="0300-1234567"
                                     required
@@ -1060,6 +1225,366 @@ const Services = () => {
                     </div>
                 )}
             </Modal>
+
+
+
+
+{/* ============ EDIT SERVICE MODAL ============ */}
+<Modal
+    isOpen={showEditModal}
+    onClose={() => {
+        setShowEditModal(false);
+        setEditingService(null);
+    }}
+    title="Edit Service"
+    size="lg"
+    onConfirm={handleEditSubmit}
+    confirmText="Update Service"
+>
+    <form onSubmit={handleEditSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+        {/* Customer Information */}
+        <div className="border-b border-gray-400 pb-4">
+            <h4 className="font-semibold text-gray-700 mb-3">Customer Information</h4>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="label">Customer Name</label>
+                    <input
+                        type="text"
+                        name="customerName"
+                        value={editFormData.customerName}
+                        onChange={handleEditChange}
+                        className="input-field"
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="label">Phone</label>
+                    <input
+                        type="text"
+                        name="customerPhone"
+                        value={editFormData.customerPhone}
+                        onChange={handleEditChange}
+                        className="input-field"
+                        required
+                    />
+                </div>
+                <div className="col-span-2">
+                    <label className="label">Address</label>
+                    <input
+                        type="text"
+                        name="customerAddress"
+                        value={editFormData.customerAddress}
+                        onChange={handleEditChange}
+                        className="input-field"
+                    />
+                </div>
+            </div>
+        </div>
+
+        {/* Vehicle Information */}
+        <div className="border-b border-gray-400 pb-4">
+            <h4 className="font-semibold text-gray-700 mb-3">Vehicle Information</h4>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="label">Vehicle Number</label>
+                    <input
+                        type="text"
+                        name="vehicleNumber"
+                        value={editFormData.vehicleNumber}
+                        onChange={handleEditChange}
+                        className="input-field"
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="label">Vehicle Model</label>
+                    <input
+                        type="text"
+                        name="vehicleModel"
+                        value={editFormData.vehicleModel}
+                        onChange={handleEditChange}
+                        className="input-field"
+                        required
+                    />
+                </div>
+                <div>
+                    <label className="label">Make</label>
+                    <input
+                        type="text"
+                        name="vehicleMake"
+                        value={editFormData.vehicleMake}
+                        onChange={handleEditChange}
+                        className="input-field"
+                    />
+                </div>
+                <div>
+                    <label className="label">Mileage</label>
+                    <input
+                        type="number"
+                        name="mileage"
+                        value={editFormData.mileage}
+                        onChange={handleEditChange}
+                        className="input-field"
+                    />
+                </div>
+            </div>
+        </div>
+
+        {/* Services */}
+        <div className="pb-1">
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-gray-700">Services</h4>
+                <button type="button" onClick={addEditService} className="text-sm text-blue-600 hover:underline">
+                    + Add Service
+                </button>
+            </div>
+            {editFormData.services.map((service, index) => (
+                <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                    <div className="col-span-2">
+                        <label className="label text-xs">Service Name</label>
+                        <input
+                            type="text"
+                            value={service.serviceName}
+                            onChange={(e) => handleEditServiceChange(index, 'serviceName', e.target.value)}
+                            className="input-field text-sm"
+                            placeholder="e.g., Oil Change"
+                        />
+                    </div>
+                    <div>
+                        <label className="label text-xs">Price (PKR)</label>
+                        <input
+                            type="number"
+                            value={service.servicePrice}
+                            onChange={(e) => handleEditServiceChange(index, 'servicePrice', e.target.value)}
+                            className="input-field text-sm"
+                            placeholder="500"
+                        />
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                            <label className="label text-xs">Hours</label>
+                            <input
+                                type="number"
+                                value={service.laborHours}
+                                onChange={(e) => handleEditServiceChange(index, 'laborHours', e.target.value)}
+                                className="input-field text-sm"
+                                placeholder="1"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => removeEditService(index)}
+                            className="text-red-500 hover:text-red-700 mb-1"
+                            disabled={editFormData.services.length === 1}
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        {/* Assigned To */}
+        <div className="border-b pb-4 border-gray-400">
+            <label className="label text-xs">Assigned To</label>
+            <input
+                type="text"
+                name="assignedTo"
+                value={editFormData.assignedTo}
+                onChange={handleEditChange}
+                className="input-field text-sm"
+                placeholder="Enter Staff Name"
+            />
+        </div>
+
+        {/* Parts Used */}
+        <div className="border-b border-gray-400 pb-4">
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-gray-700">Parts Used</h4>
+                <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
+                    + Add Part
+                </button>
+            </div>
+            {editFormData.partsUsed.map((part, index) => (
+                <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                    <div className="col-span-2">
+                        <label className="label text-xs">Product</label>
+                        <select
+                            value={part.product}
+                            onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
+                            className="input-field text-sm"
+                        >
+                            <option value="">Select Product</option>
+                            {products.map((p) => (
+                                <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div>
+                        <label className="label text-xs">Qty</label>
+                        <input
+                            type="number"
+                            value={part.quantity}
+                            onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
+                            className="input-field text-sm"
+                            placeholder="1"
+                        />
+                    </div>
+                    <div>
+                        <label className="label text-xs">Price</label>
+                        <input
+                            type="number"
+                            value={part.unitPrice}
+                            onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
+                            className="input-field text-sm"
+                            placeholder="500"
+                        />
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                            <label className="label text-xs">From Inv.</label>
+                            <select
+                                value={part.fromInventory}
+                                onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
+                                className="input-field text-sm"
+                            >
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => removeEditPart(index)}
+                            className="text-red-500 hover:text-red-700 mb-1"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        {/* Additional Charges */}
+        <div className="border-b border-gray-400 pb-4">
+            <div className="flex justify-between items-center mb-3">
+                <h4 className="font-semibold text-gray-700">Additional Charges</h4>
+                <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
+                    + Add Charge
+                </button>
+            </div>
+            {editFormData.additionalCharges.map((charge, index) => (
+                <div key={index} className="grid grid-cols-3 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                    <div className="col-span-2">
+                        <label className="label text-xs">Description</label>
+                        <input
+                            type="text"
+                            value={charge.description}
+                            onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
+                            className="input-field text-sm"
+                            placeholder="e.g., Waste Disposal"
+                        />
+                    </div>
+                    <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                            <label className="label text-xs">Amount</label>
+                            <input
+                                type="number"
+                                value={charge.amount}
+                                onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
+                                className="input-field text-sm"
+                                placeholder="100"
+                            />
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => removeEditCharge(index)}
+                            className="text-red-500 hover:text-red-700 mb-1"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        {/* Billing */}
+        <div className="border-b border-gray-400 pb-4">
+            <h4 className="font-semibold text-gray-700 mb-3">Billing</h4>
+            <div className="grid grid-cols-2 gap-4">
+                <div>
+                    <label className="label">Tax Rate (%)</label>
+                    <input
+                        type="number"
+                        name="billing.taxRate"
+                        value={editFormData.billing.taxRate}
+                        onChange={(e) => setEditFormData({
+                            ...editFormData,
+                            billing: { ...editFormData.billing, taxRate: e.target.value }
+                        })}
+                        className="input-field"
+                        placeholder="0"
+                    />
+                </div>
+                <div>
+                    <label className="label">Discount</label>
+                    <input
+                        type="number"
+                        name="billing.discount"
+                        value={editFormData.billing.discount}
+                        onChange={(e) => setEditFormData({
+                            ...editFormData,
+                            billing: { ...editFormData.billing, discount: e.target.value }
+                        })}
+                        className="input-field"
+                    />
+                </div>
+                <div>
+                    <label className="label">Discount Type</label>
+                    <select
+                        name="billing.discountType"
+                        value={editFormData.billing.discountType}
+                        onChange={(e) => setEditFormData({
+                            ...editFormData,
+                            billing: { ...editFormData.billing, discountType: e.target.value }
+                        })}
+                        className="input-field"
+                    >
+                        <option value="fixed">Fixed</option>
+                        <option value="percentage">Percentage</option>
+                    </select>
+                </div>
+                <div>
+                    <label className="label">Paid Amount</label>
+                    <input
+                        type="number"
+                        name="billing.paidAmount"
+                        value={editFormData.billing.paidAmount}
+                        onChange={(e) => setEditFormData({
+                            ...editFormData,
+                            billing: { ...editFormData.billing, paidAmount: e.target.value }
+                        })}
+                        className="input-field"
+                        placeholder="0"
+                    />
+                </div>
+            </div>
+        </div>
+
+        {/* Notes */}
+        <div>
+            <label className="label">Notes</label>
+            <textarea
+                name="notes"
+                value={editFormData.notes}
+                onChange={handleEditChange}
+                className="input-field"
+                rows="2"
+                placeholder="Additional notes..."
+            />
+        </div>
+    </form>
+</Modal>
+
         </div>
     );
 };
