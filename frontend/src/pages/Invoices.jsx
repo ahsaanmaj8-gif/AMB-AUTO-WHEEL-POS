@@ -264,14 +264,14 @@ const [endDate, setEndDate] = useState('');
   // ============ PRINT INVOICE ============
  // In handlePrint function
 const handlePrint = (invoice) => {
-  console.log("invoice: ", invoice)
+  // console.log("invoice: ", invoice)
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     toast.error('Please allow popups for this site');
     return;
   }
 
-  printWindow.document.write(`
+ printWindow.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
@@ -466,6 +466,7 @@ const handlePrint = (invoice) => {
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">Payment Details:</h3>
           <div class="space-y-1 text-gray-700">
+            <p><span class="font-medium">Payment Method Used:</span> ${invoice.paymentMethod || 'N/A'}</p>
             <p><span class="font-medium">Bank Name:</span> Faysal Islamic Bank</p>
             <p><span class="font-medium">Account Name:</span> AMB AUTO WHEELS</p>
             <p><span class="font-medium">Account Number:</span> 3622499000002922</p>

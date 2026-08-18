@@ -58,7 +58,7 @@ const Revenue = () => {
         services: []
     });
     const [recentTransactions, setRecentTransactions] = useState([]);
-const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
+// const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
     useEffect(() => {
         fetchRevenueData();
     }, [dateFilter, startDate, endDate]);
@@ -71,12 +71,12 @@ const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
             if (dateFilter === 'custom' && startDate && endDate) {
                 params.startDate = startDate;
                 params.endDate = endDate;
-            } else if (dateFilter !== 'all' && dateFilter !== 'custom') {
+            } else if (dateFilter !== 'all' ) {
                 params.period = dateFilter;
             }
-            if (paymentMethodFilter !== 'all') {  // ✅ ADD THIS
-            params.paymentMethod = paymentMethodFilter;
-        }
+        //     if (paymentMethodFilter !== 'all') {  // ✅ ADD THIS
+        //     params.paymentMethod = paymentMethodFilter;
+        // }
 
             const response = await axios.get(
                 'https://amb-auto-wheel-pos.onrender.com/api/revenue/summary',
@@ -257,7 +257,7 @@ const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
 
 
 
-<div className="w-48">
+{/* <div className="w-48">
     <select
         value={paymentMethodFilter}
         onChange={(e) => setPaymentMethodFilter(e.target.value)}
@@ -269,7 +269,7 @@ const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
         <option value="bank-transfer">🏦 Bank Transfer</option>
         <option value="other">📱 Other</option>
     </select>
-</div>
+</div> */}
 
             </div>
 

@@ -253,7 +253,8 @@ const handleEditSubmit = async (e) => {
                 discount: billingTotals.discount,
                 totalAmount: billingTotals.totalAmount,
                 paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
-                balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0)
+                balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
+                paymentMethod: editFormData.billing?.paymentMethod || 'cash'
             }
         };
 
@@ -307,12 +308,21 @@ const handleEditSubmit = async (e) => {
             return;
         }
 
+
+
+
+        const method = prompt('Payment Method:\n1 - Cash\n2 - Card\n3 - Bank Transfer\n4 - Other', '1');
+    let paymentMethod = 'cash';
+    if (method === '2') paymentMethod = 'card';
+    else if (method === '3') paymentMethod = 'bank-transfer';
+    else if (method === '4') paymentMethod = 'other';
+
         try {
             const response = await axios.post(
                 `https://amb-auto-wheel-pos.onrender.com/api/services/${id}/pay-remaining`,
                 {
                     paidAmount: payAmount,
-                    paymentMethod: "cash" // You can add a dropdown for this
+                    paymentMethod: paymentMethod 
                 }
             );
 
