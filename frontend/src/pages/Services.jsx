@@ -54,7 +54,8 @@ const Services = () => {
             taxRate: '0',
             discount: '0',
             discountType: 'fixed',
-            paidAmount: '0'
+            paidAmount: '0',
+            paymentMethod: 'cash' 
         },
         notes: '',
         assignedTo: ''
@@ -585,7 +586,8 @@ const handleEditSubmit = async (e) => {
                 taxRate: '0',
                 discount: '0',
                 discountType: 'fixed',
-                paidAmount: '0'
+                paidAmount: '0',
+                paymentMethod: 'cash'
             },
             notes: '',
             status: 'pending',
