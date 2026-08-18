@@ -83,7 +83,8 @@ const Services = () => {
                 taxRate: service.billing?.taxRate?.toString() || '0',
                 discount: service.billing?.discount?.toString() || '0',
                 discountType: service.billing?.discountType || 'fixed',
-                paidAmount: service.billing?.paidAmount?.toString() || '0'
+                paidAmount: service.billing?.paidAmount?.toString() || '0',
+                paymentMethod: service.billing?.paymentMethod || 'cash'
             },
             notes: service.notes || '',
             assignedTo: service.assignedTo || ''
