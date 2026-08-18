@@ -67,6 +67,7 @@ const Services = () => {
 
     // ============ OPEN EDIT MODAL ============
     const openEditModal = (service) => {
+        console.log("Editing service: ", service); // Log the service being edited
         setEditingService(service);
         setEditFormData({
             customerName: service.customerName || '',
