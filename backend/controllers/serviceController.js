@@ -385,7 +385,8 @@ const payRemaining = async (req, res) => {
         paymentStatus: service.billing.paymentStatus,
         paymentMethod: service.billing.paymentMethod,
         status: service.billing.balance <= 0 ? "paid" : "issued"
-      }
+      },
+       { returnDocument: 'after' }
     );
 
     // ============ CREATE NOTIFICATION ============
@@ -589,7 +590,7 @@ const updateService = async (req, res) => {
     const updatedService = await Service.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true, runValidators: true },
+      { returnDocument: 'after', runValidators: true },
     );
 
     // Update invoice
