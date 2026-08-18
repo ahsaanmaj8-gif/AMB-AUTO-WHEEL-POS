@@ -58,7 +58,7 @@ const Revenue = () => {
         services: []
     });
     const [recentTransactions, setRecentTransactions] = useState([]);
-
+const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
     useEffect(() => {
         fetchRevenueData();
     }, [dateFilter, startDate, endDate]);
@@ -74,6 +74,9 @@ const Revenue = () => {
             } else if (dateFilter !== 'all' && dateFilter !== 'custom') {
                 params.period = dateFilter;
             }
+            if (paymentMethodFilter !== 'all') {  // ✅ ADD THIS
+            params.paymentMethod = paymentMethodFilter;
+        }
 
             const response = await axios.get(
                 'https://amb-auto-wheel-pos.onrender.com/api/revenue/summary',
