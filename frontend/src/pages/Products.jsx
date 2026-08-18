@@ -443,7 +443,7 @@ const handleWastage = async (product) => {
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="label">Price (PKR)</label>
+              <label className="label">Selling Price (PKR)</label>
               <input
                 type="number"
                 name="price"
@@ -455,7 +455,7 @@ const handleWastage = async (product) => {
               />
             </div>
             <div>
-              <label className="label">Cost Price (PKR)</label>
+              <label className="label">Purchase Price (PKR)</label>
               <input
                 type="number"
                 name="costPrice"

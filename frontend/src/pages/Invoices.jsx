@@ -462,6 +462,17 @@ const handlePrint = (invoice) => {
           </ol>
         </div>
 
+        <!-- ============ PAYMENT DETAILS ============ -->
+        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
+          <h3 class="font-bold text-gray-700 mb-2">Payment Details:</h3>
+          <div class="space-y-1 text-gray-700">
+            <p><span class="font-medium">Bank Name:</span> Faysal Islamic Bank</p>
+            <p><span class="font-medium">Account Name:</span> AMB AUTO WHEELS</p>
+            <p><span class="font-medium">Account Number:</span> 3622499000002922</p>
+            <p><span class="font-medium">IBAN/Swift Code:</span> PK85FAYS3622499000002922</p>
+          </div>
+        </div>
+
         <!-- ============ AUTHORIZED SIGNATURE ============ -->
         <div class="flex justify-between items-center mt-6 pt-4 border-t">
           <div>

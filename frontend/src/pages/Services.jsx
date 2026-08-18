@@ -1428,7 +1428,7 @@ const handleEditSubmit = async (e) => {
                         />
                     </div>
                     <div>
-                        <label className="label text-xs">Price (PKR)</label>
+                        <label className="label text-xs"> Price (PKR)</label>
                         <input
                             type="number"
                             value={service.servicePrice}
