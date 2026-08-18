@@ -181,6 +181,7 @@ const Services = () => {
    // ============ SUBMIT EDIT ============
 const handleEditSubmit = async (e) => {
     e.preventDefault();
+    console.log("Edit form data: ",editFormData); // Log the form data to check its structure
     
     try {
         // ✅ Calculate billing totals before sending
