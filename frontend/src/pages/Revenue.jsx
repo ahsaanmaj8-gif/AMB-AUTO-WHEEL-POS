@@ -251,7 +251,27 @@ const Revenue = () => {
                 <div className="text-sm text-gray-500 self-center">
                     {getFilterLabel()} Revenue Summary
                 </div>
+
+
+
+<div className="w-48">
+    <select
+        value={paymentMethodFilter}
+        onChange={(e) => setPaymentMethodFilter(e.target.value)}
+        className="input-field"
+    >
+        <option value="all">💳 All Payments</option>
+        <option value="cash">💵 Cash</option>
+        <option value="card">💳 Card</option>
+        <option value="bank-transfer">🏦 Bank Transfer</option>
+        <option value="other">📱 Other</option>
+    </select>
+</div>
+
             </div>
+
+
+
 
             {/* ============ STATS CARDS ============ */}
             {loading ? (

@@ -1143,6 +1143,36 @@ const handleEditSubmit = async (e) => {
                         </div>
                     </div>
 
+
+
+
+{/* Payment Method */}
+<div className="border-b border-gray-400 pb-4">
+    <div className="grid grid-cols-2 gap-4">
+        <div>
+            <label className="label">Payment Method</label>
+            <select
+                name="billing.paymentMethod"
+                value={formData.billing.paymentMethod}
+                onChange={(e) => setFormData({
+                    ...formData,
+                    billing: { ...formData.billing, paymentMethod: e.target.value }
+                })}
+                className="input-field"
+            >
+                <option value="cash">💵 Cash</option>
+                <option value="card">💳 Card</option>
+                <option value="bank-transfer">🏦 Bank Transfer</option>
+                <option value="other">📱 Other</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+
+
+
+
                     {/* Notes */}
                     <div>
                         <label className="label">Notes</label>
@@ -1646,6 +1676,37 @@ const handleEditSubmit = async (e) => {
                 </div>
             </div>
         </div>
+
+
+
+
+
+{/* Payment Method */}
+<div className="border-b border-gray-400 pb-4">
+    <div className="grid grid-cols-2 gap-4">
+        <div>
+            <label className="label">Payment Method</label>
+            <select
+                name="billing.paymentMethod"
+                value={formData.billing.paymentMethod}
+                onChange={(e) => setFormData({
+                    ...formData,
+                    billing: { ...formData.billing, paymentMethod: e.target.value }
+                })}
+                className="input-field"
+            >
+                <option value="cash">💵 Cash</option>
+                <option value="card">💳 Card</option>
+                <option value="bank-transfer">🏦 Bank Transfer</option>
+                <option value="other">📱 Other</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+
+
+
 
         {/* Notes */}
         <div>

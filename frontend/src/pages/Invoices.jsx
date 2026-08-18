@@ -743,6 +743,7 @@ const filteredInvoices = invoices.filter(inv => {
                   <th>Balance</th>
                   <th>Status</th>
                   <th>Date</th>
+                  <th>Payment Method</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -787,6 +788,20 @@ const filteredInvoices = invoices.filter(inv => {
 <td className="text-sm text-gray-500">
     {new Date(invoice.createdAt).toLocaleDateString()}
 </td>
+
+
+
+
+<td>
+    <span className="text-sm">
+        {invoice.paymentMethod === 'cash' && '💵 Cash'}
+        {invoice.paymentMethod === 'card' && '💳 Card'}
+        {invoice.paymentMethod === 'bank-transfer' && '🏦 Bank'}
+        {invoice.paymentMethod === 'other' && '📱 Other'}
+        {!invoice.paymentMethod && 'N/A'}
+    </span>
+</td>
+
 
                     <td>
                       <div className="flex gap-2">

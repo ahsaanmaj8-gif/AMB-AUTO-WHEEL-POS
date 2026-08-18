@@ -368,6 +368,24 @@ const monthlyServicess = allServices.filter((s) => {
             }}
           />
         </div>
+
+
+
+
+{/* Payment Method Distribution */}
+<div className="card">
+    <h3 className="text-lg font-semibold text-gray-800 mb-4">Payment Methods</h3>
+    <Doughnut 
+        data={{
+            labels: ['Cash', 'Card', 'Bank Transfer', 'Other'],
+            datasets: [{
+                data: [45, 30, 15, 10],
+                backgroundColor: ['#22c55e', '#3b82f6', '#eab308', '#8b5cf6']
+            }]
+        }}
+    />
+</div>
+
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 mb-8">
