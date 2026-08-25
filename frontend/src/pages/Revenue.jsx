@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-import { 
-    FaDollarSign, 
-    FaWrench, 
-    FaBox, 
+import {
+    FaDollarSign,
+    FaWrench,
+    FaBox,
     FaCalendar,
     FaFilter,
     FaDownload,
@@ -45,7 +45,9 @@ const Revenue = () => {
     const [endDate, setEndDate] = useState('');
     const [revenueData, setRevenueData] = useState({
         totalRevenue: 0,
+        totalProfit: 0,
         productRevenue: 0,
+        productProfit: 0,
         laborRevenue: 0,
         serviceRevenue: 0,
         totalServices: 0,
@@ -58,7 +60,7 @@ const Revenue = () => {
         services: []
     });
     const [recentTransactions, setRecentTransactions] = useState([]);
-// const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
+    // const [paymentMethodFilter, setPaymentMethodFilter] = useState('all');
     useEffect(() => {
         fetchRevenueData();
     }, [dateFilter, startDate, endDate]);
@@ -71,29 +73,35 @@ const Revenue = () => {
             if (dateFilter === 'custom' && startDate && endDate) {
                 params.startDate = startDate;
                 params.endDate = endDate;
-            } else if (dateFilter !== 'all' ) {
+            } else if (dateFilter !== 'all') {
                 params.period = dateFilter;
             }
-        //     if (paymentMethodFilter !== 'all') {  // ✅ ADD THIS
-        //     params.paymentMethod = paymentMethodFilter;
-        // }
+            //     if (paymentMethodFilter !== 'all') {  // ✅ ADD THIS
+            //     params.paymentMethod = paymentMethodFilter;
+            // }
 
             const response = await axios.get(
                 'https://amb-auto-wheel-pos.onrender.com/api/revenue/summary',
                 { params }
             );
-            
+
+
+            // console.log(response.data.productProfit)
+            // console.log(response.data)
+
             setRevenueData(response.data);
             setChartData(response.data.chartData || { labels: [], revenue: [], services: [] });
             setRecentTransactions(response.data.recentTransactions || []);
         } catch (error) {
             console.error('Error fetching revenue:', error);
             toast.error('Failed to fetch revenue data');
-            
+
             // Sample data for display
             setRevenueData({
                 totalRevenue: 125000,
+                totalProfit: 45000,        
                 productRevenue: 45000,
+                productProfit: 15000,      
                 laborRevenue: 35000,
                 serviceRevenue: 45000,
                 totalServices: 28,
@@ -112,7 +120,7 @@ const Revenue = () => {
 
     // ============ GET FILTER LABEL ============
     const getFilterLabel = () => {
-        switch(dateFilter) {
+        switch (dateFilter) {
             case 'today': return "Today's";
             case 'week': return "This Week's";
             case 'month': return "This Month's";
@@ -143,7 +151,7 @@ const Revenue = () => {
         const ws = XLSX.utils.aoa_to_sheet(exportData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Revenue');
-        
+
         const excelBuffer = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
         const data = new Blob([excelBuffer], { type: 'application/octet-stream' });
         const filename = `Revenue_${new Date().toISOString().split('T')[0]}.xlsx`;
@@ -257,7 +265,7 @@ const Revenue = () => {
 
 
 
-{/* <div className="w-48">
+                {/* <div className="w-48">
     <select
         value={paymentMethodFilter}
         onChange={(e) => setPaymentMethodFilter(e.target.value)}
@@ -296,7 +304,19 @@ const Revenue = () => {
                                     <FaDollarSign className="text-xl text-white" />
                                 </div>
                             </div>
+                            {/* ✅ Add Total Profit */}
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                                <p className="text-sm text-green-600 font-medium">
+                                    Total Profit: PKR {revenueData.totalProfit?.toLocaleString() || 0}
+                                </p>
+                                {/* {revenueData.totalRevenue > 0 && (
+                                    <p className="text-xs text-gray-500">
+                                        Margin: {((revenueData.totalProfit / revenueData.totalRevenue) * 100).toFixed(1)}%
+                                    </p>
+                                )} */}
+                            </div>
                         </div>
+
 
                         <div className="stat-card">
                             <div className="flex items-start justify-between">
@@ -344,33 +364,47 @@ const Revenue = () => {
                             <p className="text-sm text-gray-500">Product Revenue</p>
                             <p className="text-2xl font-bold text-gray-800">PKR {revenueData.productRevenue?.toLocaleString() || 0}</p>
                             <p className="text-xs text-gray-400">From parts sales</p>
+
+                            {/* ✅ Add Profit Line */}
+                            <div className="mt-2 pt-2 border-t border-gray-200">
+                                <p className="text-sm text-green-600 font-medium">
+                                    Profit: PKR {revenueData.productProfit?.toLocaleString() || 0}
+                                </p>
+                                {/* {revenueData.productRevenue > 0 && (
+                                    <p className="text-xs text-gray-500">
+                                        Margin: {((revenueData.productProfit / revenueData.productRevenue) * 100).toFixed(1)}%
+                                    </p>
+                                )} */}
+                            </div>
+
                             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                <div 
-                                    className="bg-blue-500 h-1.5 rounded-full" 
+                                <div
+                                    className="bg-blue-500 h-1.5 rounded-full"
                                     style={{ width: `${revenueData.totalRevenue ? (revenueData.productRevenue / revenueData.totalRevenue) * 100 : 0}%` }}
                                 ></div>
                             </div>
                         </div>
+
 
                         <div className="card border-l-4 border-l-yellow-500">
                             <p className="text-sm text-gray-500">Labor Revenue</p>
                             <p className="text-2xl font-bold text-gray-800">PKR {revenueData.laborRevenue?.toLocaleString() || 0}</p>
                             <p className="text-xs text-gray-400">From service labor</p>
                             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                <div 
-                                    className="bg-yellow-500 h-1.5 rounded-full" 
+                                <div
+                                    className="bg-yellow-500 h-1.5 rounded-full"
                                     style={{ width: `${revenueData.totalRevenue ? (revenueData.laborRevenue / revenueData.totalRevenue) * 100 : 0}%` }}
                                 ></div>
                             </div>
                         </div>
 
                         <div className="card border-l-4 border-l-green-500">
-                            <p className="text-sm text-gray-500">Service Revenue</p>
+                            <p className="text-sm text-gray-500">Total Overall Revenue</p>
                             <p className="text-2xl font-bold text-gray-800">PKR {revenueData.serviceRevenue?.toLocaleString() || 0}</p>
                             <p className="text-xs text-gray-400">From service charges</p>
                             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
-                                <div 
-                                    className="bg-green-500 h-1.5 rounded-full" 
+                                <div
+                                    className="bg-green-500 h-1.5 rounded-full"
                                     style={{ width: `${revenueData.totalRevenue ? (revenueData.serviceRevenue / revenueData.totalRevenue) * 100 : 0}%` }}
                                 ></div>
                             </div>
@@ -382,8 +416,8 @@ const Revenue = () => {
                         <div className="card lg:col-span-1">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenue Distribution</h3>
                             {revenueData.totalRevenue > 0 ? (
-                                <Doughnut 
-                                    data={revenueDistribution} 
+                                <Doughnut
+                                    data={revenueDistribution}
                                     options={{
                                         responsive: true,
                                         plugins: {
@@ -398,8 +432,8 @@ const Revenue = () => {
                         <div className="card lg:col-span-2">
                             <h3 className="text-lg font-semibold text-gray-800 mb-4">Revenue Trend</h3>
                             {chartData.labels?.length > 0 ? (
-                                <Line 
-                                    data={revenueChartData} 
+                                <Line
+                                    data={revenueChartData}
                                     options={{
                                         responsive: true,
                                         plugins: {

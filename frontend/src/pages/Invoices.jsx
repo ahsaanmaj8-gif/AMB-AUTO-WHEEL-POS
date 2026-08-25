@@ -42,7 +42,7 @@ const [endDate, setEndDate] = useState('');
         new Date(a.createdAt) - new Date(b.createdAt)
       );
 
-      console.log("Fetched invoices: ", sortedInvoices)
+      // console.log("Fetched invoices: ", sortedInvoices)
       setInvoices(sortedInvoices || []);
     } catch (error) {
       toast.error('Failed to fetch invoices');
@@ -449,6 +449,16 @@ const handlePrint = (invoice) => {
           </div>
         </div>
 
+
+
+        <!-- ============ ✅ NOTES SECTION - ADD HERE ============ -->
+${(invoice.notes || invoice.service?.notes) ? `
+  <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200 mb-4">
+    <h3 class="font-bold text-gray-700 mb-1">📝 Notes:</h3>
+    <p class="text-sm text-gray-700">${invoice.notes || invoice.service?.notes || ''}</p>
+  </div>
+` : ''}
+
         <!-- ============ TERMS & CONDITIONS ============ -->
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">Terms and Conditions:</h3>
@@ -466,7 +476,6 @@ const handlePrint = (invoice) => {
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">Payment Details:</h3>
           <div class="space-y-1 text-gray-700">
-            <p><span class="font-medium">Payment Method Used:</span> ${invoice.paymentMethod || 'N/A'}</p>
             <p><span class="font-medium">Bank Name:</span> Faysal Islamic Bank</p>
             <p><span class="font-medium">Account Name:</span> AMB AUTO WHEELS</p>
             <p><span class="font-medium">Account Number:</span> 3622499000002922</p>
@@ -543,6 +552,37 @@ const getDateFilter = (invoiceDate) => {
             return true;
     }
 };
+
+
+
+
+// ============ UPDATE PAYMENT METHOD ============
+// ============ UPDATE PAYMENT METHOD ============
+const updatePaymentMethod = async (invoiceId, paymentMethod) => {
+    try {
+        const response = await axios.put(
+            `https://amb-auto-wheel-pos.onrender.com/api/invoices/${invoiceId}/payment-method`,
+            { paymentMethod }
+        );
+        
+        if (response.data.success) {
+            toast.success(`Payment method updated to ${paymentMethod}`);
+            
+            // ✅ Update local state immediately
+            setInvoices(prevInvoices => 
+                prevInvoices.map(inv => 
+                    inv._id === invoiceId 
+                        ? { ...inv, paymentMethod: paymentMethod } 
+                        : inv
+                )
+            );
+        }
+    } catch (error) {
+        console.error('Update error:', error.response?.data);
+        toast.error(error.response?.data?.message || 'Failed to update payment method');
+    }
+};
+
 
 // Update filteredInvoices
 const filteredInvoices = invoices.filter(inv => {
@@ -794,13 +834,16 @@ const filteredInvoices = invoices.filter(inv => {
 
 
 <td>
-    <span className="text-sm">
-        {invoice.paymentMethod === 'cash' && '💵 Cash'}
-        {invoice.paymentMethod === 'card' && '💳 Card'}
-        {invoice.paymentMethod === 'bank-transfer' && '🏦 Bank'}
-        {invoice.paymentMethod === 'other' && '📱 Other'}
-        {!invoice.paymentMethod && 'N/A'}
-    </span>
+    <select
+        value={invoice.paymentMethod || 'cash'}
+        onChange={(e) => updatePaymentMethod(invoice._id, e.target.value)}
+        className="text-xs px-2 py-1 rounded border border-gray-300 focus:outline-none focus:ring-1 focus:ring-blue-500"
+    >
+        <option value="cash">💵 Cash</option>
+        <option value="card">💳 Card</option>
+        <option value="bank-transfer">🏦 Bank Transfer</option>
+        <option value="other">📱 Other</option>
+    </select>
 </td>
 
 

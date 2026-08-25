@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { requireSignIn, isAdmin, isStaff } = require("../middleware/authMiddleware");
 const Invoice = require("../models/invoiceModel");
+const { updatePaymentMethod } = require("../controllers/invoiceController");
 
 // ============ CONTROLLER FUNCTIONS ============
 
@@ -119,5 +120,8 @@ router.get("/:id", getInvoiceById);
 router.delete("/:id", deleteInvoice);
 router.delete("/month/:year/:month", deleteInvoicesByMonth);
 router.delete("/all", deleteAllInvoices);
+
+// Update payment method
+router.put("/:id/payment-method", updatePaymentMethod);
 
 module.exports = router;

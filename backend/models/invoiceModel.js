@@ -51,7 +51,11 @@ const invoiceSchema = mongoose.Schema({
         totalPrice: {
             type: Number,
             required: true
-        }
+        },
+        purchasePrice: {  
+        type: Number,
+        default: 0
+    }
     }],
     
     // ---------- BILLING SUMMARY ----------
@@ -93,12 +97,7 @@ const invoiceSchema = mongoose.Schema({
         enum: ["paid", "partial", "unpaid"],
         default: "unpaid"
     },
-    paymentMethod: {
-        type: String,
-        enum: ["cash", "card", "bank-transfer", "other"],
-        default: "cash"
-    },
-    
+  
     // ---------- INVOICE STATUS ----------
     status: {
         type: String,
@@ -127,7 +126,12 @@ const invoiceSchema = mongoose.Schema({
     dueDate: {
         type: Date
     },
-    
+    paymentMethod: {
+    type: String,
+    enum: ["cash", "card", "bank-transfer", "other"],
+    default: "cash"
+},
+
     // ---------- NOTES ----------
     notes: {
         type: String,

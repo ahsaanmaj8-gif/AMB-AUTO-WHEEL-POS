@@ -447,7 +447,7 @@ const handleWastage = async (product) => {
               <input
                 type="number"
                 name="price"
-                placeholder='e.g. 2500'
+                placeholder='e.g. 3500'
                 value={formData.price}
                 onChange={handleChange}
                 className="input-field"

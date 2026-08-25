@@ -3,6 +3,7 @@ import axios from 'axios';
 import toast from 'react-hot-toast';
 import { FaPlus, FaEye, FaPrint, FaSearch, FaCheck, FaTimes, FaEdit } from 'react-icons/fa';
 import Modal from '../components/Common/Modal';
+import { FaTrash } from 'react-icons/fa';
 
 const Services = () => {
     const [services, setServices] = useState([]);
@@ -21,8 +22,9 @@ const Services = () => {
         vehicleMake: '',
         mileage: '',
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }],
-        additionalCharges: [{ description: '', amount: '' }],
+        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', fromInventory: true }],
+        additionalCharges: [{ description: '', amount: ''  , purchasePrice: '',  
+    sellingPrice: ''  }],
         billing: {
             taxRate: '0',
             discount: '0',
@@ -48,14 +50,14 @@ const Services = () => {
         vehicleMake: '',
         mileage: '',
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }],
+        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', fromInventory: true }],
         additionalCharges: [{ description: '', amount: '' }],
         billing: {
             taxRate: '0',
             discount: '0',
             discountType: 'fixed',
             paidAmount: '0',
-            paymentMethod: 'cash' 
+            // paymentMethod: 'cash' 
         },
         notes: '',
         assignedTo: ''
@@ -68,7 +70,7 @@ const Services = () => {
 
     // ============ OPEN EDIT MODAL ============
     const openEditModal = (service) => {
-        console.log("Editing service: ", service); // Log the service being edited
+        // console.log("Editing service: ", service); // Log the service being edited
         setEditingService(service);
         setEditFormData({
             customerName: service.customerName || '',
@@ -86,7 +88,7 @@ const Services = () => {
                 discount: service.billing?.discount?.toString() || '0',
                 discountType: service.billing?.discountType || 'fixed',
                 paidAmount: service.billing?.paidAmount?.toString() || '0',
-                paymentMethod: service.billing?.paymentMethod || 'cash'
+                // paymentMethod: service.billing?.paymentMethod || 'cash'
             },
             notes: service.notes || '',
             assignedTo: service.assignedTo || ''
@@ -181,100 +183,100 @@ const Services = () => {
     };
 
     // ============ SUBMIT EDIT ============
-   // ============ SUBMIT EDIT ============
-const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    console.log("Edit form data: ",editFormData); // Log the form data to check its structure
-    
-    try {
-        // ✅ Calculate billing totals before sending
-        const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
-            // Calculate services total
-            let servicesTotal = 0;
-            services.forEach(service => {
-                servicesTotal += parseFloat(service.servicePrice) || 0;
-            });
+    // ============ SUBMIT EDIT ============
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        // console.log("Edit form data: ", editFormData); // Log the form data to check its structure
 
-            // Calculate parts total
-            let partsTotal = 0;
-            parts.forEach(part => {
-                partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
-            });
+        try {
+            // ✅ Calculate billing totals before sending
+            const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
+                // Calculate services total
+                let servicesTotal = 0;
+                services.forEach(service => {
+                    servicesTotal += parseFloat(service.servicePrice) || 0;
+                });
 
-            // Calculate additional charges
-            let chargesTotal = 0;
-            charges.forEach(charge => {
-                chargesTotal += parseFloat(charge.amount) || 0;
-            });
+                // Calculate parts total
+                let partsTotal = 0;
+                parts.forEach(part => {
+                    partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
+                });
 
-            // Subtotal
-            let subtotal = servicesTotal + partsTotal + chargesTotal;
+                // Calculate additional charges
+                let chargesTotal = 0;
+                charges.forEach(charge => {
+                    chargesTotal += parseFloat(charge.amount) || 0;
+                });
 
-            // Tax
-            let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
+                // Subtotal
+                let subtotal = servicesTotal + partsTotal + chargesTotal;
 
-            // Total before discount
-            let total = subtotal + tax;
+                // Tax
+                let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
 
-            // Discount
-            let discountAmount = 0;
-            if (parseFloat(discount) > 0) {
-                if (discountType === "percentage") {
-                    discountAmount = (total * parseFloat(discount)) / 100;
-                } else {
-                    discountAmount = parseFloat(discount);
+                // Total before discount
+                let total = subtotal + tax;
+
+                // Discount
+                let discountAmount = 0;
+                if (parseFloat(discount) > 0) {
+                    if (discountType === "percentage") {
+                        discountAmount = (total * parseFloat(discount)) / 100;
+                    } else {
+                        discountAmount = parseFloat(discount);
+                    }
                 }
-            }
 
-            // Final total
-            let finalTotal = total - discountAmount;
+                // Final total
+                let finalTotal = total - discountAmount;
 
-            return {
-                subtotal: subtotal,
-                tax: tax,
-                discount: discountAmount,
-                totalAmount: finalTotal
+                return {
+                    subtotal: subtotal,
+                    tax: tax,
+                    discount: discountAmount,
+                    totalAmount: finalTotal
+                };
             };
-        };
 
-        // Calculate billing
-        const billingTotals = calculateBillingTotals(
-            editFormData.services || [],
-            editFormData.partsUsed || [],
-            editFormData.additionalCharges || [],
-            editFormData.billing?.taxRate || 0,
-            editFormData.billing?.discount || 0,
-            editFormData.billing?.discountType || "fixed"
-        );
+            // Calculate billing
+            const billingTotals = calculateBillingTotals(
+                editFormData.services || [],
+                editFormData.partsUsed || [],
+                editFormData.additionalCharges || [],
+                editFormData.billing?.taxRate || 0,
+                editFormData.billing?.discount || 0,
+                editFormData.billing?.discountType || "fixed"
+            );
 
-        // ✅ Prepare data with calculated billing
-        const dataToSend = {
-            ...editFormData,
-            billing: {
-                ...editFormData.billing,
-                subtotal: billingTotals.subtotal,
-                tax: billingTotals.tax,
-                discount: billingTotals.discount,
-                totalAmount: billingTotals.totalAmount,
-                paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
-                balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
-                paymentMethod: editFormData.billing?.paymentMethod || 'cash'
-            }
-        };
+            // ✅ Prepare data with calculated billing
+            const dataToSend = {
+                ...editFormData,
+                billing: {
+                    ...editFormData.billing,
+                    subtotal: billingTotals.subtotal,
+                    tax: billingTotals.tax,
+                    discount: billingTotals.discount,
+                    totalAmount: billingTotals.totalAmount,
+                    paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
+                    balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
+                    // paymentMethod: editFormData.billing?.paymentMethod || 'cash'
+                }
+            };
 
-        await axios.put(
-            `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
-            dataToSend
-        );
-        
-        toast.success('Service updated successfully!');
-        setShowEditModal(false);
-        fetchServices();
-    } catch (error) {
-        console.error('Edit error:', error.response?.data);
-        toast.error(error.response?.data?.message || 'Failed to update service');
-    }
-};
+            await axios.put(
+                `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
+                dataToSend
+            );
+
+            toast.success('Service updated successfully!');
+            setShowEditModal(false);
+            fetchServices();
+        } catch (error) {
+            console.error('Edit error:', error.response?.data);
+            toast.error(error.response?.data?.message || 'Failed to update service');
+        }
+    };
 
 
 
@@ -291,7 +293,7 @@ const handleEditSubmit = async (e) => {
         if (!service) return;
 
         const balance = service.billing?.balance || 0;
-
+        const currentPaymentMethod = service.billing?.paymentMethod || 'cash';
         // Show prompt for payment amount
         const amount = prompt(
             `Remaining balance: PKR ${balance.toLocaleString()}\n\nEnter amount to pay:`,
@@ -315,18 +317,18 @@ const handleEditSubmit = async (e) => {
 
 
 
-        const method = prompt('Payment Method:\n1 - Cash\n2 - Card\n3 - Bank Transfer\n4 - Other', '1');
-    let paymentMethod = 'cash';
-    if (method === '2') paymentMethod = 'card';
-    else if (method === '3') paymentMethod = 'bank-transfer';
-    else if (method === '4') paymentMethod = 'other';
+        //     const method = prompt('Payment Method:\n1 - Cash\n2 - Card\n3 - Bank Transfer\n4 - Other', '1');
+        // let paymentMethod = 'cash';
+        // if (method === '2') paymentMethod = 'card';
+        // else if (method === '3') paymentMethod = 'bank-transfer';
+        // else if (method === '4') paymentMethod = 'other';
 
         try {
             const response = await axios.post(
                 `https://amb-auto-wheel-pos.onrender.com/api/services/${id}/pay-remaining`,
                 {
                     paidAmount: payAmount,
-                    paymentMethod: paymentMethod 
+                    paymentMethod: currentPaymentMethod
                 }
             );
 
@@ -388,31 +390,45 @@ const handleEditSubmit = async (e) => {
     };
 
     const handlePartChange = (index, field, value) => {
-        const updatedParts = [...formData.partsUsed];
-        updatedParts[index][field] = value;
+    const updatedParts = [...formData.partsUsed];
+    updatedParts[index][field] = value;
 
-        // If product is selected from dropdown, auto-fill productName and unitPrice
-        if (field === 'product' && value) {
-            const product = products.find(p => p._id === value);
+    // If product is selected from dropdown, auto-fill productName and unitPrice
+    if (field === 'product' && value) {
+        const product = products.find(p => p._id === value);
+        if (product) {
+            updatedParts[index].productName = product.name;
+            updatedParts[index].unitPrice = product.price;
+            updatedParts[index].purchasePrice = product.costPrice || product.price;
+        }
+    }
+
+    // ✅ If fromInventory is changed to false
+    if (field === 'fromInventory' && value === false) {
+        updatedParts[index].product = '';
+        
+    }
+
+    // ✅ If fromInventory is changed to true
+    if (field === 'fromInventory' && value === true) {
+        // If product is selected, auto-fill
+        if (updatedParts[index].product) {
+            const product = products.find(p => p._id === updatedParts[index].product);
             if (product) {
                 updatedParts[index].productName = product.name;
                 updatedParts[index].unitPrice = product.price;
+                updatedParts[index].purchasePrice = product.costPrice || product.price;
             }
         }
+    }
 
-        // If fromInventory is changed to false, clear the product selection
-        if (field === 'fromInventory' && value === false) {
-            updatedParts[index].product = '';
-            // Keep the productName as is (user can type manually)
-        }
-
-        setFormData({ ...formData, partsUsed: updatedParts });
-    };
+    setFormData({ ...formData, partsUsed: updatedParts });
+};
 
     const addPart = () => {
         setFormData({
             ...formData,
-            partsUsed: [...formData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }]
+            partsUsed: [...formData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', fromInventory: true }]
         });
     };
 
@@ -432,7 +448,8 @@ const handleEditSubmit = async (e) => {
     const addCharge = () => {
         setFormData({
             ...formData,
-            additionalCharges: [...formData.additionalCharges, { description: '', amount: '' }]
+            additionalCharges: [...formData.additionalCharges, { description: '', amount: '' ,  purchasePrice: '',  
+            sellingPrice: '' }]
         });
     };
 
@@ -453,19 +470,31 @@ const handleEditSubmit = async (e) => {
         }
 
         // ============ ✅ FIX: Process parts ============
-        const processedParts = formData.partsUsed.map(part => {
-            const quantity = parseFloat(part.quantity) || 0;
-            const unitPrice = parseFloat(part.unitPrice) || 0;
+    const processedParts = formData.partsUsed.map(part => {
+    const quantity = parseFloat(part.quantity) || 0;
+    const unitPrice = parseFloat(part.unitPrice) || 0;
+    const purchasePrice = parseFloat(part.purchasePrice) || 0;
+    
 
-            return {
-                product: part.fromInventory && part.product ? part.product : null, // ✅ null instead of ""
-                productName: part.productName || 'Custom Item',
-                quantity: quantity,
-                unitPrice: unitPrice,
-                totalPrice: quantity * unitPrice,
-                fromInventory: part.fromInventory
-            };
-        });
+    // console.log('Part Data:', {
+    //         productName: part.productName,
+    //         quantity: quantity,
+    //         unitPrice: unitPrice,
+    //         purchasePrice: purchasePrice  // ✅ Check this value
+    //     });
+    return {
+        product: part.fromInventory && part.product ? part.product : null,
+        productName: part.productName || 'Custom Item',
+        quantity: quantity,           // ✅ SEND QUANTITY
+        unitPrice: unitPrice,         // ✅ SEND SELLING PRICE
+        purchasePrice: purchasePrice, // ✅ SEND PURCHASE PRICE
+        totalPrice: quantity * unitPrice,
+        fromInventory: part.fromInventory
+    };
+});
+
+// ✅ Log to verify
+// console.log('Processed Parts:', processedParts);
 
         const dataToSend = {
             ...formData,
@@ -530,18 +559,24 @@ const handleEditSubmit = async (e) => {
             // Show prompt to enter paid amount
             const paidAmountInput = prompt("Enter paid amount (PKR):", "0");
 
+            const service = services.find(s => s._id === id);
+            if (!service) {
+                toast.error('Service not found');
+                return;
+            }
+
             if (paidAmountInput === null) {
                 return; // User cancelled
             }
 
             const paidAmount = parseFloat(paidAmountInput) || 0;
-
+            const currentPaymentMethod = service.billing?.paymentMethod || 'cash';
             // console.log("paidAmount: ", paidAmount);
             const response = await axios.post(
                 `https://amb-auto-wheel-pos.onrender.com/api/services/${id}/generate-bill`,
                 {
                     paidAmount: paidAmount,
-                    paymentMethod: "cash" // Can add dropdown later
+                    paymentMethod: currentPaymentMethod // Can add dropdown later
                 }
             );
 
@@ -587,7 +622,7 @@ const handleEditSubmit = async (e) => {
                 discount: '0',
                 discountType: 'fixed',
                 paidAmount: '0',
-                paymentMethod: 'cash'
+                // paymentMethod: 'cash'
             },
             notes: '',
             status: 'pending',
@@ -604,6 +639,26 @@ const handleEditSubmit = async (e) => {
         service.customerName.toLowerCase().includes(search.toLowerCase()) ||
         service.vehicleNumber.toLowerCase().includes(search.toLowerCase())
     );
+
+
+
+
+    // ============ DELETE SERVICE ============
+    const deleteService = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this service? This cannot be undone!')) {
+            return;
+        }
+
+        try {
+            await axios.delete(`https://amb-auto-wheel-pos.onrender.com/api/services/${id}`);
+            toast.success('Service deleted successfully');
+            fetchServices();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to delete service');
+        }
+    };
+
+
 
 
     // console.log("Filtered Services:", filteredServices[0]?.billing.balance);
@@ -735,7 +790,7 @@ const handleEditSubmit = async (e) => {
                                                     <FaEye />
                                                 </button>
 
-                                                {/* ✅ Edit Button */}
+                                                {/* Edit Button */}
                                                 {service.status !== 'completed' && (
                                                     <button
                                                         onClick={() => openEditModal(service)}
@@ -745,6 +800,15 @@ const handleEditSubmit = async (e) => {
                                                         <FaEdit />
                                                     </button>
                                                 )}
+
+                                                {/* ✅ DELETE BUTTON */}
+                                                <button
+                                                    onClick={() => deleteService(service._id)}
+                                                    className="text-red-600 hover:text-red-800 p-1.5 hover:bg-red-50 rounded-lg transition-colors"
+                                                    title="Delete Service"
+                                                >
+                                                    <FaTrash />
+                                                </button>
 
                                                 {/* Generate Bill OR Pay Remaining OR Paid */}
                                                 {service.status !== 'completed' ? (
@@ -1014,15 +1078,28 @@ const handleEditSubmit = async (e) => {
                                 </div>
 
                                 {/* Price */}
+                                {/* ✅ Purchase Price (New) */}
                                 <div>
-                                    <label className="label text-xs">Price (PKR)</label>
+                                    <label className="label text-xs">Purchase Price</label>
+                                    <input
+                                        type="number"
+                                        value={part.purchasePrice}
+                                        onChange={(e) => handlePartChange(index, 'purchasePrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="Cost"
+                                        disabled={part.fromInventory}
+                                    />
+                                </div>
+
+                                {/* Selling Price */}
+                                <div>
+                                    <label className="label text-xs">Selling Price</label>
                                     <input
                                         type="number"
                                         value={part.unitPrice}
                                         onChange={(e) => handlePartChange(index, 'unitPrice', e.target.value)}
                                         className="input-field text-sm"
                                         placeholder="500"
-                                        min="0"
                                     />
                                 </div>
 
@@ -1053,51 +1130,95 @@ const handleEditSubmit = async (e) => {
                     </div>
 
                     {/* Additional Charges */}
-                    <div className="border-b border-gray-400 pb-4">
-                        <div className="flex justify-between items-center mb-3">
-                            <h4 className="font-semibold text-gray-700">Additional Charges (Sublets)</h4>
-                            <button type="button" onClick={addCharge} className="text-sm text-blue-600 hover:underline">
-                                + Add Charge
-                            </button>
-                        </div>
-                        {formData.additionalCharges.map((charge, index) => (
-                            <div key={index} className="grid grid-cols-3 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-                                <div className="col-span-2">
-                                    <label className="label text-xs">Description</label>
-                                    <input
-                                        type="text"
-                                        value={charge.description}
-                                        onChange={(e) => handleChargeChange(index, 'description', e.target.value)}
-                                        className="input-field text-sm"
-                                        placeholder="e.g., Waste Disposal"
-                                    />
-                                </div>
-                                <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                        <label className="label text-xs">Amount</label>
-                                        <input
-                                            type="number"
-                                            value={charge.amount}
-                                            onChange={(e) => handleChargeChange(index, 'amount', e.target.value)}
-                                            className="input-field text-sm"
-                                            placeholder="100"
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeCharge(index)}
-                                        className="text-red-500 hover:text-red-700 mb-1"
-                                    >
-                                        <FaTimes />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                   {/* Additional Charges (Sublets) */}
+<div className="border-b border-gray-400 pb-4">
+    <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-gray-700">Additional Charges (Sublets)</h4>
+        <button type="button" onClick={addCharge} className="text-sm text-blue-600 hover:underline">
+            + Add Charge
+        </button>
+    </div>
+    {formData.additionalCharges.map((charge, index) => (
+        <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+            <div className="col-span-1">
+                <label className="label text-xs">Description</label>
+                <input
+                    type="text"
+                    value={charge.description}
+                    onChange={(e) => handleChargeChange(index, 'description', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="e.g., Waste Disposal"
+                />
+            </div>
+            <div>
+                <label className="label text-xs">Purchase Price</label>
+                <input
+                    type="number"
+                    value={charge.purchasePrice}
+                    onChange={(e) => handleChargeChange(index, 'purchasePrice', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="Cost"
+                />
+            </div>
+            <div>
+                <label className="label text-xs">Selling Price</label>
+                <input
+                    type="number"
+                    value={charge.sellingPrice}
+                    onChange={(e) => handleChargeChange(index, 'sellingPrice', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="Sell"
+                />
+            </div>
+            <div className="flex items-end gap-2">
+                <div className="flex-1">
+                    <label className="label text-xs">Customer Price</label>
+                    <input
+                        type="number"
+                        value={charge.amount}
+                        onChange={(e) => handleChargeChange(index, 'amount', e.target.value)}
+                        className="input-field text-sm"
+                        placeholder="500"
+                    />
+                </div>
+                <button
+                    type="button"
+                    onClick={() => removeCharge(index)}
+                    className="text-red-500 hover:text-red-700 mb-1"
+                >
+                    <FaTimes />
+                </button>
+            </div>
+        </div>
+    ))}
+</div>
 
                     {/* Billing */}
                     <div className="border-b border-gray-400 pb-4">
                         <h4 className="font-semibold text-gray-700 mb-3">Billing</h4>
+                        {(() => {
+                            const servicesTotal = formData.services.reduce((sum, s) => sum + (parseFloat(s.servicePrice) || 0), 0);
+                            const partsTotal = formData.partsUsed.reduce((sum, p) => sum + ((parseFloat(p.quantity) || 0) * (parseFloat(p.unitPrice) || 0)), 0);
+                            const chargesTotal = formData.additionalCharges.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+                            const subtotal = servicesTotal + partsTotal + chargesTotal;
+                            const taxAmount = subtotal * (parseFloat(formData.billing.taxRate) || 0) / 100;
+                            let discountAmount = 0;
+                            if (parseFloat(formData.billing.discount) > 0) {
+                                if (formData.billing.discountType === 'percentage') {
+                                    discountAmount = (subtotal + taxAmount) * (parseFloat(formData.billing.discount) || 0) / 100;
+                                } else {
+                                    discountAmount = parseFloat(formData.billing.discount) || 0;
+                                }
+                            }
+                            const grandTotal = subtotal + taxAmount - discountAmount;
+
+                            return (
+                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+                                    <p className="text-sm text-gray-600">Total Bill Amount:</p>
+                                    <p className="text-2xl font-bold text-blue-600">PKR {grandTotal.toLocaleString()}</p>
+                                </div>
+                            );
+                        })()}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="label">Tax Rate (%)</label>
@@ -1161,8 +1282,12 @@ const handleEditSubmit = async (e) => {
 
 
 
-{/* Payment Method */}
-<div className="border-b border-gray-400 pb-4">
+
+
+
+
+                    {/* Payment Method */}
+                    {/* <div className="border-b border-gray-400 pb-4">
     <div className="grid grid-cols-2 gap-4">
         <div>
             <label className="label">Payment Method</label>
@@ -1182,7 +1307,7 @@ const handleEditSubmit = async (e) => {
             </select>
         </div>
     </div>
-</div>
+</div> */}
 
 
 
@@ -1351,353 +1476,353 @@ const handleEditSubmit = async (e) => {
 
 
 
-{/* ============ EDIT SERVICE MODAL ============ */}
-<Modal
-    isOpen={showEditModal}
-    onClose={() => {
-        setShowEditModal(false);
-        setEditingService(null);
-    }}
-    title="Edit Service"
-    size="lg"
-    onConfirm={handleEditSubmit}
-    confirmText="Update Service"
->
-    <form onSubmit={handleEditSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
-        {/* Customer Information */}
-        <div className="border-b border-gray-400 pb-4">
-            <h4 className="font-semibold text-gray-700 mb-3">Customer Information</h4>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="label">Customer Name</label>
-                    <input
-                        type="text"
-                        name="customerName"
-                        value={editFormData.customerName}
-                        onChange={handleEditChange}
-                        className="input-field"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="label">Phone</label>
-                    <input
-                        type="text"
-                        name="customerPhone"
-                        value={editFormData.customerPhone}
-                        onChange={handleEditChange}
-                        className="input-field"
-                        required
-                    />
-                </div>
-                <div className="col-span-2">
-                    <label className="label">Address</label>
-                    <input
-                        type="text"
-                        name="customerAddress"
-                        value={editFormData.customerAddress}
-                        onChange={handleEditChange}
-                        className="input-field"
-                    />
-                </div>
-            </div>
-        </div>
+            {/* ============ EDIT SERVICE MODAL ============ */}
+            <Modal
+                isOpen={showEditModal}
+                onClose={() => {
+                    setShowEditModal(false);
+                    setEditingService(null);
+                }}
+                title="Edit Service"
+                size="lg"
+                onConfirm={handleEditSubmit}
+                confirmText="Update Service"
+            >
+                <form onSubmit={handleEditSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+                    {/* Customer Information */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Customer Information</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="label">Customer Name</label>
+                                <input
+                                    type="text"
+                                    name="customerName"
+                                    value={editFormData.customerName}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Phone</label>
+                                <input
+                                    type="text"
+                                    name="customerPhone"
+                                    value={editFormData.customerPhone}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                    required
+                                />
+                            </div>
+                            <div className="col-span-2">
+                                <label className="label">Address</label>
+                                <input
+                                    type="text"
+                                    name="customerAddress"
+                                    value={editFormData.customerAddress}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                />
+                            </div>
+                        </div>
+                    </div>
 
-        {/* Vehicle Information */}
-        <div className="border-b border-gray-400 pb-4">
-            <h4 className="font-semibold text-gray-700 mb-3">Vehicle Information</h4>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="label">Vehicle Number</label>
-                    <input
-                        type="text"
-                        name="vehicleNumber"
-                        value={editFormData.vehicleNumber}
-                        onChange={handleEditChange}
-                        className="input-field"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="label">Vehicle Model</label>
-                    <input
-                        type="text"
-                        name="vehicleModel"
-                        value={editFormData.vehicleModel}
-                        onChange={handleEditChange}
-                        className="input-field"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="label">Make</label>
-                    <input
-                        type="text"
-                        name="vehicleMake"
-                        value={editFormData.vehicleMake}
-                        onChange={handleEditChange}
-                        className="input-field"
-                    />
-                </div>
-                <div>
-                    <label className="label">Mileage</label>
-                    <input
-                        type="number"
-                        name="mileage"
-                        value={editFormData.mileage}
-                        onChange={handleEditChange}
-                        className="input-field"
-                    />
-                </div>
-            </div>
-        </div>
+                    {/* Vehicle Information */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Vehicle Information</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="label">Vehicle Number</label>
+                                <input
+                                    type="text"
+                                    name="vehicleNumber"
+                                    value={editFormData.vehicleNumber}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Vehicle Model</label>
+                                <input
+                                    type="text"
+                                    name="vehicleModel"
+                                    value={editFormData.vehicleModel}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Make</label>
+                                <input
+                                    type="text"
+                                    name="vehicleMake"
+                                    value={editFormData.vehicleMake}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Mileage</label>
+                                <input
+                                    type="number"
+                                    name="mileage"
+                                    value={editFormData.mileage}
+                                    onChange={handleEditChange}
+                                    className="input-field"
+                                />
+                            </div>
+                        </div>
+                    </div>
 
-        {/* Services */}
-        <div className="pb-1">
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-gray-700">Services</h4>
-                <button type="button" onClick={addEditService} className="text-sm text-blue-600 hover:underline">
-                    + Add Service
-                </button>
-            </div>
-            {editFormData.services.map((service, index) => (
-                <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-                    <div className="col-span-2">
-                        <label className="label text-xs">Service Name</label>
+                    {/* Services */}
+                    <div className="pb-1">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-gray-700">Services</h4>
+                            <button type="button" onClick={addEditService} className="text-sm text-blue-600 hover:underline">
+                                + Add Service
+                            </button>
+                        </div>
+                        {editFormData.services.map((service, index) => (
+                            <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                                <div className="col-span-2">
+                                    <label className="label text-xs">Service Name</label>
+                                    <input
+                                        type="text"
+                                        value={service.serviceName}
+                                        onChange={(e) => handleEditServiceChange(index, 'serviceName', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="e.g., Oil Change"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label text-xs"> Price (PKR)</label>
+                                    <input
+                                        type="number"
+                                        value={service.servicePrice}
+                                        onChange={(e) => handleEditServiceChange(index, 'servicePrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="500"
+                                    />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <label className="label text-xs">Hours</label>
+                                        <input
+                                            type="number"
+                                            value={service.laborHours}
+                                            onChange={(e) => handleEditServiceChange(index, 'laborHours', e.target.value)}
+                                            className="input-field text-sm"
+                                            placeholder="1"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeEditService(index)}
+                                        className="text-red-500 hover:text-red-700 mb-1"
+                                        disabled={editFormData.services.length === 1}
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Assigned To */}
+                    <div className="border-b pb-4 border-gray-400">
+                        <label className="label text-xs">Assigned To</label>
                         <input
                             type="text"
-                            value={service.serviceName}
-                            onChange={(e) => handleEditServiceChange(index, 'serviceName', e.target.value)}
+                            name="assignedTo"
+                            value={editFormData.assignedTo}
+                            onChange={handleEditChange}
                             className="input-field text-sm"
-                            placeholder="e.g., Oil Change"
+                            placeholder="Enter Staff Name"
                         />
                     </div>
-                    <div>
-                        <label className="label text-xs"> Price (PKR)</label>
-                        <input
-                            type="number"
-                            value={service.servicePrice}
-                            onChange={(e) => handleEditServiceChange(index, 'servicePrice', e.target.value)}
-                            className="input-field text-sm"
-                            placeholder="500"
-                        />
-                    </div>
-                    <div className="flex items-end gap-2">
-                        <div className="flex-1">
-                            <label className="label text-xs">Hours</label>
-                            <input
-                                type="number"
-                                value={service.laborHours}
-                                onChange={(e) => handleEditServiceChange(index, 'laborHours', e.target.value)}
-                                className="input-field text-sm"
-                                placeholder="1"
-                            />
+
+                    {/* Parts Used */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-gray-700">Parts Used</h4>
+                            <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
+                                + Add Part
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => removeEditService(index)}
-                            className="text-red-500 hover:text-red-700 mb-1"
-                            disabled={editFormData.services.length === 1}
-                        >
-                            <FaTimes />
-                        </button>
+                        {editFormData.partsUsed.map((part, index) => (
+                            <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                                <div className="col-span-2">
+                                    <label className="label text-xs">Product</label>
+                                    <select
+                                        value={part.product}
+                                        onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
+                                        className="input-field text-sm"
+                                    >
+                                        <option value="">Select Product</option>
+                                        {products.map((p) => (
+                                            <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div>
+                                    <label className="label text-xs">Qty</label>
+                                    <input
+                                        type="number"
+                                        value={part.quantity}
+                                        onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="1"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label text-xs">Price</label>
+                                    <input
+                                        type="number"
+                                        value={part.unitPrice}
+                                        onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="500"
+                                    />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <label className="label text-xs">From Inv.</label>
+                                        <select
+                                            value={part.fromInventory}
+                                            onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
+                                            className="input-field text-sm"
+                                        >
+                                            <option value="true">Yes</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeEditPart(index)}
+                                        className="text-red-500 hover:text-red-700 mb-1"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            ))}
-        </div>
 
-        {/* Assigned To */}
-        <div className="border-b pb-4 border-gray-400">
-            <label className="label text-xs">Assigned To</label>
-            <input
-                type="text"
-                name="assignedTo"
-                value={editFormData.assignedTo}
-                onChange={handleEditChange}
-                className="input-field text-sm"
-                placeholder="Enter Staff Name"
-            />
-        </div>
-
-        {/* Parts Used */}
-        <div className="border-b border-gray-400 pb-4">
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-gray-700">Parts Used</h4>
-                <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
-                    + Add Part
-                </button>
-            </div>
-            {editFormData.partsUsed.map((part, index) => (
-                <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-                    <div className="col-span-2">
-                        <label className="label text-xs">Product</label>
-                        <select
-                            value={part.product}
-                            onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
-                            className="input-field text-sm"
-                        >
-                            <option value="">Select Product</option>
-                            {products.map((p) => (
-                                <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label className="label text-xs">Qty</label>
-                        <input
-                            type="number"
-                            value={part.quantity}
-                            onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
-                            className="input-field text-sm"
-                            placeholder="1"
-                        />
-                    </div>
-                    <div>
-                        <label className="label text-xs">Price</label>
-                        <input
-                            type="number"
-                            value={part.unitPrice}
-                            onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
-                            className="input-field text-sm"
-                            placeholder="500"
-                        />
-                    </div>
-                    <div className="flex items-end gap-2">
-                        <div className="flex-1">
-                            <label className="label text-xs">From Inv.</label>
-                            <select
-                                value={part.fromInventory}
-                                onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
-                                className="input-field text-sm"
-                            >
-                                <option value="true">Yes</option>
-                                <option value="false">No</option>
-                            </select>
+                    {/* Additional Charges */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-gray-700">Additional Charges</h4>
+                            <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
+                                + Add Charge
+                            </button>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => removeEditPart(index)}
-                            className="text-red-500 hover:text-red-700 mb-1"
-                        >
-                            <FaTimes />
-                        </button>
+                        {editFormData.additionalCharges.map((charge, index) => (
+                            <div key={index} className="grid grid-cols-3 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                                <div className="col-span-2">
+                                    <label className="label text-xs">Description</label>
+                                    <input
+                                        type="text"
+                                        value={charge.description}
+                                        onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="e.g., Waste Disposal"
+                                    />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <label className="label text-xs">Amount</label>
+                                        <input
+                                            type="number"
+                                            value={charge.amount}
+                                            onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
+                                            className="input-field text-sm"
+                                            placeholder="100"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeEditCharge(index)}
+                                        className="text-red-500 hover:text-red-700 mb-1"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                </div>
-            ))}
-        </div>
 
-        {/* Additional Charges */}
-        <div className="border-b border-gray-400 pb-4">
-            <div className="flex justify-between items-center mb-3">
-                <h4 className="font-semibold text-gray-700">Additional Charges</h4>
-                <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
-                    + Add Charge
-                </button>
-            </div>
-            {editFormData.additionalCharges.map((charge, index) => (
-                <div key={index} className="grid grid-cols-3 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-                    <div className="col-span-2">
-                        <label className="label text-xs">Description</label>
-                        <input
-                            type="text"
-                            value={charge.description}
-                            onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
-                            className="input-field text-sm"
-                            placeholder="e.g., Waste Disposal"
-                        />
-                    </div>
-                    <div className="flex items-end gap-2">
-                        <div className="flex-1">
-                            <label className="label text-xs">Amount</label>
-                            <input
-                                type="number"
-                                value={charge.amount}
-                                onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
-                                className="input-field text-sm"
-                                placeholder="100"
-                            />
+                    {/* Billing */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Billing</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="label">Tax Rate (%)</label>
+                                <input
+                                    type="number"
+                                    name="billing.taxRate"
+                                    value={editFormData.billing.taxRate}
+                                    onChange={(e) => setEditFormData({
+                                        ...editFormData,
+                                        billing: { ...editFormData.billing, taxRate: e.target.value }
+                                    })}
+                                    className="input-field"
+                                    placeholder="0"
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Discount</label>
+                                <input
+                                    type="number"
+                                    name="billing.discount"
+                                    value={editFormData.billing.discount}
+                                    onChange={(e) => setEditFormData({
+                                        ...editFormData,
+                                        billing: { ...editFormData.billing, discount: e.target.value }
+                                    })}
+                                    className="input-field"
+                                />
+                            </div>
+                            <div>
+                                <label className="label">Discount Type</label>
+                                <select
+                                    name="billing.discountType"
+                                    value={editFormData.billing.discountType}
+                                    onChange={(e) => setEditFormData({
+                                        ...editFormData,
+                                        billing: { ...editFormData.billing, discountType: e.target.value }
+                                    })}
+                                    className="input-field"
+                                >
+                                    <option value="fixed">Fixed</option>
+                                    <option value="percentage">Percentage</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="label">Paid Amount</label>
+                                <input
+                                    type="number"
+                                    name="billing.paidAmount"
+                                    value={editFormData.billing.paidAmount}
+                                    onChange={(e) => setEditFormData({
+                                        ...editFormData,
+                                        billing: { ...editFormData.billing, paidAmount: e.target.value }
+                                    })}
+                                    className="input-field"
+                                    placeholder="0"
+                                />
+                            </div>
                         </div>
-                        <button
-                            type="button"
-                            onClick={() => removeEditCharge(index)}
-                            className="text-red-500 hover:text-red-700 mb-1"
-                        >
-                            <FaTimes />
-                        </button>
                     </div>
-                </div>
-            ))}
-        </div>
-
-        {/* Billing */}
-        <div className="border-b border-gray-400 pb-4">
-            <h4 className="font-semibold text-gray-700 mb-3">Billing</h4>
-            <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="label">Tax Rate (%)</label>
-                    <input
-                        type="number"
-                        name="billing.taxRate"
-                        value={editFormData.billing.taxRate}
-                        onChange={(e) => setEditFormData({
-                            ...editFormData,
-                            billing: { ...editFormData.billing, taxRate: e.target.value }
-                        })}
-                        className="input-field"
-                        placeholder="0"
-                    />
-                </div>
-                <div>
-                    <label className="label">Discount</label>
-                    <input
-                        type="number"
-                        name="billing.discount"
-                        value={editFormData.billing.discount}
-                        onChange={(e) => setEditFormData({
-                            ...editFormData,
-                            billing: { ...editFormData.billing, discount: e.target.value }
-                        })}
-                        className="input-field"
-                    />
-                </div>
-                <div>
-                    <label className="label">Discount Type</label>
-                    <select
-                        name="billing.discountType"
-                        value={editFormData.billing.discountType}
-                        onChange={(e) => setEditFormData({
-                            ...editFormData,
-                            billing: { ...editFormData.billing, discountType: e.target.value }
-                        })}
-                        className="input-field"
-                    >
-                        <option value="fixed">Fixed</option>
-                        <option value="percentage">Percentage</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="label">Paid Amount</label>
-                    <input
-                        type="number"
-                        name="billing.paidAmount"
-                        value={editFormData.billing.paidAmount}
-                        onChange={(e) => setEditFormData({
-                            ...editFormData,
-                            billing: { ...editFormData.billing, paidAmount: e.target.value }
-                        })}
-                        className="input-field"
-                        placeholder="0"
-                    />
-                </div>
-            </div>
-        </div>
 
 
 
 
 
-{/* Payment Method */}
-<div className="border-b border-gray-400 pb-4">
+                    {/* Payment Method */}
+                    {/* <div className="border-b border-gray-400 pb-4">
     <div className="grid grid-cols-2 gap-4">
         <div>
             <label className="label">Payment Method</label>
@@ -1717,26 +1842,26 @@ const handleEditSubmit = async (e) => {
             </select>
         </div>
     </div>
-</div>
+</div> */}
 
 
 
 
 
-        {/* Notes */}
-        <div>
-            <label className="label">Notes</label>
-            <textarea
-                name="notes"
-                value={editFormData.notes}
-                onChange={handleEditChange}
-                className="input-field"
-                rows="2"
-                placeholder="Additional notes..."
-            />
-        </div>
-    </form>
-</Modal>
+                    {/* Notes */}
+                    <div>
+                        <label className="label">Notes</label>
+                        <textarea
+                            name="notes"
+                            value={editFormData.notes}
+                            onChange={handleEditChange}
+                            className="input-field"
+                            rows="2"
+                            placeholder="Additional notes..."
+                        />
+                    </div>
+                </form>
+            </Modal>
 
         </div>
     );

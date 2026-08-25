@@ -126,17 +126,28 @@ const createService = async (req, res) => {
     const processedParts = partsUsed?.map(part => {
       const quantity = parseFloat(part.quantity) || 0;
       const unitPrice = parseFloat(part.unitPrice) || 0;
-      
+      const purchasePrice = parseFloat(part.purchasePrice) || 0;
+
       return {
         // ✅ If fromInventory is true AND product exists → use product ID, else null
         product: part.fromInventory && part.product ? part.product : null,
         productName: part.productName || 'Custom Item',
         quantity: quantity,
         unitPrice: unitPrice,
+         purchasePrice: purchasePrice,
         totalPrice: quantity * unitPrice,
         fromInventory: part.fromInventory || false
       };
     }) || [];
+
+
+
+    const processedCharges = additionalCharges?.map(charge => ({
+    description: charge.description || '',
+    amount: parseFloat(charge.amount) || 0,
+    purchasePrice: parseFloat(charge.purchasePrice) || 0,   
+    sellingPrice: parseFloat(charge.sellingPrice) || 0     
+})) || [];
 
     // Create service WITH processed parts
     const service = new Service({
@@ -149,7 +160,7 @@ const createService = async (req, res) => {
       mileage,
       services: services || [],
       partsUsed: processedParts, // ✅ Use processed parts
-      additionalCharges: additionalCharges || [],
+      additionalCharges: processedCharges || [],
       billing: {
         subtotal: billingTotals.subtotal,
         tax: billingTotals.tax,
@@ -265,6 +276,7 @@ const createService = async (req, res) => {
           quantity: p.quantity,
           unitPrice: p.unitPrice,
           totalPrice: p.totalPrice,
+          purchasePrice: p.purchasePrice || 0
         })),
         ...(service.additionalCharges || []).map((c) => ({
           type: "charge",
@@ -320,7 +332,7 @@ const createService = async (req, res) => {
 // ============ PAY REMAINING BALANCE ============
 const payRemaining = async (req, res) => {
   try {
-    const { paidAmount, paymentMethod } = req.body;
+    const { paidAmount , paymentMethod  } = req.body;
     const service = await Service.findById(req.params.id);
 
     if (!service) {
@@ -365,7 +377,10 @@ const payRemaining = async (req, res) => {
     // ============ UPDATE PAYMENT ============
     service.billing.paidAmount = service.billing.paidAmount + amount;
     service.billing.balance = service.billing.totalAmount - service.billing.paidAmount;
-    service.billing.paymentMethod = paymentMethod || service.billing.paymentMethod || "cash";
+    
+     if (paymentMethod) {
+            service.billing.paymentMethod = paymentMethod;
+        }
 
     // ============ UPDATE PAYMENT STATUS ============
     if (service.billing.balance <= 0) {
@@ -698,6 +713,7 @@ const generateBill = async (req, res) => {
             quantity: p.quantity,
             unitPrice: p.unitPrice,
             totalPrice: p.totalPrice,
+             purchasePrice: p.purchasePrice || 0
           })),
           ...(service.additionalCharges || []).map((c) => ({
             type: "charge",
@@ -812,6 +828,46 @@ const getServiceStats = async (req, res) => {
   }
 };
 
+
+
+
+// ============ DELETE SERVICE ============
+const deleteService = async (req, res) => {
+    try {
+        const service = await Service.findById(req.params.id);
+        if (!service) {
+            return res.status(404).json({
+                success: false,
+                message: "Service not found"
+            });
+        }
+
+        // Check if service is completed
+        if (service.status === 'completed') {
+            return res.status(400).json({
+                success: false,
+                message: "Cannot delete a completed service"
+            });
+        }
+
+        // Delete related invoice if exists
+        await Invoice.findOneAndDelete({ service: service._id });
+
+        // Delete the service
+        await service.deleteOne();
+
+        res.status(200).json({
+            success: true,
+            message: "Service deleted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
   createService,
   getAllServices,
@@ -821,5 +877,6 @@ module.exports = {
   generateBill,
   getServiceStats,
   payRemaining,
+  deleteService,
   getCustomerByPhone
 };

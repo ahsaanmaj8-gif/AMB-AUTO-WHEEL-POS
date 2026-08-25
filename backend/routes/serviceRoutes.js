@@ -11,7 +11,8 @@ const {
     getServiceStats,
     getAllServicesWithInvoice,
     payRemaining,
-    getCustomerByPhone
+    getCustomerByPhone,
+    deleteService
 } = require("../controllers/serviceController");
 
 // ============ ALL ROUTES REQUIRE LOGIN ============
@@ -34,6 +35,9 @@ router.get("/:id", getServiceById);
 
 // Update service
 router.put("/:id", updateService);
+
+// Delete service
+router.delete("/:id", deleteService);
 
 // Generate bill for service
 router.post("/:id/generate-bill", generateBill);

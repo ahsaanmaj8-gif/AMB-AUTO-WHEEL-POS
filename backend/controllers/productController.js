@@ -87,7 +87,7 @@ if (product.quantity <= product.minQuantity) {
 }
 
 
-        console.log(req.user);
+        // console.log(req.user);
         
 
         // If quantity > 0, create initial transaction
