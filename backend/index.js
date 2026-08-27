@@ -35,6 +35,9 @@ const invoiceRoutes = require("./routes/invoiceRoutes");
 const userRoutes = require("./routes/userRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
+const expenseRoutes = require("./routes/expenseRoutes");
+
+
 
 // ============ ROUTES ============
 app.use("/api/auth", authRoutes);
@@ -46,7 +49,7 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/revenue", revenueRoutes);
-
+app.use("/api/expenses", expenseRoutes);
 
 
 // ============ TEST ROUTE ============

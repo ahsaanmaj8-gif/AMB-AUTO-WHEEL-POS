@@ -18,6 +18,8 @@ import Transactions from './pages/Transactions';
 import Profile from './pages/Profile';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Revenue from './pages/Revenue';
+import Expenses from './pages/Expenses';
+
 
 function App() {
 
@@ -71,6 +73,7 @@ function App() {
           <Route path="products" element={<Products />} />
           <Route path="categories" element={<Categories />} />
           <Route path="revenue" element={<Revenue />} />
+          <Route path="expenses" element={<Expenses />} />
           <Route path="services" element={<Services />} />
           <Route path="invoices" element={<Invoices />} />
           <Route path="transactions" element={<Transactions />} />

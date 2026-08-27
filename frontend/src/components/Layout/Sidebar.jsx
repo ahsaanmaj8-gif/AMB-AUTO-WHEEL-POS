@@ -9,7 +9,8 @@ import {
     FaHistory,
     FaUser,
     FaSignOutAlt,
-    FaFileInvoice
+    FaFileInvoice,
+    FaMoneyBillWave 
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
@@ -24,6 +25,7 @@ const Sidebar = () => {
         { path: '/services', icon: FaWrench, label: 'Services' },
         { path: '/invoices', icon: FaFileInvoice, label: 'Invoices' },
         { path: '/revenue', icon: FaDollarSign, label: 'Revenue' },
+        { path: '/expenses', icon: FaMoneyBillWave, label: 'Expenses' },
         { path: '/categories', icon: FaTags, label: 'Categories' },
         { path: '/transactions', icon: FaHistory, label: 'Transactions' },
         // { path: '/paymentDetails', icon: FaHistory, label: 'Payment Details' },
