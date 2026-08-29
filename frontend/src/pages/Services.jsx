@@ -68,33 +68,45 @@ const Services = () => {
 
 
 
-    // ============ OPEN EDIT MODAL ============
-    const openEditModal = (service) => {
-        // console.log("Editing service: ", service); // Log the service being edited
-        setEditingService(service);
-        setEditFormData({
-            customerName: service.customerName || '',
-            customerPhone: service.customerPhone || '',
-            customerAddress: service.customerAddress || '',
-            vehicleNumber: service.vehicleNumber || '',
-            vehicleModel: service.vehicleModel || '',
-            vehicleMake: service.vehicleMake || '',
-            mileage: service.mileage || '',
-            services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-            partsUsed: service.partsUsed || [{ product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }],
-            additionalCharges: service.additionalCharges || [{ description: '', amount: '' }],
-            billing: {
-                taxRate: service.billing?.taxRate?.toString() || '0',
-                discount: service.billing?.discount?.toString() || '0',
-                discountType: service.billing?.discountType || 'fixed',
-                paidAmount: service.billing?.paidAmount?.toString() || '0',
-                // paymentMethod: service.billing?.paymentMethod || 'cash'
-            },
-            notes: service.notes || '',
-            assignedTo: service.assignedTo || ''
-        });
-        setShowEditModal(true);
-    };
+   // ============ OPEN EDIT MODAL ============
+const openEditModal = (service) => {
+    // console.log("Editing service: ", service);
+    setEditingService(service);
+    setEditFormData({
+        customerName: service.customerName || '',
+        customerPhone: service.customerPhone || '',
+        customerAddress: service.customerAddress || '',
+        vehicleNumber: service.vehicleNumber || '',
+        vehicleModel: service.vehicleModel || '',
+        vehicleMake: service.vehicleMake || '',
+        mileage: service.mileage || '',
+        services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
+        partsUsed: service.partsUsed || [{ 
+            product: '', 
+            productName: '', 
+            quantity: '1', 
+            unitPrice: '', 
+            purchasePrice: '',  // ✅ ADD THIS
+            fromInventory: true 
+        }],
+        additionalCharges: service.additionalCharges || [{ 
+            description: '', 
+            amount: '',
+            purchasePrice: '',  // ✅ ADD THIS
+            sellingPrice: ''    // ✅ ADD THIS
+        }],
+        billing: {
+            taxRate: service.billing?.taxRate?.toString() || '0',
+            discount: service.billing?.discount?.toString() || '0',
+            discountType: service.billing?.discountType || 'fixed',
+            paidAmount: service.billing?.paidAmount?.toString() || '0',
+            paymentMethod: service.billing?.paymentMethod || 'cash'
+        },
+        notes: service.notes || '',
+        assignedTo: service.assignedTo || ''
+    });
+    setShowEditModal(true);
+};
 
     // ============ HANDLE EDIT CHANGE ============
     const handleEditChange = (e) => {
@@ -112,20 +124,22 @@ const Services = () => {
     };
 
     // ============ HANDLE EDIT PART CHANGE ============
-    const handleEditPartChange = (index, field, value) => {
-        const updatedParts = [...editFormData.partsUsed];
-        updatedParts[index][field] = value;
+   // ============ HANDLE EDIT PART CHANGE ============
+const handleEditPartChange = (index, field, value) => {
+    const updatedParts = [...editFormData.partsUsed];
+    updatedParts[index][field] = value;
 
-        if (field === 'product' && value) {
-            const product = products.find(p => p._id === value);
-            if (product) {
-                updatedParts[index].productName = product.name;
-                updatedParts[index].unitPrice = product.price;
-            }
+    if (field === 'product' && value) {
+        const product = products.find(p => p._id === value);
+        if (product) {
+            updatedParts[index].productName = product.name;
+            updatedParts[index].unitPrice = product.price;
+            updatedParts[index].purchasePrice = product.costPrice || product.price;  // ✅ ADD THIS
         }
+    }
 
-        setEditFormData({ ...editFormData, partsUsed: updatedParts });
-    };
+    setEditFormData({ ...editFormData, partsUsed: updatedParts });
+};
 
     // ============ HANDLE EDIT CHARGE CHANGE ============
     const handleEditChargeChange = (index, field, value) => {
@@ -151,12 +165,20 @@ const Services = () => {
     };
 
     // ============ ADD EDIT PART ROW ============
-    const addEditPart = () => {
-        setEditFormData({
-            ...editFormData,
-            partsUsed: [...editFormData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }]
-        });
-    };
+   // ============ ADD EDIT PART ROW ============
+const addEditPart = () => {
+    setEditFormData({
+        ...editFormData,
+        partsUsed: [...editFormData.partsUsed, { 
+            product: '', 
+            productName: '', 
+            quantity: '1', 
+            unitPrice: '', 
+            purchasePrice: '',  // ✅ ADD THIS
+            fromInventory: true 
+        }]
+    });
+};
 
     // ============ REMOVE EDIT PART ROW ============
     const removeEditPart = (index) => {
@@ -167,12 +189,17 @@ const Services = () => {
     };
 
     // ============ ADD EDIT CHARGE ROW ============
-    const addEditCharge = () => {
-        setEditFormData({
-            ...editFormData,
-            additionalCharges: [...editFormData.additionalCharges, { description: '', amount: '' }]
-        });
-    };
+   const addEditCharge = () => {
+    setEditFormData({
+        ...editFormData,
+        additionalCharges: [...editFormData.additionalCharges, { 
+            description: '', 
+            amount: '',
+            purchasePrice: '',  // ✅ ADD THIS
+            sellingPrice: ''    // ✅ ADD THIS
+        }]
+    });
+};
 
     // ============ REMOVE EDIT CHARGE ROW ============
     const removeEditCharge = (index) => {
@@ -183,100 +210,88 @@ const Services = () => {
     };
 
     // ============ SUBMIT EDIT ============
-    // ============ SUBMIT EDIT ============
-    const handleEditSubmit = async (e) => {
-        e.preventDefault();
-        // console.log("Edit form data: ", editFormData); // Log the form data to check its structure
+   // ============ SUBMIT EDIT ============
+const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    console.log("Edit form data: ", editFormData);
 
-        try {
-            // ✅ Calculate billing totals before sending
-            const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
-                // Calculate services total
-                let servicesTotal = 0;
-                services.forEach(service => {
-                    servicesTotal += parseFloat(service.servicePrice) || 0;
-                });
+    try {
+        // Calculate billing totals
+        const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
+            let servicesTotal = 0;
+            services.forEach(service => {
+                servicesTotal += parseFloat(service.servicePrice) || 0;
+            });
 
-                // Calculate parts total
-                let partsTotal = 0;
-                parts.forEach(part => {
-                    partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
-                });
+            let partsTotal = 0;
+            parts.forEach(part => {
+                partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
+            });
 
-                // Calculate additional charges
-                let chargesTotal = 0;
-                charges.forEach(charge => {
-                    chargesTotal += parseFloat(charge.amount) || 0;
-                });
+            let chargesTotal = 0;
+            charges.forEach(charge => {
+                chargesTotal += parseFloat(charge.amount) || 0;
+            });
 
-                // Subtotal
-                let subtotal = servicesTotal + partsTotal + chargesTotal;
-
-                // Tax
-                let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
-
-                // Total before discount
-                let total = subtotal + tax;
-
-                // Discount
-                let discountAmount = 0;
-                if (parseFloat(discount) > 0) {
-                    if (discountType === "percentage") {
-                        discountAmount = (total * parseFloat(discount)) / 100;
-                    } else {
-                        discountAmount = parseFloat(discount);
-                    }
+            let subtotal = servicesTotal + partsTotal + chargesTotal;
+            let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
+            let total = subtotal + tax;
+            let discountAmount = 0;
+            if (parseFloat(discount) > 0) {
+                if (discountType === "percentage") {
+                    discountAmount = (total * parseFloat(discount)) / 100;
+                } else {
+                    discountAmount = parseFloat(discount);
                 }
+            }
+            let finalTotal = total - discountAmount;
 
-                // Final total
-                let finalTotal = total - discountAmount;
-
-                return {
-                    subtotal: subtotal,
-                    tax: tax,
-                    discount: discountAmount,
-                    totalAmount: finalTotal
-                };
+            return {
+                subtotal: subtotal,
+                tax: tax,
+                discount: discountAmount,
+                totalAmount: finalTotal
             };
+        };
 
-            // Calculate billing
-            const billingTotals = calculateBillingTotals(
-                editFormData.services || [],
-                editFormData.partsUsed || [],
-                editFormData.additionalCharges || [],
-                editFormData.billing?.taxRate || 0,
-                editFormData.billing?.discount || 0,
-                editFormData.billing?.discountType || "fixed"
-            );
+        // Calculate billing
+        const billingTotals = calculateBillingTotals(
+            editFormData.services || [],
+            editFormData.partsUsed || [],
+            editFormData.additionalCharges || [],
+            editFormData.billing?.taxRate || 0,
+            editFormData.billing?.discount || 0,
+            editFormData.billing?.discountType || "fixed"
+        );
 
-            // ✅ Prepare data with calculated billing
-            const dataToSend = {
-                ...editFormData,
-                billing: {
-                    ...editFormData.billing,
-                    subtotal: billingTotals.subtotal,
-                    tax: billingTotals.tax,
-                    discount: billingTotals.discount,
-                    totalAmount: billingTotals.totalAmount,
-                    paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
-                    balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
-                    // paymentMethod: editFormData.billing?.paymentMethod || 'cash'
-                }
-            };
+        // ✅ Prepare data with calculated billing and purchasePrice
+        const dataToSend = {
+            ...editFormData,
+            billing: {
+                ...editFormData.billing,
+                subtotal: billingTotals.subtotal,
+                tax: billingTotals.tax,
+                discount: billingTotals.discount,
+                totalAmount: billingTotals.totalAmount,
+                paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
+                balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
+                paymentMethod: editFormData.billing?.paymentMethod || 'cash'
+            }
+        };
 
-            await axios.put(
-                `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
-                dataToSend
-            );
+        await axios.put(
+            `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
+            dataToSend
+        );
 
-            toast.success('Service updated successfully!');
-            setShowEditModal(false);
-            fetchServices();
-        } catch (error) {
-            console.error('Edit error:', error.response?.data);
-            toast.error(error.response?.data?.message || 'Failed to update service');
-        }
-    };
+        toast.success('Service updated successfully!');
+        setShowEditModal(false);
+        fetchServices();
+    } catch (error) {
+        console.error('Edit error:', error.response?.data);
+        toast.error(error.response?.data?.message || 'Failed to update service');
+    }
+};
 
 
 
@@ -304,8 +319,8 @@ const Services = () => {
 
         const payAmount = parseFloat(amount);
 
-        if (payAmount <= 0) {
-            toast.error('Amount must be greater than 0');
+        if (payAmount < 0) {
+            toast.error('Amount must be greater than or equal to 0');
             return;
         }
 
@@ -1645,114 +1660,168 @@ const Services = () => {
                     </div>
 
                     {/* Parts Used */}
-                    <div className="border-b border-gray-400 pb-4">
-                        <div className="flex justify-between items-center mb-3">
-                            <h4 className="font-semibold text-gray-700">Parts Used</h4>
-                            <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
-                                + Add Part
-                            </button>
-                        </div>
-                        {editFormData.partsUsed.map((part, index) => (
-                            <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-                                <div className="col-span-2">
-                                    <label className="label text-xs">Product</label>
-                                    <select
-                                        value={part.product}
-                                        onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
-                                        className="input-field text-sm"
-                                    >
-                                        <option value="">Select Product</option>
-                                        {products.map((p) => (
-                                            <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="label text-xs">Qty</label>
-                                    <input
-                                        type="number"
-                                        value={part.quantity}
-                                        onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
-                                        className="input-field text-sm"
-                                        placeholder="1"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="label text-xs">Price</label>
-                                    <input
-                                        type="number"
-                                        value={part.unitPrice}
-                                        onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
-                                        className="input-field text-sm"
-                                        placeholder="500"
-                                    />
-                                </div>
-                                <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                        <label className="label text-xs">From Inv.</label>
-                                        <select
-                                            value={part.fromInventory}
-                                            onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
-                                            className="input-field text-sm"
-                                        >
-                                            <option value="true">Yes</option>
-                                            <option value="false">No</option>
-                                        </select>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeEditPart(index)}
-                                        className="text-red-500 hover:text-red-700 mb-1"
-                                    >
-                                        <FaTimes />
-                                    </button>
-                                </div>
-                            </div>
+                    {/* Parts Used */}
+<div className="border-b border-gray-400 pb-4">
+    <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-gray-700">Parts Used</h4>
+        <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
+            + Add Part
+        </button>
+    </div>
+    {editFormData.partsUsed.map((part, index) => (
+        <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+            {/* Product Selection */}
+            {part.fromInventory ? (
+                <div className="col-span-2">
+                    <label className="label text-xs">Product</label>
+                    <select
+                        value={part.product}
+                        onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
+                        className="input-field text-sm"
+                    >
+                        <option value="">Select Product</option>
+                        {products.map((p) => (
+                            <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
                         ))}
-                    </div>
+                    </select>
+                </div>
+            ) : (
+                <div className="col-span-2">
+                    <label className="label text-xs">Product Name (Manual)</label>
+                    <input
+                        type="text"
+                        value={part.productName}
+                        onChange={(e) => handleEditPartChange(index, 'productName', e.target.value)}
+                        className="input-field text-sm"
+                        placeholder="Enter custom product name"
+                    />
+                </div>
+            )}
+
+            {/* Quantity */}
+            <div>
+                <label className="label text-xs">Qty</label>
+                <input
+                    type="number"
+                    value={part.quantity}
+                    onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="1"
+                    min="1"
+                />
+            </div>
+
+            {/* Purchase Price */}
+            <div>
+                <label className="label text-xs">Purchase Price</label>
+                <input
+                    type="number"
+                    value={part.purchasePrice}
+                    onChange={(e) => handleEditPartChange(index, 'purchasePrice', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="Cost"
+                />
+            </div>
+
+            {/* Selling Price */}
+            <div>
+                <label className="label text-xs">Selling Price</label>
+                <input
+                    type="number"
+                    value={part.unitPrice}
+                    onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="500"
+                />
+            </div>
+
+            {/* From Inventory & Remove */}
+            <div className="flex items-end gap-2">
+                <div className="flex-1">
+                    <label className="label text-xs">From Inv.</label>
+                    <select
+                        value={part.fromInventory}
+                        onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
+                        className="input-field text-sm"
+                    >
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => removeEditPart(index)}
+                    className="text-red-500 hover:text-red-700 mb-1"
+                >
+                    <FaTimes />
+                </button>
+            </div>
+        </div>
+    ))}
+</div>
 
                     {/* Additional Charges */}
-                    <div className="border-b border-gray-400 pb-4">
-                        <div className="flex justify-between items-center mb-3">
-                            <h4 className="font-semibold text-gray-700">Additional Charges</h4>
-                            <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
-                                + Add Charge
-                            </button>
-                        </div>
-                        {editFormData.additionalCharges.map((charge, index) => (
-                            <div key={index} className="grid grid-cols-3 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-                                <div className="col-span-2">
-                                    <label className="label text-xs">Description</label>
-                                    <input
-                                        type="text"
-                                        value={charge.description}
-                                        onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
-                                        className="input-field text-sm"
-                                        placeholder="e.g., Waste Disposal"
-                                    />
-                                </div>
-                                <div className="flex items-end gap-2">
-                                    <div className="flex-1">
-                                        <label className="label text-xs">Amount</label>
-                                        <input
-                                            type="number"
-                                            value={charge.amount}
-                                            onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
-                                            className="input-field text-sm"
-                                            placeholder="100"
-                                        />
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => removeEditCharge(index)}
-                                        className="text-red-500 hover:text-red-700 mb-1"
-                                    >
-                                        <FaTimes />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+<div className="border-b border-gray-400 pb-4">
+    <div className="flex justify-between items-center mb-3">
+        <h4 className="font-semibold text-gray-700">Additional Charges</h4>
+        <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
+            + Add Charge
+        </button>
+    </div>
+    {editFormData.additionalCharges.map((charge, index) => (
+        <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+            <div>
+                <label className="label text-xs">Description</label>
+                <input
+                    type="text"
+                    value={charge.description}
+                    onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="e.g., Waste Disposal"
+                />
+            </div>
+            <div>
+                <label className="label text-xs">Purchase Price</label>
+                <input
+                    type="number"
+                    value={charge.purchasePrice}
+                    onChange={(e) => handleEditChargeChange(index, 'purchasePrice', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="Cost"
+                />
+            </div>
+            <div>
+                <label className="label text-xs">Selling Price</label>
+                <input
+                    type="number"
+                    value={charge.sellingPrice}
+                    onChange={(e) => handleEditChargeChange(index, 'sellingPrice', e.target.value)}
+                    className="input-field text-sm"
+                    placeholder="Sell"
+                />
+            </div>
+            <div className="flex items-end gap-2">
+                <div className="flex-1">
+                    <label className="label text-xs">Customer Price</label>
+                    <input
+                        type="number"
+                        value={charge.amount}
+                        onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
+                        className="input-field text-sm"
+                        placeholder="500"
+                    />
+                </div>
+                <button
+                    type="button"
+                    onClick={() => removeEditCharge(index)}
+                    className="text-red-500 hover:text-red-700 mb-1"
+                >
+                    <FaTimes />
+                </button>
+            </div>
+        </div>
+    ))}
+</div>
 
                     {/* Billing */}
                     <div className="border-b border-gray-400 pb-4">

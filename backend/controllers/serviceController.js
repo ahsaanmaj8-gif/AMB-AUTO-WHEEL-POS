@@ -351,7 +351,7 @@ const payRemaining = async (req, res) => {
     }
 
     // Check if balance exists
-    if (service.billing.balance <= 0) {
+    if (service.billing.balance < 0) {
       return res.status(400).json({
         success: false,
         message: "No balance remaining to pay"
@@ -360,12 +360,14 @@ const payRemaining = async (req, res) => {
 
     // Validate payment amount
     const amount = parseFloat(paidAmount);
-    if (!amount || amount <= 0) {
-      return res.status(400).json({
+    if (isNaN(amount) || amount < 0) {
+    console.log("amount:", amount);
+
+    return res.status(400).json({
         success: false,
-        message: "Payment amount must be greater than 0"
-      });
-    }
+        message: "Payment amount must be greater than or equal to 0"
+    });
+}
 
     if (amount > service.billing.balance) {
       return res.status(400).json({
@@ -592,43 +594,90 @@ const getServiceById = async (req, res) => {
 // @route   PUT /api/services/:id
 // @access  Private
 const updateService = async (req, res) => {
-  try {
-    const service = await Service.findById(req.params.id);
-    if (!service) {
-      return res.status(404).json({
-        success: false,
-        message: "Service not found",
-      });
+    try {
+        const service = await Service.findById(req.params.id);
+        if (!service) {
+            return res.status(404).json({
+                success: false,
+                message: "Service not found",
+            });
+        }
+
+        // Update service
+        const updatedService = await Service.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { returnDocument: 'after', runValidators: true },
+        );
+
+        // ============ ✅ UPDATE INVOICE COMPLETELY ============
+        let invoice = await Invoice.findOne({ service: service._id });
+
+        if (invoice) {
+            // Update customer & vehicle info
+            invoice.customerName = updatedService.customerName;
+            invoice.customerPhone = updatedService.customerPhone;
+            invoice.vehicleNumber = updatedService.vehicleNumber;
+            invoice.vehicleModel = updatedService.vehicleModel || '';
+            
+            // ✅ Update items (services, parts, charges)
+            invoice.items = [
+                ...updatedService.services.map((s) => ({
+                    type: "service",
+                    description: s.serviceName,
+                    quantity: s.laborHours || 1,
+                    unitPrice: s.servicePrice / (s.laborHours || 1),
+                    totalPrice: s.servicePrice,
+                })),
+                ...updatedService.partsUsed.map((p) => ({
+                    type: "part",
+                    description: p.productName,
+                    quantity: p.quantity,
+                    unitPrice: p.unitPrice,
+                    totalPrice: p.totalPrice,
+                    purchasePrice: p.purchasePrice || 0
+                })),
+                ...(updatedService.additionalCharges || []).map((c) => ({
+                    type: "charge",
+                    description: c.description,
+                    quantity: 1,
+                    unitPrice: c.amount,
+                    totalPrice: c.amount,
+                })),
+            ];
+
+            // ✅ Update billing
+            invoice.subtotal = updatedService.billing.subtotal;
+            invoice.tax = updatedService.billing.tax;
+            invoice.taxRate = updatedService.billing.taxRate;
+            invoice.discount = updatedService.billing.discount;
+            invoice.discountType = updatedService.billing.discountType;
+            invoice.totalAmount = updatedService.billing.totalAmount;
+            invoice.paidAmount = updatedService.billing.paidAmount;
+            invoice.balance = updatedService.billing.balance;
+            invoice.paymentStatus = updatedService.billing.paymentStatus;
+            invoice.paymentMethod = updatedService.billing.paymentMethod;
+            invoice.notes = updatedService.notes;
+
+            // Update invoice status
+            invoice.status = updatedService.billing.balance <= 0 ? "paid" : "issued";
+
+            await invoice.save();
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Service updated successfully",
+            service: updatedService,
+            invoice: invoice || null,
+        });
+    } catch (error) {
+        console.error("Update Service Error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
     }
-
-    // Update fields
-    const updatedService = await Service.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { returnDocument: 'after', runValidators: true },
-    );
-
-    // Update invoice
-    await Invoice.findOneAndUpdate(
-      { service: service._id },
-      {
-        customerName: updatedService.customerName,
-        customerPhone: updatedService.customerPhone,
-        vehicleNumber: updatedService.vehicleNumber,
-      },
-    );
-
-    res.status(200).json({
-      success: true,
-      message: "Service updated successfully",
-      service: updatedService,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
 // @desc    Generate bill for service
