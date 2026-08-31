@@ -123,8 +123,7 @@ const openEditModal = (service) => {
         setEditFormData({ ...editFormData, services: updatedServices });
     };
 
-    // ============ HANDLE EDIT PART CHANGE ============
-   // ============ HANDLE EDIT PART CHANGE ============
+  // ============ HANDLE EDIT PART CHANGE ============
 const handleEditPartChange = (index, field, value) => {
     const updatedParts = [...editFormData.partsUsed];
     updatedParts[index][field] = value;
@@ -134,8 +133,15 @@ const handleEditPartChange = (index, field, value) => {
         if (product) {
             updatedParts[index].productName = product.name;
             updatedParts[index].unitPrice = product.price;
-            updatedParts[index].purchasePrice = product.costPrice || product.price;  // ✅ ADD THIS
+            updatedParts[index].purchasePrice = product.costPrice || product.price;
         }
+    }
+
+    // ✅ Auto calculate totalPrice when quantity or unitPrice changes
+    if (field === 'quantity' || field === 'unitPrice' || field === 'product') {
+        const quantity = parseFloat(updatedParts[index].quantity) || 0;
+        const unitPrice = parseFloat(updatedParts[index].unitPrice) || 0;
+        updatedParts[index].totalPrice = quantity * unitPrice;
     }
 
     setEditFormData({ ...editFormData, partsUsed: updatedParts });
@@ -175,6 +181,7 @@ const addEditPart = () => {
             quantity: '1', 
             unitPrice: '', 
             purchasePrice: '',  // ✅ ADD THIS
+             totalPrice: 0,
             fromInventory: true 
         }]
     });
@@ -254,19 +261,46 @@ const handleEditSubmit = async (e) => {
             };
         };
 
-        // Calculate billing
+        // ============ ✅ PROCESS PARTS - ADD totalPrice ============
+        const processedParts = editFormData.partsUsed.map(part => {
+            const quantity = parseFloat(part.quantity) || 0;
+            const unitPrice = parseFloat(part.unitPrice) || 0;
+            const purchasePrice = parseFloat(part.purchasePrice) || 0;
+            
+            return {
+                product: part.fromInventory && part.product ? part.product : null,
+                productName: part.productName || 'Custom Item',
+                quantity: quantity,
+                unitPrice: unitPrice,
+                purchasePrice: purchasePrice,
+                totalPrice: quantity * unitPrice,  // ✅ CALCULATE totalPrice
+                fromInventory: part.fromInventory || false
+            };
+        });
+
+        // ============ ✅ PROCESS CHARGES ============
+        const processedCharges = editFormData.additionalCharges.map(charge => ({
+            description: charge.description || '',
+            amount: parseFloat(charge.amount) || 0,
+            purchasePrice: parseFloat(charge.purchasePrice) || 0,
+            sellingPrice: parseFloat(charge.sellingPrice) || 0
+        }));
+
+        // Calculate billing with processed data
         const billingTotals = calculateBillingTotals(
             editFormData.services || [],
-            editFormData.partsUsed || [],
-            editFormData.additionalCharges || [],
+            processedParts,          // ✅ Use processed parts
+            processedCharges,        // ✅ Use processed charges
             editFormData.billing?.taxRate || 0,
             editFormData.billing?.discount || 0,
             editFormData.billing?.discountType || "fixed"
         );
 
-        // ✅ Prepare data with calculated billing and purchasePrice
+        // ✅ Prepare data with calculated billing and processed parts
         const dataToSend = {
             ...editFormData,
+            partsUsed: processedParts,           // ✅ SEND PROCESSED PARTS
+            additionalCharges: processedCharges,  // ✅ SEND PROCESSED CHARGES
             billing: {
                 ...editFormData.billing,
                 subtotal: billingTotals.subtotal,
@@ -1760,6 +1794,9 @@ const handleEditSubmit = async (e) => {
     ))}
 </div>
 
+
+
+
                     {/* Additional Charges */}
 <div className="border-b border-gray-400 pb-4">
     <div className="flex justify-between items-center mb-3">
@@ -1823,9 +1860,38 @@ const handleEditSubmit = async (e) => {
     ))}
 </div>
 
+
+
                     {/* Billing */}
                     <div className="border-b border-gray-400 pb-4">
                         <h4 className="font-semibold text-gray-700 mb-3">Billing</h4>
+
+
+
+                          {/* ✅ ADD TOTAL BILL AMOUNT HERE */}
+    {(() => {
+        const servicesTotal = editFormData.services.reduce((sum, s) => sum + (parseFloat(s.servicePrice) || 0), 0);
+        const partsTotal = editFormData.partsUsed.reduce((sum, p) => sum + ((parseFloat(p.quantity) || 0) * (parseFloat(p.unitPrice) || 0)), 0);
+        const chargesTotal = editFormData.additionalCharges.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+        const subtotal = servicesTotal + partsTotal + chargesTotal;
+        const taxAmount = subtotal * (parseFloat(editFormData.billing.taxRate) || 0) / 100;
+        let discountAmount = 0;
+        if (parseFloat(editFormData.billing.discount) > 0) {
+            if (editFormData.billing.discountType === 'percentage') {
+                discountAmount = (subtotal + taxAmount) * (parseFloat(editFormData.billing.discount) || 0) / 100;
+            } else {
+                discountAmount = parseFloat(editFormData.billing.discount) || 0;
+            }
+        }
+        const grandTotal = subtotal + taxAmount - discountAmount;
+
+        return (
+            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+                <p className="text-sm text-gray-600">Total Bill Amount:</p>
+                <p className="text-2xl font-bold text-blue-600">PKR {grandTotal.toLocaleString()}</p>
+            </div>
+        );
+    })()}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="label">Tax Rate (%)</label>
