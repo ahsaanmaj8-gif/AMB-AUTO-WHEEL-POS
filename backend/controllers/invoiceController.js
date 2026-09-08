@@ -1,39 +1,63 @@
-const express = require("express");
-const router = express.Router();
-const { protect } = require("../middleware/authMiddleware");
 const Invoice = require("../models/invoiceModel");
 const Service = require("../models/serviceModel");
 
-
-// @desc    Get all invoices
-// @route   GET /api/invoices
-// @access  Private
+// ============ GET ALL INVOICES ============
 const getInvoices = async (req, res) => {
-  try {
-    const invoices = await Invoice.find()
-  .populate("service", "vehicleModel vehicleMake mileage notes")
-  .sort({ createdAt: -1 });
-    res.status(200).json({
-      success: true,
-      count: invoices.length,
-      invoices: invoices,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+    try {
+        const invoices = await Invoice.find({ 
+            workshopId: req.user.workshopId 
+        })
+            .populate("service", "customerAddress vehicleModel vehicleMake mileage notes")
+            .sort({ createdAt: -1 });
+        
+        res.status(200).json({
+            success: true,
+            count: invoices.length,
+            invoices: invoices,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
 };
 
+// ============ GET SINGLE INVOICE ============
+const getInvoiceById = async (req, res) => {
+    try {
+        const invoice = await Invoice.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: "Invoice not found",
+            });
+        }
+        res.status(200).json({
+            success: true,
+            invoice: invoice,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
+};
 
-
-// ============ UPDATE PAYMENT METHOD ============
 // ============ UPDATE PAYMENT METHOD ============
 const updatePaymentMethod = async (req, res) => {
     try {
         const { paymentMethod } = req.body;
-        const invoice = await Invoice.findById(req.params.id);
+        
+        // ✅ Find invoice with workshopId check
+        const invoice = await Invoice.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         
         if (!invoice) {
             return res.status(404).json({
@@ -42,7 +66,6 @@ const updatePaymentMethod = async (req, res) => {
             });
         }
 
-        // Valid payment methods
         const validMethods = ['cash', 'card', 'bank-transfer', 'other'];
         if (!validMethods.includes(paymentMethod)) {
             return res.status(400).json({
@@ -51,14 +74,16 @@ const updatePaymentMethod = async (req, res) => {
             });
         }
 
-        // Update invoice
         invoice.paymentMethod = paymentMethod;
         await invoice.save();
 
         // Also update the related service
         if (invoice.service) {
-            await Service.findByIdAndUpdate(
-                invoice.service,
+            await Service.findOneAndUpdate(
+                { 
+                    _id: invoice.service, 
+                    workshopId: req.user.workshopId 
+                },
                 { "billing.paymentMethod": paymentMethod }
             );
         }
@@ -77,35 +102,81 @@ const updatePaymentMethod = async (req, res) => {
     }
 };
 
-
-// @desc    Get single invoice
-// @route   GET /api/invoices/:id
-// @access  Private
-const getInvoiceById = async (req, res) => {
-  try {
-    const invoice = await Invoice.findById(req.params.id);
-    if (!invoice) {
-      return res.status(404).json({
-        success: false,
-        message: "Invoice not found",
-      });
+// ============ DELETE SINGLE INVOICE ============
+const deleteInvoice = async (req, res) => {
+    try {
+        const invoice = await Invoice.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
+        if (!invoice) {
+            return res.status(404).json({
+                success: false,
+                message: "Invoice not found"
+            });
+        }
+        await invoice.deleteOne();
+        res.status(200).json({
+            success: true,
+            message: "Invoice deleted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
     }
-    res.status(200).json({
-      success: true,
-      invoice: invoice,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
 };
 
-//
+// ============ DELETE INVOICES BY MONTH ============
+const deleteInvoicesByMonth = async (req, res) => {
+    try {
+        const { year, month } = req.params;
+        const startDate = new Date(year, month - 1, 1);
+        const endDate = new Date(year, month, 0, 23, 59, 59);
+        
+        const result = await Invoice.deleteMany({
+            workshopId: req.user.workshopId,
+            createdAt: { $gte: startDate, $lte: endDate }
+        });
+        
+        res.status(200).json({
+            success: true,
+            message: `${result.deletedCount} invoices deleted`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+// ============ DELETE ALL INVOICES ============
+const deleteAllInvoices = async (req, res) => {
+    try {
+        const result = await Invoice.deleteMany({ 
+            workshopId: req.user.workshopId 
+        });
+        res.status(200).json({
+            success: true,
+            message: `${result.deletedCount} invoices deleted`,
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 module.exports = {
     getInvoices,
     getInvoiceById,
-    updatePaymentMethod
+    updatePaymentMethod,
+    deleteInvoice,
+    deleteInvoicesByMonth,
+    deleteAllInvoices
 };

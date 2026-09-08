@@ -228,6 +228,13 @@ const Header = () => {
                             day: 'numeric'
                         })}
                     </p>
+
+
+                      {/* {user?.workshopName && (
+        <p className="text-xs text-blue-600 font-medium mt-1">
+            🏪 {user.workshopName}
+        </p>
+    )} */}
                 </div>
 
                 {/* Right */}
@@ -369,6 +376,14 @@ const Header = () => {
                         <div className="hidden sm:block">
                             <p className="text-sm font-medium text-gray-700">{user?.name}</p>
                             <p className="text-xs text-gray-500 capitalize">{user?.role === 1 ? 'Admin' : 'Staff'}</p>
+                       
+                       {user?.workshopName && (
+        <p className="text-xs text-blue-600 font-medium">
+            🏪 {user.workshopName}
+        </p>
+    )}
+
+
                         </div>
                     </div>
                 </div>

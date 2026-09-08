@@ -399,15 +399,25 @@ const Revenue = () => {
                         </div>
 
                         <div className="card border-l-4 border-l-green-500">
-                            <p className="text-sm text-gray-500">Total Overall Revenue</p>
-                            <p className="text-2xl font-bold text-gray-800">PKR {revenueData.serviceRevenue?.toLocaleString() || 0}</p>
-                            <p className="text-xs text-gray-400">From service charges</p>
+                            <p className="text-sm text-gray-500">Total Profit</p>
+                            {/* <p className="text-2xl font-bold text-gray-800">PKR {revenueData.serviceRevenue?.toLocaleString() || 0}</p> */}
+                             <div className="mt-2 pt-2 border-t border-gray-200">
+                                <p className="text-sm text-green-600 font-medium">
+                                    Total Profit: PKR {revenueData.totalProfit?.toLocaleString() || 0}
+                                </p>
+                                {/* {revenueData.totalRevenue > 0 && (
+                                    <p className="text-xs text-gray-500">
+                                        Margin: {((revenueData.totalProfit / revenueData.totalRevenue) * 100).toFixed(1)}%
+                                    </p>
+                                )} */}
+                            </div>
+                            {/* <p className="text-xs text-gray-400">From service charges</p>
                             <div className="w-full bg-gray-200 rounded-full h-1.5 mt-2">
                                 <div
                                     className="bg-green-500 h-1.5 rounded-full"
                                     style={{ width: `${revenueData.totalRevenue ? (revenueData.serviceRevenue / revenueData.totalRevenue) * 100 : 0}%` }}
                                 ></div>
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 

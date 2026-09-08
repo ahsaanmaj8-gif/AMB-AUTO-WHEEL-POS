@@ -22,9 +22,11 @@ const Services = () => {
         vehicleMake: '',
         mileage: '',
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', fromInventory: true }],
-        additionalCharges: [{ description: '', amount: ''  , purchasePrice: '',  
-    sellingPrice: ''  }],
+        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', fromInventory: true }],
+        additionalCharges: [{
+            description: '', amount: '', purchasePrice: '',
+            sellingPrice: ''
+        }],
         billing: {
             taxRate: '0',
             discount: '0',
@@ -50,7 +52,7 @@ const Services = () => {
         vehicleMake: '',
         mileage: '',
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', fromInventory: true }],
+        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', fromInventory: true }],
         additionalCharges: [{ description: '', amount: '' }],
         billing: {
             taxRate: '0',
@@ -68,45 +70,46 @@ const Services = () => {
 
 
 
-   // ============ OPEN EDIT MODAL ============
-const openEditModal = (service) => {
-    // console.log("Editing service: ", service);
-    setEditingService(service);
-    setEditFormData({
-        customerName: service.customerName || '',
-        customerPhone: service.customerPhone || '',
-        customerAddress: service.customerAddress || '',
-        vehicleNumber: service.vehicleNumber || '',
-        vehicleModel: service.vehicleModel || '',
-        vehicleMake: service.vehicleMake || '',
-        mileage: service.mileage || '',
-        services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-        partsUsed: service.partsUsed || [{ 
-            product: '', 
-            productName: '', 
-            quantity: '1', 
-            unitPrice: '', 
-            purchasePrice: '',  // ✅ ADD THIS
-            fromInventory: true 
-        }],
-        additionalCharges: service.additionalCharges || [{ 
-            description: '', 
-            amount: '',
-            purchasePrice: '',  // ✅ ADD THIS
-            sellingPrice: ''    // ✅ ADD THIS
-        }],
-        billing: {
-            taxRate: service.billing?.taxRate?.toString() || '0',
-            discount: service.billing?.discount?.toString() || '0',
-            discountType: service.billing?.discountType || 'fixed',
-            paidAmount: service.billing?.paidAmount?.toString() || '0',
-            paymentMethod: service.billing?.paymentMethod || 'cash'
-        },
-        notes: service.notes || '',
-        assignedTo: service.assignedTo || ''
-    });
-    setShowEditModal(true);
-};
+    // ============ OPEN EDIT MODAL ============
+    const openEditModal = (service) => {
+        // console.log("Editing service: ", service);
+        setEditingService(service);
+        setEditFormData({
+            customerName: service.customerName || '',
+            customerPhone: service.customerPhone || '',
+            customerAddress: service.customerAddress || '',
+            vehicleNumber: service.vehicleNumber || '',
+            vehicleModel: service.vehicleModel || '',
+            vehicleMake: service.vehicleMake || '',
+            mileage: service.mileage || '',
+            services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
+            partsUsed: service.partsUsed || [{
+                product: '',
+                productName: '',
+                quantity: '1',
+                unitPrice: '',
+                purchasePrice: '',  // ✅ ADD THIS
+                searchTerm: '',
+                fromInventory: true
+            }],
+            additionalCharges: service.additionalCharges || [{
+                description: '',
+                amount: '',
+                purchasePrice: '',  // ✅ ADD THIS
+                sellingPrice: ''    // ✅ ADD THIS
+            }],
+            billing: {
+                taxRate: service.billing?.taxRate?.toString() || '0',
+                discount: service.billing?.discount?.toString() || '0',
+                discountType: service.billing?.discountType || 'fixed',
+                paidAmount: service.billing?.paidAmount?.toString() || '0',
+                paymentMethod: service.billing?.paymentMethod || 'cash'
+            },
+            notes: service.notes || '',
+            assignedTo: service.assignedTo || ''
+        });
+        setShowEditModal(true);
+    };
 
     // ============ HANDLE EDIT CHANGE ============
     const handleEditChange = (e) => {
@@ -123,29 +126,29 @@ const openEditModal = (service) => {
         setEditFormData({ ...editFormData, services: updatedServices });
     };
 
-  // ============ HANDLE EDIT PART CHANGE ============
-const handleEditPartChange = (index, field, value) => {
-    const updatedParts = [...editFormData.partsUsed];
-    updatedParts[index][field] = value;
+    // ============ HANDLE EDIT PART CHANGE ============
+    const handleEditPartChange = (index, field, value) => {
+        const updatedParts = [...editFormData.partsUsed];
+        updatedParts[index][field] = value;
 
-    if (field === 'product' && value) {
-        const product = products.find(p => p._id === value);
-        if (product) {
-            updatedParts[index].productName = product.name;
-            updatedParts[index].unitPrice = product.price;
-            updatedParts[index].purchasePrice = product.costPrice || product.price;
+        if (field === 'product' && value) {
+            const product = products.find(p => p._id === value);
+            if (product) {
+                updatedParts[index].productName = product.name;
+                updatedParts[index].unitPrice = product.price;
+                updatedParts[index].purchasePrice = product.costPrice || product.price;
+            }
         }
-    }
 
-    // ✅ Auto calculate totalPrice when quantity or unitPrice changes
-    if (field === 'quantity' || field === 'unitPrice' || field === 'product') {
-        const quantity = parseFloat(updatedParts[index].quantity) || 0;
-        const unitPrice = parseFloat(updatedParts[index].unitPrice) || 0;
-        updatedParts[index].totalPrice = quantity * unitPrice;
-    }
+        // ✅ Auto calculate totalPrice when quantity or unitPrice changes
+        if (field === 'quantity' || field === 'unitPrice' || field === 'product') {
+            const quantity = parseFloat(updatedParts[index].quantity) || 0;
+            const unitPrice = parseFloat(updatedParts[index].unitPrice) || 0;
+            updatedParts[index].totalPrice = quantity * unitPrice;
+        }
 
-    setEditFormData({ ...editFormData, partsUsed: updatedParts });
-};
+        setEditFormData({ ...editFormData, partsUsed: updatedParts });
+    };
 
     // ============ HANDLE EDIT CHARGE CHANGE ============
     const handleEditChargeChange = (index, field, value) => {
@@ -171,21 +174,21 @@ const handleEditPartChange = (index, field, value) => {
     };
 
     // ============ ADD EDIT PART ROW ============
-   // ============ ADD EDIT PART ROW ============
-const addEditPart = () => {
-    setEditFormData({
-        ...editFormData,
-        partsUsed: [...editFormData.partsUsed, { 
-            product: '', 
-            productName: '', 
-            quantity: '1', 
-            unitPrice: '', 
-            purchasePrice: '',  // ✅ ADD THIS
-             totalPrice: 0,
-            fromInventory: true 
-        }]
-    });
-};
+    // ============ ADD EDIT PART ROW ============
+    const addEditPart = () => {
+        setEditFormData({
+            ...editFormData,
+            partsUsed: [...editFormData.partsUsed, {
+                product: '',
+                productName: '',
+                quantity: '1',
+                unitPrice: '',
+                purchasePrice: '',  // ✅ ADD THIS
+                totalPrice: 0,
+                fromInventory: true
+            }]
+        });
+    };
 
     // ============ REMOVE EDIT PART ROW ============
     const removeEditPart = (index) => {
@@ -196,17 +199,17 @@ const addEditPart = () => {
     };
 
     // ============ ADD EDIT CHARGE ROW ============
-   const addEditCharge = () => {
-    setEditFormData({
-        ...editFormData,
-        additionalCharges: [...editFormData.additionalCharges, { 
-            description: '', 
-            amount: '',
-            purchasePrice: '',  // ✅ ADD THIS
-            sellingPrice: ''    // ✅ ADD THIS
-        }]
-    });
-};
+    const addEditCharge = () => {
+        setEditFormData({
+            ...editFormData,
+            additionalCharges: [...editFormData.additionalCharges, {
+                description: '',
+                amount: '',
+                purchasePrice: '',  // ✅ ADD THIS
+                sellingPrice: ''    // ✅ ADD THIS
+            }]
+        });
+    };
 
     // ============ REMOVE EDIT CHARGE ROW ============
     const removeEditCharge = (index) => {
@@ -217,115 +220,115 @@ const addEditPart = () => {
     };
 
     // ============ SUBMIT EDIT ============
-   // ============ SUBMIT EDIT ============
-const handleEditSubmit = async (e) => {
-    e.preventDefault();
-    console.log("Edit form data: ", editFormData);
+    // ============ SUBMIT EDIT ============
+    const handleEditSubmit = async (e) => {
+        e.preventDefault();
+        // console.log("Edit form data: ", editFormData);
 
-    try {
-        // Calculate billing totals
-        const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
-            let servicesTotal = 0;
-            services.forEach(service => {
-                servicesTotal += parseFloat(service.servicePrice) || 0;
-            });
+        try {
+            // Calculate billing totals
+            const calculateBillingTotals = (services, parts, charges, taxRate, discount, discountType) => {
+                let servicesTotal = 0;
+                services.forEach(service => {
+                    servicesTotal += parseFloat(service.servicePrice) || 0;
+                });
 
-            let partsTotal = 0;
-            parts.forEach(part => {
-                partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
-            });
+                let partsTotal = 0;
+                parts.forEach(part => {
+                    partsTotal += (parseFloat(part.quantity) || 0) * (parseFloat(part.unitPrice) || 0);
+                });
 
-            let chargesTotal = 0;
-            charges.forEach(charge => {
-                chargesTotal += parseFloat(charge.amount) || 0;
-            });
+                let chargesTotal = 0;
+                charges.forEach(charge => {
+                    chargesTotal += parseFloat(charge.amount) || 0;
+                });
 
-            let subtotal = servicesTotal + partsTotal + chargesTotal;
-            let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
-            let total = subtotal + tax;
-            let discountAmount = 0;
-            if (parseFloat(discount) > 0) {
-                if (discountType === "percentage") {
-                    discountAmount = (total * parseFloat(discount)) / 100;
-                } else {
-                    discountAmount = parseFloat(discount);
+                let subtotal = servicesTotal + partsTotal + chargesTotal;
+                let tax = (subtotal * (parseFloat(taxRate) || 0)) / 100;
+                let total = subtotal + tax;
+                let discountAmount = 0;
+                if (parseFloat(discount) > 0) {
+                    if (discountType === "percentage") {
+                        discountAmount = (total * parseFloat(discount)) / 100;
+                    } else {
+                        discountAmount = parseFloat(discount);
+                    }
                 }
-            }
-            let finalTotal = total - discountAmount;
+                let finalTotal = total - discountAmount;
 
-            return {
-                subtotal: subtotal,
-                tax: tax,
-                discount: discountAmount,
-                totalAmount: finalTotal
+                return {
+                    subtotal: subtotal,
+                    tax: tax,
+                    discount: discountAmount,
+                    totalAmount: finalTotal
+                };
             };
-        };
 
-        // ============ ✅ PROCESS PARTS - ADD totalPrice ============
-        const processedParts = editFormData.partsUsed.map(part => {
-            const quantity = parseFloat(part.quantity) || 0;
-            const unitPrice = parseFloat(part.unitPrice) || 0;
-            const purchasePrice = parseFloat(part.purchasePrice) || 0;
-            
-            return {
-                product: part.fromInventory && part.product ? part.product : null,
-                productName: part.productName || 'Custom Item',
-                quantity: quantity,
-                unitPrice: unitPrice,
-                purchasePrice: purchasePrice,
-                totalPrice: quantity * unitPrice,  // ✅ CALCULATE totalPrice
-                fromInventory: part.fromInventory || false
+            // ============ ✅ PROCESS PARTS - ADD totalPrice ============
+            const processedParts = editFormData.partsUsed.map(part => {
+                const quantity = parseFloat(part.quantity) || 0;
+                const unitPrice = parseFloat(part.unitPrice) || 0;
+                const purchasePrice = parseFloat(part.purchasePrice) || 0;
+
+                return {
+                    product: part.fromInventory && part.product ? part.product : null,
+                    productName: part.productName || 'Custom Item',
+                    quantity: quantity,
+                    unitPrice: unitPrice,
+                    purchasePrice: purchasePrice,
+                    totalPrice: quantity * unitPrice,  // ✅ CALCULATE totalPrice
+                    fromInventory: part.fromInventory || false
+                };
+            });
+
+            // ============ ✅ PROCESS CHARGES ============
+            const processedCharges = editFormData.additionalCharges.map(charge => ({
+                description: charge.description || '',
+                amount: parseFloat(charge.amount) || 0,
+                purchasePrice: parseFloat(charge.purchasePrice) || 0,
+                sellingPrice: parseFloat(charge.sellingPrice) || 0
+            }));
+
+            // Calculate billing with processed data
+            const billingTotals = calculateBillingTotals(
+                editFormData.services || [],
+                processedParts,          // ✅ Use processed parts
+                processedCharges,        // ✅ Use processed charges
+                editFormData.billing?.taxRate || 0,
+                editFormData.billing?.discount || 0,
+                editFormData.billing?.discountType || "fixed"
+            );
+
+            // ✅ Prepare data with calculated billing and processed parts
+            const dataToSend = {
+                ...editFormData,
+                partsUsed: processedParts,           // ✅ SEND PROCESSED PARTS
+                additionalCharges: processedCharges,  // ✅ SEND PROCESSED CHARGES
+                billing: {
+                    ...editFormData.billing,
+                    subtotal: billingTotals.subtotal,
+                    tax: billingTotals.tax,
+                    discount: billingTotals.discount,
+                    totalAmount: billingTotals.totalAmount,
+                    paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
+                    balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
+                    paymentMethod: editFormData.billing?.paymentMethod || 'cash'
+                }
             };
-        });
 
-        // ============ ✅ PROCESS CHARGES ============
-        const processedCharges = editFormData.additionalCharges.map(charge => ({
-            description: charge.description || '',
-            amount: parseFloat(charge.amount) || 0,
-            purchasePrice: parseFloat(charge.purchasePrice) || 0,
-            sellingPrice: parseFloat(charge.sellingPrice) || 0
-        }));
+            await axios.put(
+                `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
+                dataToSend
+            );
 
-        // Calculate billing with processed data
-        const billingTotals = calculateBillingTotals(
-            editFormData.services || [],
-            processedParts,          // ✅ Use processed parts
-            processedCharges,        // ✅ Use processed charges
-            editFormData.billing?.taxRate || 0,
-            editFormData.billing?.discount || 0,
-            editFormData.billing?.discountType || "fixed"
-        );
-
-        // ✅ Prepare data with calculated billing and processed parts
-        const dataToSend = {
-            ...editFormData,
-            partsUsed: processedParts,           // ✅ SEND PROCESSED PARTS
-            additionalCharges: processedCharges,  // ✅ SEND PROCESSED CHARGES
-            billing: {
-                ...editFormData.billing,
-                subtotal: billingTotals.subtotal,
-                tax: billingTotals.tax,
-                discount: billingTotals.discount,
-                totalAmount: billingTotals.totalAmount,
-                paidAmount: parseFloat(editFormData.billing?.paidAmount) || 0,
-                balance: billingTotals.totalAmount - (parseFloat(editFormData.billing?.paidAmount) || 0),
-                paymentMethod: editFormData.billing?.paymentMethod || 'cash'
-            }
-        };
-
-        await axios.put(
-            `https://amb-auto-wheel-pos.onrender.com/api/services/${editingService._id}`,
-            dataToSend
-        );
-
-        toast.success('Service updated successfully!');
-        setShowEditModal(false);
-        fetchServices();
-    } catch (error) {
-        console.error('Edit error:', error.response?.data);
-        toast.error(error.response?.data?.message || 'Failed to update service');
-    }
-};
+            toast.success('Service updated successfully!');
+            setShowEditModal(false);
+            fetchServices();
+        } catch (error) {
+            console.error('Edit error:', error.response?.data);
+            toast.error(error.response?.data?.message || 'Failed to update service');
+        }
+    };
 
 
 
@@ -439,45 +442,53 @@ const handleEditSubmit = async (e) => {
     };
 
     const handlePartChange = (index, field, value) => {
-    const updatedParts = [...formData.partsUsed];
-    updatedParts[index][field] = value;
+        const updatedParts = [...formData.partsUsed];
+        updatedParts[index][field] = value;
 
-    // If product is selected from dropdown, auto-fill productName and unitPrice
-    if (field === 'product' && value) {
-        const product = products.find(p => p._id === value);
-        if (product) {
-            updatedParts[index].productName = product.name;
-            updatedParts[index].unitPrice = product.price;
-            updatedParts[index].purchasePrice = product.costPrice || product.price;
-        }
+
+
+        if (field === 'searchTerm') {
+        setFormData({ ...formData, partsUsed: updatedParts });
+        return;
     }
 
-    // ✅ If fromInventory is changed to false
-    if (field === 'fromInventory' && value === false) {
-        updatedParts[index].product = '';
-        
-    }
-
-    // ✅ If fromInventory is changed to true
-    if (field === 'fromInventory' && value === true) {
-        // If product is selected, auto-fill
-        if (updatedParts[index].product) {
-            const product = products.find(p => p._id === updatedParts[index].product);
+        // If product is selected from dropdown, auto-fill productName and unitPrice
+        if (field === 'product' && value) {
+            const product = products.find(p => p._id === value);
             if (product) {
                 updatedParts[index].productName = product.name;
                 updatedParts[index].unitPrice = product.price;
                 updatedParts[index].purchasePrice = product.costPrice || product.price;
             }
         }
-    }
 
-    setFormData({ ...formData, partsUsed: updatedParts });
-};
+        // ✅ If fromInventory is changed to false
+        if (field === 'fromInventory' && value === false) {
+            updatedParts[index].product = '';
+            updatedParts[index].searchTerm = '';
+
+        }
+
+        // ✅ If fromInventory is changed to true
+        if (field === 'fromInventory' && value === true) {
+            // If product is selected, auto-fill
+            if (updatedParts[index].product) {
+                const product = products.find(p => p._id === updatedParts[index].product);
+                if (product) {
+                    updatedParts[index].productName = product.name;
+                    updatedParts[index].unitPrice = product.price;
+                    updatedParts[index].purchasePrice = product.costPrice || product.price;
+                }
+            }
+        }
+
+        setFormData({ ...formData, partsUsed: updatedParts });
+    };
 
     const addPart = () => {
         setFormData({
             ...formData,
-            partsUsed: [...formData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', fromInventory: true }]
+            partsUsed: [...formData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', fromInventory: true }]
         });
     };
 
@@ -497,8 +508,10 @@ const handleEditSubmit = async (e) => {
     const addCharge = () => {
         setFormData({
             ...formData,
-            additionalCharges: [...formData.additionalCharges, { description: '', amount: '' ,  purchasePrice: '',  
-            sellingPrice: '' }]
+            additionalCharges: [...formData.additionalCharges, {
+                description: '', amount: '', purchasePrice: '',
+                sellingPrice: ''
+            }]
         });
     };
 
@@ -519,31 +532,31 @@ const handleEditSubmit = async (e) => {
         }
 
         // ============ ✅ FIX: Process parts ============
-    const processedParts = formData.partsUsed.map(part => {
-    const quantity = parseFloat(part.quantity) || 0;
-    const unitPrice = parseFloat(part.unitPrice) || 0;
-    const purchasePrice = parseFloat(part.purchasePrice) || 0;
-    
+        const processedParts = formData.partsUsed.map(part => {
+            const quantity = parseFloat(part.quantity) || 0;
+            const unitPrice = parseFloat(part.unitPrice) || 0;
+            const purchasePrice = parseFloat(part.purchasePrice) || 0;
 
-    // console.log('Part Data:', {
-    //         productName: part.productName,
-    //         quantity: quantity,
-    //         unitPrice: unitPrice,
-    //         purchasePrice: purchasePrice  // ✅ Check this value
-    //     });
-    return {
-        product: part.fromInventory && part.product ? part.product : null,
-        productName: part.productName || 'Custom Item',
-        quantity: quantity,           // ✅ SEND QUANTITY
-        unitPrice: unitPrice,         // ✅ SEND SELLING PRICE
-        purchasePrice: purchasePrice, // ✅ SEND PURCHASE PRICE
-        totalPrice: quantity * unitPrice,
-        fromInventory: part.fromInventory
-    };
-});
 
-// ✅ Log to verify
-// console.log('Processed Parts:', processedParts);
+            // console.log('Part Data:', {
+            //         productName: part.productName,
+            //         quantity: quantity,
+            //         unitPrice: unitPrice,
+            //         purchasePrice: purchasePrice  // ✅ Check this value
+            //     });
+            return {
+                product: part.fromInventory && part.product ? part.product : null,
+                productName: part.productName || 'Custom Item',
+                quantity: quantity,           // ✅ SEND QUANTITY
+                unitPrice: unitPrice,         // ✅ SEND SELLING PRICE
+                purchasePrice: purchasePrice, // ✅ SEND PURCHASE PRICE
+                totalPrice: quantity * unitPrice,
+                fromInventory: part.fromInventory
+            };
+        });
+
+        // ✅ Log to verify
+        // console.log('Processed Parts:', processedParts);
 
         const dataToSend = {
             ...formData,
@@ -757,6 +770,7 @@ const handleEditSubmit = async (e) => {
                                     <th>Vehicle</th>
                                     <th>Services</th>
                                     <th>Total</th>
+                                    <th>Profit</th>
                                     <th>Status</th>
                                     <th>Payment</th>
                                     <th>Actions</th>
@@ -778,6 +792,7 @@ const handleEditSubmit = async (e) => {
                                             <div className="text-xs text-gray-500">{service.partsUsed?.length || 0} parts</div>
                                         </td>
                                         <td className="font-medium">PKR {service.billing?.totalAmount?.toLocaleString() || 0}</td>
+                                        <td className="font-medium">PKR {service.profit?.totalProfit?.toLocaleString() || 0}</td>
                                         {/* <td>
                                             <span className={`badge ${service.status === 'completed' ? 'badge-success' :
                                                 service.status === 'in-progress' ? 'badge-warning' :
@@ -1087,18 +1102,40 @@ const handleEditSubmit = async (e) => {
                                 {part.fromInventory ? (
                                     <div className="col-span-2">
                                         <label className="label text-xs">Product</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Search products..."
+                                            className="input-field text-sm mb-1"
+                                            value={part.searchTerm || ''}
+                                            onChange={(e) => handlePartChange(index, 'searchTerm', e.target.value)}  // ✅ Use handlePartChange
+                                        />
                                         <select
                                             value={part.product}
                                             onChange={(e) => handlePartChange(index, 'product', e.target.value)}
                                             className="input-field text-sm"
                                         >
                                             <option value="">Select Product</option>
-                                            {products.map((p) => (
-                                                <option key={p._id} value={p._id}>
-                                                    {p.name} ({p.sku}) - PKR {p.price}
-                                                </option>
-                                            ))}
+                                            {products
+                                                .filter(p => {
+                                                    const search = part.searchTerm || '';
+                                                    if (!search) return true;
+                                                    return p.name.toLowerCase().includes(search.toLowerCase()) ||
+                                                        p.sku.toLowerCase().includes(search.toLowerCase());
+                                                })
+                                                .map((p) => (
+                                                    <option key={p._id} value={p._id}>
+                                                        {p.name} ({p.sku}) - PKR {p.price}
+                                                    </option>
+                                                ))}
                                         </select>
+                                        {products.filter(p => {
+                                            const search = part.searchTerm || '';
+                                            if (!search) return true;
+                                            return p.name.toLowerCase().includes(search.toLowerCase()) ||
+                                                p.sku.toLowerCase().includes(search.toLowerCase());
+                                        }).length === 0 && part.searchTerm && (
+                                                <p className="text-xs text-red-500 mt-1">No products found</p>
+                                            )}
                                     </div>
                                 ) : (
                                     <div className="col-span-2">
@@ -1179,68 +1216,68 @@ const handleEditSubmit = async (e) => {
                     </div>
 
                     {/* Additional Charges */}
-                   {/* Additional Charges (Sublets) */}
-<div className="border-b border-gray-400 pb-4">
-    <div className="flex justify-between items-center mb-3">
-        <h4 className="font-semibold text-gray-700">Additional Charges (Sublets)</h4>
-        <button type="button" onClick={addCharge} className="text-sm text-blue-600 hover:underline">
-            + Add Charge
-        </button>
-    </div>
-    {formData.additionalCharges.map((charge, index) => (
-        <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-            <div className="col-span-1">
-                <label className="label text-xs">Description</label>
-                <input
-                    type="text"
-                    value={charge.description}
-                    onChange={(e) => handleChargeChange(index, 'description', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="e.g., Waste Disposal"
-                />
-            </div>
-            <div>
-                <label className="label text-xs">Purchase Price</label>
-                <input
-                    type="number"
-                    value={charge.purchasePrice}
-                    onChange={(e) => handleChargeChange(index, 'purchasePrice', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="Cost"
-                />
-            </div>
-            <div>
-                <label className="label text-xs">Selling Price</label>
-                <input
-                    type="number"
-                    value={charge.sellingPrice}
-                    onChange={(e) => handleChargeChange(index, 'sellingPrice', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="Sell"
-                />
-            </div>
-            <div className="flex items-end gap-2">
-                <div className="flex-1">
-                    <label className="label text-xs">Customer Price</label>
-                    <input
-                        type="number"
-                        value={charge.amount}
-                        onChange={(e) => handleChargeChange(index, 'amount', e.target.value)}
-                        className="input-field text-sm"
-                        placeholder="500"
-                    />
-                </div>
-                <button
-                    type="button"
-                    onClick={() => removeCharge(index)}
-                    className="text-red-500 hover:text-red-700 mb-1"
-                >
-                    <FaTimes />
-                </button>
-            </div>
-        </div>
-    ))}
-</div>
+                    {/* Additional Charges (Sublets) */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-gray-700">Additional Charges (Sublets)</h4>
+                            <button type="button" onClick={addCharge} className="text-sm text-blue-600 hover:underline">
+                                + Add Charge
+                            </button>
+                        </div>
+                        {formData.additionalCharges.map((charge, index) => (
+                            <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                                <div className="col-span-1">
+                                    <label className="label text-xs">Description</label>
+                                    <input
+                                        type="text"
+                                        value={charge.description}
+                                        onChange={(e) => handleChargeChange(index, 'description', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="e.g., Waste Disposal"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label text-xs">Purchase Price</label>
+                                    <input
+                                        type="number"
+                                        value={charge.purchasePrice}
+                                        onChange={(e) => handleChargeChange(index, 'purchasePrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="Cost"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label text-xs">Selling Price</label>
+                                    <input
+                                        type="number"
+                                        value={charge.sellingPrice}
+                                        onChange={(e) => handleChargeChange(index, 'sellingPrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="Sell"
+                                    />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <label className="label text-xs">Customer Price</label>
+                                        <input
+                                            type="number"
+                                            value={charge.amount}
+                                            onChange={(e) => handleChargeChange(index, 'amount', e.target.value)}
+                                            className="input-field text-sm"
+                                            placeholder="500"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeCharge(index)}
+                                        className="text-red-500 hover:text-red-700 mb-1"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
                     {/* Billing */}
                     <div className="border-b border-gray-400 pb-4">
@@ -1445,6 +1482,7 @@ const handleEditSubmit = async (e) => {
                                                 <th>Part</th>
                                                 <th>Qty</th>
                                                 <th>Price</th>
+                                                <th>Purchase price</th>
                                                 <th>Total</th>
                                                 <th>From Inv.</th>
                                             </tr>
@@ -1455,6 +1493,7 @@ const handleEditSubmit = async (e) => {
                                                     <td>{p.productName}</td>
                                                     <td>{p.quantity}</td>
                                                     <td>PKR {p.unitPrice}</td>
+                                                    <td>PKR {p.purchasePrice}</td>
                                                     <td>PKR {p.totalPrice}</td>
                                                     <td>{p.fromInventory ? 'Yes' : 'No'}</td>
                                                 </tr>
@@ -1464,6 +1503,36 @@ const handleEditSubmit = async (e) => {
                                 </div>
                             </div>
                         )}
+
+
+                        {/* Additional Charges (Sublet) */}
+{selectedService.additionalCharges && selectedService.additionalCharges.length > 0 && (
+    <div>
+        <h5 className="font-semibold text-gray-700 mb-2">Additional Charges (Sublet)</h5>
+        <div className="table-container">
+            <table className="table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Amount</th>
+                        <th>Purchase Price</th>
+                        <th>Selling Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {selectedService.additionalCharges.map((charge, i) => (
+                        <tr key={i}>
+                            <td>{charge.description}</td>
+                            <td>PKR {charge.amount?.toLocaleString() || 0}</td>
+                            <td>PKR {charge.purchasePrice?.toLocaleString() || 0}</td>
+                            <td>PKR {charge.sellingPrice?.toLocaleString() || 0}</td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    </div>
+)}
 
                         {/* Billing Summary */}
                         <div className="bg-blue-50 p-4 rounded-lg">
@@ -1695,170 +1764,198 @@ const handleEditSubmit = async (e) => {
 
                     {/* Parts Used */}
                     {/* Parts Used */}
-<div className="border-b border-gray-400 pb-4">
-    <div className="flex justify-between items-center mb-3">
-        <h4 className="font-semibold text-gray-700">Parts Used</h4>
-        <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
-            + Add Part
-        </button>
-    </div>
-    {editFormData.partsUsed.map((part, index) => (
-        <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-            {/* Product Selection */}
-            {part.fromInventory ? (
-                <div className="col-span-2">
-                    <label className="label text-xs">Product</label>
-                    <select
-                        value={part.product}
-                        onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
-                        className="input-field text-sm"
-                    >
-                        <option value="">Select Product</option>
-                        {products.map((p) => (
-                            <option key={p._id} value={p._id}>{p.name} ({p.sku})</option>
+                    <div className="border-b border-gray-400 pb-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-gray-700">Parts Used</h4>
+                            <button type="button" onClick={addEditPart} className="text-sm text-blue-600 hover:underline">
+                                + Add Part
+                            </button>
+                        </div>
+                        {editFormData.partsUsed.map((part, index) => (
+                            <div key={index} className="grid grid-cols-5 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                                {/* Product Selection */}
+                                {part.fromInventory ? (
+                                    <div className="col-span-2">
+                                        <label className="label text-xs">Product</label>
+                                        <input
+                                            type="text"
+                                            placeholder="Search products..."
+                                            className="input-field text-sm mb-1"
+                                            value={part.searchTerm || ''}
+                                            onChange={(e) => {
+                                                const updatedParts = [...editFormData.partsUsed];
+                                                updatedParts[index].searchTerm = e.target.value;
+                                                setEditFormData({ ...editFormData, partsUsed: updatedParts });
+                                            }}
+                                        />
+                                        <select
+                                            value={part.product}
+                                            onChange={(e) => handleEditPartChange(index, 'product', e.target.value)}
+                                            className="input-field text-sm"
+                                        >
+                                            <option value="">Select Product</option>
+                                            {products
+                                                .filter(p => {
+                                                    const search = part.searchTerm || '';
+                                                    if (!search) return true;
+                                                    return p.name.toLowerCase().includes(search.toLowerCase()) ||
+                                                        p.sku.toLowerCase().includes(search.toLowerCase());
+                                                })
+                                                .map((p) => (
+                                                    <option key={p._id} value={p._id}>
+                                                        {p.name} ({p.sku}) - PKR {p.price}
+                                                    </option>
+                                                ))}
+                                        </select>
+                                        {products.filter(p => {
+                                            const search = part.searchTerm || '';
+                                            if (!search) return true;
+                                            return p.name.toLowerCase().includes(search.toLowerCase()) ||
+                                                p.sku.toLowerCase().includes(search.toLowerCase());
+                                        }).length === 0 && part.searchTerm && (
+                                                <p className="text-xs text-red-500 mt-1">No products found</p>
+                                            )}
+                                    </div>
+                                ) : (
+                                    <div className="col-span-2">
+                                        <label className="label text-xs">Product Name (Manual)</label>
+                                        <input
+                                            type="text"
+                                            value={part.productName}
+                                            onChange={(e) => handleEditPartChange(index, 'productName', e.target.value)}
+                                            className="input-field text-sm"
+                                            placeholder="Enter custom product name"
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Quantity */}
+                                <div>
+                                    <label className="label text-xs">Qty</label>
+                                    <input
+                                        type="number"
+                                        value={part.quantity}
+                                        onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="1"
+                                        min="1"
+                                    />
+                                </div>
+
+                                {/* Purchase Price */}
+                                <div>
+                                    <label className="label text-xs">Purchase Price</label>
+                                    <input
+                                        type="number"
+                                        value={part.purchasePrice}
+                                        onChange={(e) => handleEditPartChange(index, 'purchasePrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="Cost"
+                                    />
+                                </div>
+
+                                {/* Selling Price */}
+                                <div>
+                                    <label className="label text-xs">Selling Price</label>
+                                    <input
+                                        type="number"
+                                        value={part.unitPrice}
+                                        onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="500"
+                                    />
+                                </div>
+
+                                {/* From Inventory & Remove */}
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <label className="label text-xs">From Inv.</label>
+                                        <select
+                                            value={part.fromInventory}
+                                            onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
+                                            className="input-field text-sm"
+                                        >
+                                            <option value="true">Yes</option>
+                                            <option value="false">No</option>
+                                        </select>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeEditPart(index)}
+                                        className="text-red-500 hover:text-red-700 mb-1"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </select>
-                </div>
-            ) : (
-                <div className="col-span-2">
-                    <label className="label text-xs">Product Name (Manual)</label>
-                    <input
-                        type="text"
-                        value={part.productName}
-                        onChange={(e) => handleEditPartChange(index, 'productName', e.target.value)}
-                        className="input-field text-sm"
-                        placeholder="Enter custom product name"
-                    />
-                </div>
-            )}
-
-            {/* Quantity */}
-            <div>
-                <label className="label text-xs">Qty</label>
-                <input
-                    type="number"
-                    value={part.quantity}
-                    onChange={(e) => handleEditPartChange(index, 'quantity', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="1"
-                    min="1"
-                />
-            </div>
-
-            {/* Purchase Price */}
-            <div>
-                <label className="label text-xs">Purchase Price</label>
-                <input
-                    type="number"
-                    value={part.purchasePrice}
-                    onChange={(e) => handleEditPartChange(index, 'purchasePrice', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="Cost"
-                />
-            </div>
-
-            {/* Selling Price */}
-            <div>
-                <label className="label text-xs">Selling Price</label>
-                <input
-                    type="number"
-                    value={part.unitPrice}
-                    onChange={(e) => handleEditPartChange(index, 'unitPrice', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="500"
-                />
-            </div>
-
-            {/* From Inventory & Remove */}
-            <div className="flex items-end gap-2">
-                <div className="flex-1">
-                    <label className="label text-xs">From Inv.</label>
-                    <select
-                        value={part.fromInventory}
-                        onChange={(e) => handleEditPartChange(index, 'fromInventory', e.target.value === 'true')}
-                        className="input-field text-sm"
-                    >
-                        <option value="true">Yes</option>
-                        <option value="false">No</option>
-                    </select>
-                </div>
-                <button
-                    type="button"
-                    onClick={() => removeEditPart(index)}
-                    className="text-red-500 hover:text-red-700 mb-1"
-                >
-                    <FaTimes />
-                </button>
-            </div>
-        </div>
-    ))}
-</div>
+                    </div>
 
 
 
 
                     {/* Additional Charges */}
-<div className="border-b border-gray-400 pb-4">
-    <div className="flex justify-between items-center mb-3">
-        <h4 className="font-semibold text-gray-700">Additional Charges</h4>
-        <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
-            + Add Charge
-        </button>
-    </div>
-    {editFormData.additionalCharges.map((charge, index) => (
-        <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
-            <div>
-                <label className="label text-xs">Description</label>
-                <input
-                    type="text"
-                    value={charge.description}
-                    onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="e.g., Waste Disposal"
-                />
-            </div>
-            <div>
-                <label className="label text-xs">Purchase Price</label>
-                <input
-                    type="number"
-                    value={charge.purchasePrice}
-                    onChange={(e) => handleEditChargeChange(index, 'purchasePrice', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="Cost"
-                />
-            </div>
-            <div>
-                <label className="label text-xs">Selling Price</label>
-                <input
-                    type="number"
-                    value={charge.sellingPrice}
-                    onChange={(e) => handleEditChargeChange(index, 'sellingPrice', e.target.value)}
-                    className="input-field text-sm"
-                    placeholder="Sell"
-                />
-            </div>
-            <div className="flex items-end gap-2">
-                <div className="flex-1">
-                    <label className="label text-xs">Customer Price</label>
-                    <input
-                        type="number"
-                        value={charge.amount}
-                        onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
-                        className="input-field text-sm"
-                        placeholder="500"
-                    />
-                </div>
-                <button
-                    type="button"
-                    onClick={() => removeEditCharge(index)}
-                    className="text-red-500 hover:text-red-700 mb-1"
-                >
-                    <FaTimes />
-                </button>
-            </div>
-        </div>
-    ))}
-</div>
+                    <div className="border-b border-gray-400 pb-4">
+                        <div className="flex justify-between items-center mb-3">
+                            <h4 className="font-semibold text-gray-700">Additional Charges</h4>
+                            <button type="button" onClick={addEditCharge} className="text-sm text-blue-600 hover:underline">
+                                + Add Charge
+                            </button>
+                        </div>
+                        {editFormData.additionalCharges.map((charge, index) => (
+                            <div key={index} className="grid grid-cols-4 gap-3 mb-2 items-end bg-gray-50 p-3 rounded-lg">
+                                <div>
+                                    <label className="label text-xs">Description</label>
+                                    <input
+                                        type="text"
+                                        value={charge.description}
+                                        onChange={(e) => handleEditChargeChange(index, 'description', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="e.g., Waste Disposal"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label text-xs">Purchase Price</label>
+                                    <input
+                                        type="number"
+                                        value={charge.purchasePrice}
+                                        onChange={(e) => handleEditChargeChange(index, 'purchasePrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="Cost"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="label text-xs">Selling Price</label>
+                                    <input
+                                        type="number"
+                                        value={charge.sellingPrice}
+                                        onChange={(e) => handleEditChargeChange(index, 'sellingPrice', e.target.value)}
+                                        className="input-field text-sm"
+                                        placeholder="Sell"
+                                    />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <div className="flex-1">
+                                        <label className="label text-xs">Customer Price</label>
+                                        <input
+                                            type="number"
+                                            value={charge.amount}
+                                            onChange={(e) => handleEditChargeChange(index, 'amount', e.target.value)}
+                                            className="input-field text-sm"
+                                            placeholder="500"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeEditCharge(index)}
+                                        className="text-red-500 hover:text-red-700 mb-1"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
 
 
 
@@ -1868,30 +1965,30 @@ const handleEditSubmit = async (e) => {
 
 
 
-                          {/* ✅ ADD TOTAL BILL AMOUNT HERE */}
-    {(() => {
-        const servicesTotal = editFormData.services.reduce((sum, s) => sum + (parseFloat(s.servicePrice) || 0), 0);
-        const partsTotal = editFormData.partsUsed.reduce((sum, p) => sum + ((parseFloat(p.quantity) || 0) * (parseFloat(p.unitPrice) || 0)), 0);
-        const chargesTotal = editFormData.additionalCharges.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
-        const subtotal = servicesTotal + partsTotal + chargesTotal;
-        const taxAmount = subtotal * (parseFloat(editFormData.billing.taxRate) || 0) / 100;
-        let discountAmount = 0;
-        if (parseFloat(editFormData.billing.discount) > 0) {
-            if (editFormData.billing.discountType === 'percentage') {
-                discountAmount = (subtotal + taxAmount) * (parseFloat(editFormData.billing.discount) || 0) / 100;
-            } else {
-                discountAmount = parseFloat(editFormData.billing.discount) || 0;
-            }
-        }
-        const grandTotal = subtotal + taxAmount - discountAmount;
+                        {/* ✅ ADD TOTAL BILL AMOUNT HERE */}
+                        {(() => {
+                            const servicesTotal = editFormData.services.reduce((sum, s) => sum + (parseFloat(s.servicePrice) || 0), 0);
+                            const partsTotal = editFormData.partsUsed.reduce((sum, p) => sum + ((parseFloat(p.quantity) || 0) * (parseFloat(p.unitPrice) || 0)), 0);
+                            const chargesTotal = editFormData.additionalCharges.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+                            const subtotal = servicesTotal + partsTotal + chargesTotal;
+                            const taxAmount = subtotal * (parseFloat(editFormData.billing.taxRate) || 0) / 100;
+                            let discountAmount = 0;
+                            if (parseFloat(editFormData.billing.discount) > 0) {
+                                if (editFormData.billing.discountType === 'percentage') {
+                                    discountAmount = (subtotal + taxAmount) * (parseFloat(editFormData.billing.discount) || 0) / 100;
+                                } else {
+                                    discountAmount = parseFloat(editFormData.billing.discount) || 0;
+                                }
+                            }
+                            const grandTotal = subtotal + taxAmount - discountAmount;
 
-        return (
-            <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
-                <p className="text-sm text-gray-600">Total Bill Amount:</p>
-                <p className="text-2xl font-bold text-blue-600">PKR {grandTotal.toLocaleString()}</p>
-            </div>
-        );
-    })()}
+                            return (
+                                <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+                                    <p className="text-sm text-gray-600">Total Bill Amount:</p>
+                                    <p className="text-2xl font-bold text-blue-600">PKR {grandTotal.toLocaleString()}</p>
+                                </div>
+                            );
+                        })()}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="label">Tax Rate (%)</label>

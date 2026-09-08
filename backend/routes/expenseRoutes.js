@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { requireSignIn, isAdmin } = require("../middleware/authMiddleware");
+const { requireSignIn, isAdmin, getWorkshopId } = require("../middleware/authMiddleware");
 const {
     addExpense,
     getExpenses,
@@ -9,6 +9,7 @@ const {
 } = require("../controllers/expenseController");
 
 router.use(requireSignIn);
+router.use(getWorkshopId);
 
 router.post("/", addExpense);
 router.get("/", getExpenses);

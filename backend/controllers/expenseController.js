@@ -18,7 +18,8 @@ const addExpense = async (req, res) => {
             amount: parseFloat(amount),
             category: category || "other",
             notes: notes || "",
-            addedBy: req.user.name || req.user.id
+            addedBy: req.user.name || req.user.id,
+            workshopId: req.user.workshopId  // ✅ ADD THIS
         });
 
         await expense.save();
@@ -41,7 +42,8 @@ const getExpenses = async (req, res) => {
     try {
         const { startDate, endDate } = req.query;
         
-        let filter = {};
+        let filter = { workshopId: req.user.workshopId };  // ✅ ADD WORKSHOP FILTER
+        
         if (startDate && endDate) {
             filter.date = {
                 $gte: new Date(startDate),
@@ -71,7 +73,10 @@ const getExpenses = async (req, res) => {
 // ============ DELETE EXPENSE ============
 const deleteExpense = async (req, res) => {
     try {
-        const expense = await Expense.findById(req.params.id);
+        const expense = await Expense.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId  // ✅ ADD WORKSHOP FILTER
+        });
         if (!expense) {
             return res.status(404).json({
                 success: false,
@@ -95,12 +100,10 @@ const deleteExpense = async (req, res) => {
 // ============ UPDATE EXPENSE ============
 const updateExpense = async (req, res) => {
     try {
-        const expense = await Expense.findByIdAndUpdate(
-            req.params.id,
-            req.body,
-            { new: true, runValidators: true }
-        );
-
+        const expense = await Expense.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId  // ✅ ADD WORKSHOP FILTER
+        });
         if (!expense) {
             return res.status(404).json({
                 success: false,
@@ -108,10 +111,16 @@ const updateExpense = async (req, res) => {
             });
         }
 
+        const updatedExpense = await Expense.findByIdAndUpdate(
+            req.params.id,
+            req.body,
+            { new: true, runValidators: true }
+        );
+
         res.status(200).json({
             success: true,
             message: "Expense updated successfully",
-            expense
+            expense: updatedExpense
         });
     } catch (error) {
         res.status(500).json({

@@ -43,6 +43,15 @@ const userSchema = mongoose.Schema({
     rejectionReason: {
         type: String,
         default: ""
+    },
+     workshopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "workshop",
+        required: true
+    },
+    permissions: {
+        type: [String],
+        default: []
     }
 }, { timestamps: true });
 

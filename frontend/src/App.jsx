@@ -19,6 +19,7 @@ import Profile from './pages/Profile';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Revenue from './pages/Revenue';
 import Expenses from './pages/Expenses';
+import Settings from './pages/Settings';
 
 
 function App() {
@@ -78,6 +79,7 @@ function App() {
           <Route path="invoices" element={<Invoices />} />
           <Route path="transactions" element={<Transactions />} />
           <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
         </Route>
 
         {/* 404 */}

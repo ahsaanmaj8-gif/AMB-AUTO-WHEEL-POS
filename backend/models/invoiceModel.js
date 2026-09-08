@@ -136,7 +136,15 @@ const invoiceSchema = mongoose.Schema({
     notes: {
         type: String,
         trim: true
+    },
+      workshopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "workshop",
+        required: true
     }
 }, { timestamps: true });
+
+
+invoiceSchema.index({ workshopId: 1, invoiceNumber: 1 }, { unique: true });
 
 module.exports = mongoose.model("invoices", invoiceSchema);

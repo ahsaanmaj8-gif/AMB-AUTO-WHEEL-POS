@@ -13,7 +13,10 @@ const Register = () => {
     password: '',
     phone: '',
     address: '',
-    answer: ''
+    answer: '',
+    workshopName: '',    // ✅ ADD
+    workshopPhone: '',   // ✅ ADD
+    workshopAddress: '' 
   });
   const [loading, setLoading] = useState(false);
   const { setUser, setToken } = useAuth();
@@ -54,7 +57,7 @@ const Register = () => {
         <div className="text-center mb-6">
           <p className='text-red-400 p-1 bg-red-100'>Currently Not Available!</p>
           <h1 className="text-2xl font-bold text-gray-800">Create Account</h1>
-          <p className="text-gray-500 text-sm">Join Amb Auto Workshop</p>
+          <p className="text-gray-500 text-sm">Join Auto Workshop Software</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -153,6 +156,51 @@ const Register = () => {
               />
             </div>
           </div>
+
+
+         {/* Workshop Information */}
+<div className="border-t pt-4 mt-4">
+    <h4 className="font-semibold text-gray-700 mb-3">🏪 Workshop Information</h4>
+    
+    <div className="space-y-3">
+        <div>
+            <label className="label">Workshop Name</label>
+            <input
+                type="text"
+                name="workshopName"
+                value={formData.workshopName}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="e.g., AutoWorkshop Lahore"
+                required
+            />
+        </div>
+        
+        <div>
+            <label className="label">Workshop Phone</label>
+            <input
+                type="text"
+                name="workshopPhone"
+                value={formData.workshopPhone}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="Workshop contact number"
+            />
+        </div>
+        
+        <div>
+            <label className="label">Workshop Address</label>
+            <input
+                type="text"
+                name="workshopAddress"
+                value={formData.workshopAddress}
+                onChange={handleChange}
+                className="input-field"
+                placeholder="Workshop address"
+            />
+        </div>
+    </div>
+</div>
 
           <button
             type="submit"

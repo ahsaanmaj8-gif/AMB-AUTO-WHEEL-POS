@@ -212,11 +212,18 @@ const serviceSchema = mongoose.Schema(
     deliveryDate: {
       type: Date, // when vehicle was delivered
     },
+     workshopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "workshop",
+        required: true
+    }
   },
   { timestamps: true },
 );
 
 // Index for quick searches
 serviceSchema.index({ vehicleNumber: 1, customerName: 1 });
+serviceSchema.index({ workshopId: 1, vehicleNumber: 1 });
+
 
 module.exports = mongoose.model("services", serviceSchema);

@@ -16,15 +16,12 @@ export const useAuth = () => {
 // Provider Component
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-
-// const [user, setUser] = useState(() => {
-//   const savedUser = localStorage.getItem('user');
-//   return savedUser ? JSON.parse(savedUser) : null;
-// });
-// console.log(localStorage.getItem("user"));
-
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [loading, setLoading] = useState(true);
+  
+  // ✅ ADD WORKSHOP STATE
+  const [workshopId, setWorkshopId] = useState(localStorage.getItem('workshopId') || null);
+  const [workshopName, setWorkshopName] = useState(localStorage.getItem('workshopName') || '');
 
   // Set token in axios headers
   useEffect(() => {
@@ -39,19 +36,31 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const loadUser = async () => {
       try {
-  const savedUser = localStorage.getItem('user');
-
+        const savedUser = localStorage.getItem('user');
         const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/auth/me');
-        // console.log("User data fetched auth me api:", response.data);
-        // console.log("JSON.parse(savedUser) local storage:", JSON.parse(savedUser));
-        setUser(response.data?.user ? response.data.user : savedUser ? JSON.parse(savedUser) : null);
+        
+        // ✅ Get workshop info from response
+        const userData = response.data?.user;
+        setUser(userData ? userData : savedUser ? JSON.parse(savedUser) : null);
+        
+        // ✅ Set workshop data if available
+        if (userData?.workshopId) {
+          setWorkshopId(userData.workshopId);
+          localStorage.setItem('workshopId', userData.workshopId);
+          setWorkshopName(userData.workshopName || '');
+          localStorage.setItem('workshopName', userData.workshopName || '');
+        }
+        
       } catch (error) {
         console.error('Error loading user:', error);
         localStorage.removeItem('token');
-         localStorage.removeItem("user");
-
-  setUser(null);
+        localStorage.removeItem('user');
+        localStorage.removeItem('workshopId');
+        localStorage.removeItem('workshopName');
+        setUser(null);
         setToken('');
+        setWorkshopId(null);
+        setWorkshopName('');
         delete axios.defaults.headers.common['Authorization'];
       } finally {
         setLoading(false);
@@ -71,6 +80,10 @@ export const AuthProvider = ({ children }) => {
     token,
     setToken,
     loading,
+    workshopId,        // ✅ ADD
+    setWorkshopId,     // ✅ ADD
+    workshopName,      // ✅ ADD
+    setWorkshopName,   // ✅ ADD
     isAuthenticated: !!user,
     isAdmin: user?.role === 1,
     isStaff: user?.role === 0 || user?.role === 1

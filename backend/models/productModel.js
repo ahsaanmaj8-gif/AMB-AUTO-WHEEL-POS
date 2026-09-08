@@ -1,6 +1,12 @@
 const mongoose = require("mongoose");
 
 const productSchema = mongoose.Schema({
+      
+    workshopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "workshop",
+        required: true
+    },
     // Product name
     name: {
         type: String,
@@ -99,5 +105,10 @@ const productSchema = mongoose.Schema({
         type: Date
     }
 }, { timestamps: true });
+
+
+// ✅ Compound unique index for SKU per workshop
+productSchema.index({ workshopId: 1, sku: 1 }, { unique: true });
+
 
 module.exports = mongoose.model("products", productSchema);

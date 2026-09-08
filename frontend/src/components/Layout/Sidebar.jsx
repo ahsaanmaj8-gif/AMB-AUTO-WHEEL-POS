@@ -10,13 +10,18 @@ import {
     FaUser,
     FaSignOutAlt,
     FaFileInvoice,
-    FaMoneyBillWave 
+    FaMoneyBillWave,
+    FaCog   
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
+import axios from 'axios';
+import { useEffect } from 'react';
+import { useState } from 'react';
 
 const Sidebar = () => {
     const { user, setUser, setToken } = useAuth();
+    const [settings, setSettings] = useState({});
     const navigate = useNavigate();
 
     const menuItems = [
@@ -28,13 +33,17 @@ const Sidebar = () => {
         { path: '/expenses', icon: FaMoneyBillWave, label: 'Expenses' },
         { path: '/categories', icon: FaTags, label: 'Categories' },
         { path: '/transactions', icon: FaHistory, label: 'Transactions' },
-        // { path: '/paymentDetails', icon: FaHistory, label: 'Payment Details' },
         { path: '/profile', icon: FaUser, label: 'Profile' },
+         ...(user.workshopName !== "AMB Auto Wheel"
+    ? [{ path: '/settings', icon: FaCog, label: 'Settings' }]
+    : []),
     ];
 
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        localStorage.removeItem('workshopId');      // ✅ ADD
+        localStorage.removeItem('workshopName');    // ✅ ADD
 
         setToken('');
         setUser(null);
@@ -42,29 +51,70 @@ const Sidebar = () => {
         navigate('/login');
     };
 
+
+
+     const fetchSettings = async () => {
+  try {
+    const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/settings');
+
+    // console.log('Fetched settings:', response.data);
+
+    setSettings(response.data.settings || {});
+  } catch (error) {
+    console.error('Failed to fetch settings:', error);
+  }
+};
+
+useEffect(() => {
+  fetchSettings();
+}, []);
+
+
     return (
         <div className="w-64 bg-white shadow-lg flex flex-col h-full fixed left-0 top-0 bottom-0 z-30">
-       <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
-  <h1 className="text-2xl gap-1 flex flex-col font-bold text-white items-center ">
-    <img
-      src="/amblogoblack.jpg"
-      alt="AMB Logo"
-      className="w-14 h-14 object-contain flex items-center rounded-full bg-white p-1"
-    />
-    
-    <p>AMB Auto Wheel</p>
-  </h1>
+            {/* Logo Section */}
+            <div className="p-6 border-b bg-gradient-to-r from-blue-600 to-blue-700">
+                <h1 className="text-2xl gap-1 flex flex-col font-bold text-white items-center">
+                    <img
+  src={
+    user?.workshopName?.trim().toLowerCase() === "amb auto wheel"
+      ? "/amblogoblack.jpg"
+      : settings?.logo || "/workshop_general_logo.jpg"
+  }
+  alt="Auto Workshop Software"
+  className="w-14 h-14 object-contain rounded-full bg-white p-1"
+/>
 
-  <p className="text-blue-100 text-xs mt-2">
-    Performance Meets Perfection
-  </p>
-</div>
+                    {/* <p>AMB Auto Wheel</p> */}
+                    {user?.workshopName && (
+                    <p className="">
+                        {user.workshopName}
+                    </p>
+                )}
+                </h1>
+                <p className="text-blue-100 text-xs mt-2 text-center">
+                    Performance Meets Perfection
+                </p>
+                {/* ✅ ADD WORKSHOP NAME */}
+                {/* {user?.workshopName && (
+                    <p className="text-blue-200 text-xs mt-2 text-center border-t border-blue-500 pt-2">
+                        🏪 {user.workshopName}
+                    </p>
+                )} */}
+            </div>
 
+            {/* User Info */}
             <div className="px-4 py-3 border-b bg-gray-50">
                 <p className="text-sm font-medium text-gray-700">{user?.name}</p>
                 <p className="text-xs text-gray-500">
                     {user?.role === 1 ? 'Administrator' : 'Staff'}
                 </p>
+                {/* ✅ ADD WORKSHOP NAME HERE TOO */}
+                {/* {user?.workshopName && (
+                    <p className="text-xs text-blue-600 font-medium mt-1">
+                        🏪 {user.workshopName}
+                    </p>
+                )} */}
             </div>
 
             <nav className="flex-1 p-4 space-y-1 overflow-y-auto">

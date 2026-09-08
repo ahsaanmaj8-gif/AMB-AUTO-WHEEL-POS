@@ -7,8 +7,6 @@ const requireSignIn = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    // console.log("Auth Header:", authHeader);
-    
     // Check if authorization header exists
     if (!authHeader) {
       return res.status(401).send({
@@ -31,11 +29,7 @@ const requireSignIn = (req, res, next) => {
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-
-
-    // console.log("Decoded JWT:", decoded);
-
-    // Attach user info to request object
+    // ✅ Attach user info to request object
     req.user = decoded;
     next();
 
@@ -51,29 +45,8 @@ const requireSignIn = (req, res, next) => {
 // ============ MIDDLEWARE TO CHECK IF USER IS ADMIN ============
 const isAdmin = async (req, res, next) => {
   try {
-    // Get user from database using the ID from decoded token
     const user = await userModel.findById(req.user.id);
     
-
-    // console.log("hello");
-    
-    // console.log(req.user);
-    // console.log("yess: ",user);
-    
-
-
-    //   if (req.user.email !== process.env.adminEmail) {
-    //   return res.status(403).send({
-    //     success: false,
-    //     message: "Unauthorized Access! You are not admin",
-    //   });
-    // }
-
-    //  req.user process.envK.adminEmail;
-
-
-
-    // Check if user exists
     if (!user) {
       return res.status(401).send({
         success: false,
@@ -89,7 +62,6 @@ const isAdmin = async (req, res, next) => {
       });
     }
 
-    // If admin, proceed to next middleware/controller
     next();
 
   } catch (error) {
@@ -105,7 +77,7 @@ const isAdmin = async (req, res, next) => {
 // ============ MIDDLEWARE TO CHECK IF USER IS STAFF OR ADMIN ============
 const isStaff = async (req, res, next) => {
   try {
-    const user = await userModel.findById(req.user._id);
+    const user = await userModel.findById(req.user.id);
     
     if (!user) {
       return res.status(401).send({
@@ -134,8 +106,44 @@ const isStaff = async (req, res, next) => {
   }
 };
 
+// ============ ✅ NEW: GET WORKSHOP ID FROM USER ============
+// ============ GET WORKSHOP ID FROM USER ============
+const getWorkshopId = async (req, res, next) => {
+    try {
+        // ✅ CHECK if req.user exists first
+        if (!req.user) {
+            return res.status(401).json({
+                success: false,
+                message: "User not authenticated"
+            });
+        }
+
+        const user = await userModel.findById(req.user.id);
+        
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        // ✅ Attach workshopId to request
+        req.workshopId = user.workshopId;
+        next();
+
+    } catch (error) {
+        console.error("Workshop check error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Error in workshop authorization",
+            error: error.message,
+        });
+    }
+};
+
 module.exports = {
   requireSignIn,
   isAdmin,
-  isStaff
+  isStaff,
+  getWorkshopId  // ✅ EXPORT NEW MIDDLEWARE
 };

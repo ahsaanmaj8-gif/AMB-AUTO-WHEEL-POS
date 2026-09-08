@@ -35,7 +35,7 @@ const getRevenueSummary = async (req, res) => {
       };
     }
 
-    const query = { status: "completed" };
+    const query = { status: "completed" , workshopId: req.user.workshopId  };
     if (Object.keys(dateFilter).length > 0) {
       query.createdAt = dateFilter;
     }
@@ -43,7 +43,7 @@ const getRevenueSummary = async (req, res) => {
     const services = await Service.find(query).sort({ createdAt: -1 });
 
     // ============ GET DAILY EXPENSES ============
-    let expenseFilter = {};
+    let expenseFilter = {workshopId: req.user.workshopId };
     if (Object.keys(dateFilter).length > 0) {
       expenseFilter.date = dateFilter;
     }

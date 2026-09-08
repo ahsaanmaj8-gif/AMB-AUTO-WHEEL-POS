@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { requireSignIn, isAdmin, isStaff } = require("../middleware/authMiddleware");
+const { requireSignIn, isAdmin, isStaff, getWorkshopId } = require("../middleware/authMiddleware");
 const {
     createProduct,
     getAllProducts,
@@ -11,27 +11,27 @@ const {
     getLowStockProducts
 } = require("../controllers/productController");
 
-// ============ PROTECTED ROUTES (All require login) ============
+// ============ ✅ CORRECT ORDER ============
+// First - Verify token (sets req.user)
+router.use(requireSignIn);
+
+// Second - Get workshopId (now req.user exists)
+router.use(getWorkshopId);
+
+// ============ PROTECTED ROUTES ============
 // Get all products
-router.get("/", requireSignIn, getAllProducts);
+router.get("/", getAllProducts);
 
 // Get low stock products
-router.get("/low-stock", requireSignIn, getLowStockProducts);
+router.get("/low-stock", getLowStockProducts);
 
 // Get single product
-router.get("/:id", requireSignIn, getProductById);
+router.get("/:id", getProductById);
 
 // ============ ADMIN ONLY ROUTES ============
-// Create product
-router.post("/", requireSignIn, isAdmin, createProduct);
-
-// Update product
-router.put("/:id", requireSignIn, isAdmin, updateProduct);
-
-// Delete product
-router.delete("/:id", requireSignIn, isAdmin, deleteProduct);
-
-// Update stock (admin only - can also be staff with permission)
-router.put("/:id/stock", requireSignIn, isAdmin, updateStock);
+router.post("/", isAdmin, createProduct);
+router.put("/:id", isAdmin, updateProduct);
+router.delete("/:id", isAdmin, deleteProduct);
+router.put("/:id/stock", isAdmin, updateStock);
 
 module.exports = router;

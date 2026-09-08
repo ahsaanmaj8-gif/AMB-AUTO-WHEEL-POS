@@ -1,11 +1,36 @@
 const Notification = require("../models/notificationModel");
 
+// ============ GET UNREAD NOTIFICATIONS ONLY ============
+const getNotifications = async (req, res) => {
+    try {
+        // ✅ Fetch ONLY unread notifications for this user
+        const notifications = await Notification.find({ 
+            userId: req.user.id,
+            read: false  // ✅ Only unread
+        }).sort({ createdAt: -1 });
+        
+        const unreadCount = notifications.length;
 
+        res.status(200).json({
+            success: true,
+            notifications: notifications,
+            unreadCount: unreadCount
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
 
 // ============ MARK AS READ ============
 const markAsRead = async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
+        const notification = await Notification.findOne({ 
+            _id: req.params.id, 
+            userId: req.user.id  // ✅ ADD USER FILTER
+        });
         
         if (!notification) {
             return res.status(404).json({
@@ -49,43 +74,13 @@ const markAllAsRead = async (req, res) => {
     }
 };
 
-
-
-
-
-
-
-
-
-
-// ============ GET UNREAD NOTIFICATIONS ONLY ============
-const getNotifications = async (req, res) => {
-    try {
-        // ✅ Fetch ONLY unread notifications
-        const notifications = await Notification.find({ 
-            userId: req.user.id,
-            read: false  // ✅ Only unread
-        }).sort({ createdAt: -1 });
-        
-        const unreadCount = notifications.length;
-
-        res.status(200).json({
-            success: true,
-            notifications: notifications,
-            unreadCount: unreadCount
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message
-        });
-    }
-};
-
-// ============ DELETE NOTIFICATION (Mark as Read = Delete) ============
+// ============ DELETE NOTIFICATION ============
 const deleteNotification = async (req, res) => {
     try {
-        const notification = await Notification.findById(req.params.id);
+        const notification = await Notification.findOne({ 
+            _id: req.params.id, 
+            userId: req.user.id  // ✅ ADD USER FILTER
+        });
         
         if (!notification) {
             return res.status(404).json({
@@ -94,7 +89,6 @@ const deleteNotification = async (req, res) => {
             });
         }
 
-        // ✅ DELETE from database (not mark as read)
         await notification.deleteOne();
 
         res.status(200).json({
@@ -109,10 +103,9 @@ const deleteNotification = async (req, res) => {
     }
 };
 
-// ============ DELETE ALL READ NOTIFICATIONS ============
+// ============ DELETE ALL NOTIFICATIONS ============
 const deleteAllNotifications = async (req, res) => {
     try {
-        // ✅ Delete ALL notifications for this user
         await Notification.deleteMany({ userId: req.user.id });
 
         res.status(200).json({
@@ -136,7 +129,7 @@ const createNotification = async (userId, title, message, type = "general", link
             message,
             type,
             link,
-            read: false  // ✅ Always false when created
+            read: false
         });
     } catch (error) {
         console.error("Error creating notification:", error);
@@ -148,6 +141,6 @@ module.exports = {
     markAsRead,
     markAllAsRead,
     createNotification,
-     deleteNotification,
+    deleteNotification,
     deleteAllNotifications,
 };

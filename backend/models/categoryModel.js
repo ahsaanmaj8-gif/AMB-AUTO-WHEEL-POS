@@ -22,6 +22,16 @@ const categorySchema = mongoose.Schema({
         unique: true,
         lowercase: true
     }
+    ,
+     workshopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "workshop",
+        required: true
+    }
 }, { timestamps: true });
+
+
+
+categorySchema.index({ workshopId: 1, name: 1 }, { unique: true });
 
 module.exports = mongoose.model("categories", categorySchema);

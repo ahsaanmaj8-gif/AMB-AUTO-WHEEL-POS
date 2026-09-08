@@ -1,24 +1,26 @@
 const Category = require("../models/categoryModel");
 
-
+// ============ CREATE CATEGORY ============
 const createCategory = async (req, res) => {
     try {
         const { name, description, slug } = req.body;
 
-        // Check if category exists
-        const existingCategory = await Category.findOne({ name });
+        const existingCategory = await Category.findOne({ 
+            name, 
+            workshopId: req.user.workshopId 
+        });
         if (existingCategory) {
             return res.status(400).json({
                 success: false,
-                message: "Category already exists"
+                message: "Category already exists in your workshop"
             });
         }
 
-        // Create category
         const category = await Category.create({
             name,
             description,
-            slug
+            slug,
+            workshopId: req.user.workshopId
         });
 
         res.status(201).json({
@@ -35,10 +37,12 @@ const createCategory = async (req, res) => {
     }
 };
 
-
+// ============ GET ALL CATEGORIES ============
 const getAllCategories = async (req, res) => {
     try {
-        const categories = await Category.find({});
+        const categories = await Category.find({ 
+            workshopId: req.user.workshopId 
+        });
         res.status(200).json({
             success: true,
             total: categories.length,
@@ -52,10 +56,13 @@ const getAllCategories = async (req, res) => {
     }
 };
 
-
+// ============ GET SINGLE CATEGORY ============
 const getCategoryById = async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        const category = await Category.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!category) {
             return res.status(404).json({
                 success: false,
@@ -74,12 +81,13 @@ const getCategoryById = async (req, res) => {
     }
 };
 
-
+// ============ UPDATE CATEGORY ============
 const updateCategory = async (req, res) => {
     try {
-        const { name, description, slug } = req.body;
-        const category = await Category.findById(req.params.id);
-
+        const category = await Category.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!category) {
             return res.status(404).json({
                 success: false,
@@ -87,7 +95,7 @@ const updateCategory = async (req, res) => {
             });
         }
 
-        // Update fields
+        const { name, description, slug } = req.body;
         category.name = name || category.name;
         category.description = description || category.description;
         category.slug = slug || category.slug;
@@ -108,10 +116,13 @@ const updateCategory = async (req, res) => {
     }
 };
 
-
+// ============ DELETE CATEGORY ============
 const deleteCategory = async (req, res) => {
     try {
-        const category = await Category.findById(req.params.id);
+        const category = await Category.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!category) {
             return res.status(404).json({
                 success: false,

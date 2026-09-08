@@ -5,7 +5,7 @@ import Sidebar from './Sidebar';
 import Header from './Header';
 
 const Layout = () => {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading , user } = useAuth();
   
   if (loading) {
     return (
@@ -29,8 +29,9 @@ const Layout = () => {
         </main>
         <footer className="bg-white border-t px-6 py-3">
           <div className="flex justify-between items-center text-sm text-gray-500">
-            <p>© 2026 Amb Auto Wheels. All rights reserved.</p>
-            <p>Version 1.0.0</p>
+            <p>© 2026 {user?.workshopName ? user.workshopName : "Auto Workshop Software" }.
+               All rights reserved.</p>
+            {/* <p>Version 1.0.0</p> */}
           </div>
         </footer>
       </div>

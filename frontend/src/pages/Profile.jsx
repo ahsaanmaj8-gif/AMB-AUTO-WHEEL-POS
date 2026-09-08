@@ -4,6 +4,7 @@ import axios from 'axios';
 import { FaUser, FaEnvelope, FaPhone, FaHome, FaLock } from 'react-icons/fa';
 import { Link } from 'react-router-dom';  // ✅ Add this import
 import toast from 'react-hot-toast';
+import { useEffect } from 'react';
 
 const Profile = () => {
   const { user, setUser } = useAuth();
@@ -51,6 +52,7 @@ const Profile = () => {
       );
       
       setUser(response.data.user);
+      
       toast.success('✅ Profile updated successfully!');
       setIsEditing(false);
     } catch (error) {
@@ -102,6 +104,40 @@ const Profile = () => {
       setLoading(false);
     }
   };
+
+
+
+  // ============ FETCH PROFILE DATA ============
+const fetchProfileData = async () => {
+    try {
+        const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/auth/me');
+        const userData = response.data.user;
+        
+        // console.log('Fetched profile data:', userData);  // ✅ Add this log for debugging
+
+        // Update formData with fetched data
+        setFormData({
+            name: userData.name || '',
+            email: userData.email || '',
+            phone: userData.phone || '',
+            address: userData.address || '',
+            createdAt: userData.createdAt || null,
+            updatedAt: userData.updatedAt || null
+        });
+        
+        // Also update user in context
+        setUser(userData);
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        toast.error('Failed to load profile data');
+    }
+};
+
+
+useEffect(() => {
+    fetchProfileData();
+}, []);
+
 
   return (
     <div className="max-w-4xl mx-auto">

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { requireSignIn, isAdmin } = require("../middleware/authMiddleware");
+const { requireSignIn, isAdmin , getWorkshopId } = require("../middleware/authMiddleware");
 const {
   getAllTransactions,
   getTransactionsByProduct,
@@ -13,6 +13,7 @@ const {
 
 // ============ ALL ROUTES REQUIRE LOGIN ============
 router.use(requireSignIn);
+router.use(getWorkshopId);
 
 // Get all transactions
 router.get("/", getAllTransactions);

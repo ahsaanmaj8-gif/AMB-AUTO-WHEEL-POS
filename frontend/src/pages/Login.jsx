@@ -60,13 +60,13 @@ const Login = () => {
       {/* Left Side */}
       <div className="hidden lg:flex flex-col text-white">
         <img
-          src="/amblogoblack.jpg"
-          alt="AMB Logo"
+          src="/workshop_general_logo.jpg"
+          alt="Auto Workshop Software Logo"
           className="w-24 h-24 rounded-full border-4 border-white shadow-xl mb-6"
         />
 
         <h1 className="text-5xl font-extrabold leading-tight">
-          AMB Auto Wheel
+          Workshop Pro 
         </h1>
 
         <p className="text-xl mt-4 text-gray-200 max-w-lg">
@@ -89,8 +89,8 @@ const Login = () => {
         <div className="text-center mb-8">
 
           <img
-            src="/AmbLogo.jpg"
-            alt="AMB Logo"
+            src="/workshop_general_logo.jpg"
+            alt="Auto Workshop Software Logo"
             className="w-20 h-20 mx-auto rounded-full border-4 border-blue-600 shadow-lg"
           />
 

@@ -72,7 +72,15 @@ const transactionSchema = mongoose.Schema({
     // Total price (quantity * unitPrice)
     totalPrice: {
         type: Number
+    },
+
+    workshopId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "workshop",
+        required: true
     }
 }, { timestamps: true });
+
+transactionSchema.index({ workshopId: 1, product: 1 });
 
 module.exports = mongoose.model("transactions", transactionSchema);

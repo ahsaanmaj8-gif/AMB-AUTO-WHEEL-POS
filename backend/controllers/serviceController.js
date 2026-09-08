@@ -176,6 +176,7 @@ const createService = async (req, res) => {
       notes: notes || "",
       assignedTo: assignedTo || req.user._id || "Staff",
       performedBy: req.user._id ? req.user._id : req.user.id,
+      workshopId: req.user.workshopId
     });
 
     // ============ DEDUCT INVENTORY FOR PARTS USED ============
@@ -225,6 +226,7 @@ const createService = async (req, res) => {
             performedBy: req.user._id ? req.user._id : req.user.id,
             unitPrice: part.unitPrice,
             totalPrice: part.quantity * part.unitPrice,
+            workshopId: req.user.workshopId
           });
         }
       }
@@ -260,6 +262,7 @@ const createService = async (req, res) => {
       service: service._id,
       customerName: service.customerName,
       customerPhone: service.customerPhone,
+      customerAddress: service.customerAddress,
       vehicleNumber: service.vehicleNumber,
       vehicleModel: service.vehicleModel,
       items: [
@@ -299,6 +302,8 @@ const createService = async (req, res) => {
       issuedBy: req.user._id ? req.user._id : req.user.id,
       status: "issued",
       notes: service.notes
+      ,
+      workshopId: req.user.workshopId
     });
 
     await invoice.save();
@@ -333,7 +338,12 @@ const createService = async (req, res) => {
 const payRemaining = async (req, res) => {
   try {
     const { paidAmount , paymentMethod  } = req.body;
-    const service = await Service.findById(req.params.id);
+    // const service = await Service.findById(req.params.id);
+
+    const service = await Service.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
 
     if (!service) {
       return res.status(404).json({
@@ -361,7 +371,7 @@ const payRemaining = async (req, res) => {
     // Validate payment amount
     const amount = parseFloat(paidAmount);
     if (isNaN(amount) || amount < 0) {
-    console.log("amount:", amount);
+    // console.log("amount:", amount);
 
     return res.status(400).json({
         success: false,
@@ -444,7 +454,7 @@ const getCustomerByPhone = async (req, res) => {
         const { phone } = req.params;
         
         // Find latest service by this customer
-        const service = await Service.findOne({ customerPhone: phone })
+        const service = await Service.findOne({ customerPhone: phone,  workshopId: req.user.workshopId  })
             .sort({ createdAt: -1 }); // Latest first
         
         if (!service) {
@@ -479,23 +489,83 @@ const getCustomerByPhone = async (req, res) => {
 // @route   GET /api/services
 // @access  Private
 const getAllServices = async (req, res) => {
-  try {
-    const services = await Service.find({})
-      .populate("assignedTo", "name email")
-      .populate("performedBy", "name email")
-      .sort({ createdAt: -1 });
+    try {
+        const services = await Service.find({ workshopId: req.user.workshopId })
+            .populate("assignedTo", "name email")
+            .populate("performedBy", "name email")
+            .sort({ createdAt: -1 });
 
-    res.status(200).json({
-      success: true,
-      total: services.length,
-      services: services,
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
+        // ✅ Calculate profit for each service
+        const servicesWithProfit = services.map(service => {
+            let totalRevenue = service.billing?.totalAmount || 0;
+            let totalExpenses = 0;
+            let totalProfit = 0;
+            let partsProfit = 0;
+            let laborProfit = 0;
+            let chargesProfit = 0;
+
+            // ============ 1. PARTS PROFIT ============
+            if (service.partsUsed && service.partsUsed.length > 0) {
+                service.partsUsed.forEach(part => {
+                    const sellingPrice = part.totalPrice || 0;
+                    const purchasePrice = part.purchasePrice || 0;
+                    const purchaseCost = purchasePrice * (part.quantity || 0);
+                    const profit = sellingPrice - purchaseCost;
+                    
+                    partsProfit += profit;
+                    totalExpenses += purchaseCost;
+                });
+            }
+
+            // ============ 2. LABOR PROFIT ============
+            if (service.services && service.services.length > 0) {
+                service.services.forEach(s => {
+                    laborProfit += s.servicePrice || 0;
+                });
+            }
+
+            // ============ 3. ADDITIONAL CHARGES (SUBLET) PROFIT ============
+            if (service.additionalCharges && service.additionalCharges.length > 0) {
+                service.additionalCharges.forEach(charge => {
+                    const sellingPrice = charge.sellingPrice || charge.amount || 0;
+                    const purchasePrice = charge.purchasePrice || 0;
+                    const profit = sellingPrice - purchasePrice;
+                    
+                    chargesProfit += profit;
+                    totalExpenses += purchasePrice;
+                });
+            }
+
+            // ============ TOTAL PROFIT ============
+            totalProfit = totalRevenue - totalExpenses;
+
+            return {
+                ...service.toObject(),
+                profit: {
+                    totalRevenue,
+                    totalExpenses,
+                    totalProfit,
+                    partsProfit,
+                    laborProfit,
+                    chargesProfit,
+                    // ✅ Profit margin percentage
+                    margin: totalRevenue > 0 ? ((totalProfit / totalRevenue) * 100).toFixed(2) : 0
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            total: servicesWithProfit.length,
+            services: servicesWithProfit,
+        });
+    } catch (error) {
+        console.error("Get services error:", error);
+        res.status(500).json({
+            success: false,
+            message: error.message,
+        });
+    }
 };
 
 
@@ -511,6 +581,7 @@ const getTodayServices = async (req, res) => {
     endOfDay.setHours(23, 59, 59, 999);
 
     const services = await Service.find({
+      workshopId: req.user.workshopId,
       createdAt: { $gte: startOfDay, $lte: endOfDay },
     }).populate("assignedTo", "name");
 
@@ -533,7 +604,7 @@ const getTodayServices = async (req, res) => {
     });
 
 
-    console.log(totalRevenue, totalPaid, totalBalance, completed, pending, inProgress);
+    // console.log(totalRevenue, totalPaid, totalBalance, completed, pending, inProgress);
 
     res.status(200).json({
       success: true,
@@ -562,10 +633,14 @@ const getTodayServices = async (req, res) => {
 // @access  Private
 const getServiceById = async (req, res) => {
   try {
-    const service = await Service.findById(req.params.id)
-      .populate("assignedTo", "name email")
-      .populate("performedBy", "name email")
-      .populate("partsUsed.product", "name sku price");
+   const service = await Service.findOne({
+  _id: req.params.id,
+  workshopId: req.user.workshopId
+})
+  .populate("assignedTo", "name email")
+  .populate("performedBy", "name email")
+  .populate("partsUsed.product", "name sku price");
+
 
     if (!service) {
       return res.status(404).json({
@@ -595,7 +670,11 @@ const getServiceById = async (req, res) => {
 // @access  Private
 const updateService = async (req, res) => {
     try {
-        const service = await Service.findById(req.params.id);
+        // const service = await Service.findById(req.params.id);
+         const service = await Service.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!service) {
             return res.status(404).json({
                 success: false,
@@ -611,7 +690,7 @@ const updateService = async (req, res) => {
         );
 
         // ============ ✅ UPDATE INVOICE COMPLETELY ============
-        let invoice = await Invoice.findOne({ service: service._id });
+        let invoice = await Invoice.findOne({ service: service._id , workshopId: req.user.workshopId  });
 
         if (invoice) {
             // Update customer & vehicle info
@@ -686,7 +765,12 @@ const updateService = async (req, res) => {
 const generateBill = async (req, res) => {
   try {
     const { paidAmount, paymentMethod } = req.body;
-    const service = await Service.findById(req.params.id);
+    // const service = await Service.findById(req.params.id);
+
+     const service = await Service.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
 
     if (!service) {
       return res.status(404).json({
@@ -726,7 +810,7 @@ const generateBill = async (req, res) => {
     await service.save();
 
     // ============ UPDATE OR CREATE INVOICE ============
-    let invoice = await Invoice.findOne({ service: service._id });
+    let invoice = await Invoice.findOne({ service: service._id , workshopId: req.user.workshopId  });
     
     if (!invoice) {
       // Create new invoice
@@ -746,6 +830,7 @@ const generateBill = async (req, res) => {
         service: service._id,
         customerName: service.customerName,
         customerPhone: service.customerPhone,
+        customerAddress: service.customerAddress || "",
         vehicleNumber: service.vehicleNumber,
         vehicleModel: service.vehicleModel,
         items: [
@@ -784,7 +869,8 @@ const generateBill = async (req, res) => {
         paymentMethod: service.billing.paymentMethod,
         issuedBy: req.user.id,
         status: service.billing.balance <= 0 ? "paid" : "issued",
-        notes: service.notes
+        notes: service.notes,
+        workshopId: req.user.workshopId 
       });
       
       await invoice.save();
@@ -883,7 +969,11 @@ const getServiceStats = async (req, res) => {
 // ============ DELETE SERVICE ============
 const deleteService = async (req, res) => {
     try {
-        const service = await Service.findById(req.params.id);
+        // const service = await Service.findById(req.params.id);
+         const service = await Service.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!service) {
             return res.status(404).json({
                 success: false,
@@ -900,7 +990,7 @@ const deleteService = async (req, res) => {
         }
 
         // Delete related invoice if exists
-        await Invoice.findOneAndDelete({ service: service._id });
+        await Invoice.findOneAndDelete({ service: service._id ,  workshopId: req.user.workshopId });
 
         // Delete the service
         await service.deleteOne();

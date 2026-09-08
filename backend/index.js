@@ -36,7 +36,8 @@ const userRoutes = require("./routes/userRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const revenueRoutes = require("./routes/revenueRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
-
+const workshopRoutes = require("./routes/workshopRoutes");
+const settingsRoutes = require("./routes/settingsRoutes");
 
 
 // ============ ROUTES ============
@@ -50,7 +51,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/revenue", revenueRoutes);
 app.use("/api/expenses", expenseRoutes);
-
+app.use("/api/workshop", workshopRoutes);
+app.use("/api/settings", settingsRoutes);
 
 // ============ TEST ROUTE ============
 // app.get("/", (req, res) => {

@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { requireSignIn, isAdmin, isStaff } = require("../middleware/authMiddleware");
+const { requireSignIn, isAdmin, isStaff , getWorkshopId } = require("../middleware/authMiddleware");
 const {
     createService,
     getAllServices,
@@ -17,6 +17,8 @@ const {
 
 // ============ ALL ROUTES REQUIRE LOGIN ============
 router.use(requireSignIn);
+router.use(getWorkshopId);  
+
 
 // Get all services
 router.get("/", getAllServices);

@@ -5,6 +5,7 @@ import { FaSearch, FaPrint, FaEye, FaDownload, FaTrash, FaCalendar } from 'react
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import Modal from '../components/Common/Modal';
+import { useAuth } from '../context/AuthContext';
 
 const Invoices = () => {
   const [invoices, setInvoices] = useState([]);
@@ -14,6 +15,9 @@ const Invoices = () => {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  const { user } = useAuth();
+  // console.log("user: ", user)
   
   // ============ NEW FILTER STATES ============
   const [dateRange, setDateRange] = useState({
@@ -171,14 +175,18 @@ const [endDate, setEndDate] = useState('');
 
     setExporting(true);
 
+        // console.log("invoice: ", invoices)
+
+
     try {
       const exportData = invoices.map((invoice, index) => ({
+
         'S.No': index + 1,
         'Invoice #': invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`,
         'Customer Name': invoice.customerName,
         'Customer Phone': invoice.customerPhone,
         'Vehicle Number': invoice.vehicleNumber,
-        'Vehicle Model': invoice.vehicleModel || 'N/A',
+        'Vehicle Model': invoice.service?.vehicleModel || 'N/A',
         'Total Amount': invoice.totalAmount || 0,
         'Paid Amount': invoice.paidAmount || 0,
         'Balance': invoice.balance || 0,
@@ -261,10 +269,27 @@ const [endDate, setEndDate] = useState('');
     }
   };
 
+
+
+
+ 
+
   // ============ PRINT INVOICE ============
  // In handlePrint function
-const handlePrint = (invoice) => {
+const handlePrint = async(invoice) => {
   // console.log("invoice: ", invoice)
+
+
+   let settings = {};
+  try {
+    const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/settings');
+    settings = response.data.settings || {};
+    // console.log(response.data.settings)
+  } catch (error) {
+    console.error('Failed to fetch settings:', error);
+  }
+
+
   const printWindow = window.open('', '_blank');
   if (!printWindow) {
     toast.error('Please allow popups for this site');
@@ -284,27 +309,95 @@ const handlePrint = (invoice) => {
         }
         body { font-family: Arial, sans-serif; background: #fff; margin: 0; }
         .letterhead-header, .letterhead-footer { width: 100%; display: block; }
-        .border-bottom { border-bottom: 2px solid #dc2626; }
-        .bg-light { background: #f8fafc; }
-        .bg-primary { background: #dc2626; }
-        .text-primary { color: #dc2626; }
-        .grand-total { font-size: 22px; color: #dc2626; border-top: 2px solid #dc2626; padding-top: 10px; margin-top: 10px; }
-        .status-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; }
-        .status-paid { background: #d4edda; color: #155724; }
-        .status-unpaid { background: #f8d7da; color: #721c24; }
-        .status-partial { background: #fff3cd; color: #856404; }
-        .footer-note { text-align: center; margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+        .letterhead-wrapper {
+  position: relative;
+  width: 100%;
+  line-height: 0; /* kills the gap under the header image */
+}
+
+  .letterhead-wrapper {
+    position: relative;
+    width: 100%;
+    line-height: 0;
+    overflow: visible;
+  }
+
+  .letterhead-header {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+   .letterhead-logo {
+      position: absolute;
+      top:55%;
+      left: 44px;
+      bottom: 25px;
+      height: 98px;
+      width: 98px;
+      border-radius: 50%;
+      object-fit: cover;
+      z-index: 2;
+      border: 3px solid white;
+    }
+
+  .letterhead-company-name {
+      position: absolute;
+      top:75%;
+      left: 180px;
+      bottom: 32px;
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 33px;
+      font-weight: 800;
+      color: #000000;
+      letter-spacing: 0.3px;
+      z-index: 2;
+      line-height: normal;
+    }
+
+  .letterhead-company-name::after {
+    content: "";
+    display: block;
+    width: 105%;
+    height: 2px;
+    margin-top: 6px;
+    background: linear-gradient(to right, #e2231a 0%, #e2231a 60%, transparent 100%);
+  }
+
+  .border-bottom { border-bottom: 2px solid #dc2626; }
+  .bg-light { background: #f8fafc; }
+  .bg-primary { background: #dc2626; }
+  .text-primary { color: #dc2626; }
+  .grand-total { font-size: 22px; color: #dc2626; border-top: 2px solid #dc2626; padding-top: 10px; margin-top: 10px; }
+  .status-badge { display: inline-block; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; }
+  .status-paid { background: #d4edda; color: #155724; }
+  .status-unpaid { background: #f8d7da; color: #721c24; }
+  .status-partial { background: #fff3cd; color: #856404; }
+  .footer-note { text-align: center; margin-top: 40px; color: #666; font-size: 12px; border-top: 1px solid #e5e7eb; padding-top: 20px; }
+
       </style>
     </head>
     <body>
 
       <!-- ============ LETTERHEAD HEADER ============ -->
-      <img src="/invoice_header.png" class="letterhead-header" alt="Amb Auto Wheels Letterhead Header" />
+      <div class="letterhead-wrapper">
+  ${settings?.headerImage 
+    ? `<img src="${settings.headerImage}" class="letterhead-header" alt="Workshop Logo" />`
+    : `<img src="/invoice_header.png" class="letterhead-header" alt="Auto Workshop Software Letterhead Header" />`
+  }
+
+  ${settings?.logo ? `<img src="${settings.logo}" class="letterhead-logo flex items-center justify-center" alt="Workshop Logo" />` : ''}
+  ${settings?.companyName ? `<p class="letterhead-company-name">${settings.companyName}</p>` : ``}
+</div>
+
+
 
       <div class="max-w-5xl mx-auto bg-white px-8 pt-6 pb-2">
 
         <!-- ============ INVOICE META ============ -->
-        <div class="flex items-center justify-between border-b-2 border-red-600 pb-4 mb-4">
+    <div class="flex items-center justify-between border-b-2 border-red-600 pb-4 mb-4 ${settings?.logo ? 'pt-10' : ''}">
+
           <h2 class="text-xl font-bold text-gray-800">Billing Invoice</h2>
           <div class="text-right">
             <p class="text-sm text-gray-500">Invoice #: <span class="font-bold text-gray-800">${invoice.invoiceNumber || `INV-${invoice._id.slice(-6)}`}</span></p>
@@ -325,7 +418,7 @@ const handlePrint = (invoice) => {
           <div class="grid grid-cols-2 gap-2 text-sm">
             <div><span class="font-medium">Name:</span> ${invoice.customerName}</div>
             <div><span class="font-medium">Contact Number:</span> ${invoice.customerPhone}</div>
-            <div><span class="font-medium">Address:</span> ${invoice.service?.customerAddress || 'N/A'}</div>
+             <div><span class="font-medium">Address:</span> ${invoice.customerAddress || invoice.service?.customerAddress || 'N/A'}</div>
             <div><span class="font-medium">Vehicle Registration:</span> ${invoice.vehicleNumber}</div>
             <div><span class="font-medium">Vehicle Make :</span> ${invoice.service?.vehicleMake || 'N/A'}</div>
             <div><span class="font-medium">Vehicle Model:</span> ${invoice.service?.vehicleModel || 'N/A'}</div>
@@ -462,35 +555,45 @@ ${(invoice.notes || invoice.service?.notes) ? `
         <!-- ============ TERMS & CONDITIONS ============ -->
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">Terms and Conditions:</h3>
-          <ol class="list-decimal list-inside space-y-1 text-gray-600">
-            <li>Payments must be made in full by the due date specified on the invoice.</li>
-            <li>All products and services are provided "as-is" and are subject to availability.</li>
-            <li>Claims regarding defective goods or services must be submitted within 7 days of receipt.</li>
-            <li>Warranties are only applicable as per manufacturer's policy.</li>
-            <li>Custom orders and special services are non-refundable.</li>
-            <li>For support or queries, please contact us at [+92-3025434437, 311-4234211].</li>
-          </ol>
+         <ol class=" list-inside space-y-1 text-gray-600">
+  ${settings.termsAndConditions ? 
+    settings.termsAndConditions.split('\n').map(line => 
+      `<li>${line}</li>`
+    ).join('') : `
+    <li>Payments must be made in full by the due date specified on the invoice.</li>
+    <li>All products and services are provided "as-is" and are subject to availability.</li>
+    <li>Claims regarding defective goods or services must be submitted within 7 days of receipt.</li>
+    <li>Warranties are only applicable as per manufacturer's policy.</li>
+    <li>Custom orders and special services are non-refundable.</li>
+    <li>For support or queries, please contact us at [+92-3025434437, 311-4234211].</li>
+     ${
+          user?.workshopName?.trim() === "AMB Auto Wheel"
+            ? `<li>For support or queries, please contact us at [+92-3025434437, 311-4234211].</li>`
+            : ''
+        }
+  `}
+</ol>
         </div>
 
         <!-- ============ PAYMENT DETAILS ============ -->
         <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4 text-sm">
           <h3 class="font-bold text-gray-700 mb-2">Payment Details:</h3>
-          <div class="space-y-1 text-gray-700">
-            <p><span class="font-medium">Bank Name:</span> Faysal Islamic Bank</p>
-            <p><span class="font-medium">Account Name:</span> AMB AUTO WHEELS</p>
-            <p><span class="font-medium">Account Number:</span> 3622499000002922</p>
-            <p><span class="font-medium">IBAN/Swift Code:</span> PK85FAYS3622499000002922</p>
-          </div>
+         <div class="space-y-1 text-gray-700">
+  <p><span class="font-medium">Bank Name:</span> ${settings.paymentDetails?.bankName || 'Faysal Islamic Bank'}</p>
+  <p><span class="font-medium">Account Name:</span> ${settings.paymentDetails?.accountName || 'AMB AUTO WHEELS'}</p>
+  <p><span class="font-medium">Account Number:</span> ${settings.paymentDetails?.accountNumber || '3622499000002922'}</p>
+  <p><span class="font-medium">IBAN/Swift Code:</span> ${settings.paymentDetails?.iban || 'PK85FAYS3622499000002922'}</p>
+</div>
         </div>
 
         <!-- ============ AUTHORIZED SIGNATURE ============ -->
         <div class="flex justify-between items-center mt-6 pt-4 border-t">
           <div>
-            <p class="text-sm font-medium">Muhammad Nauman Majeed</p>
+            <p class="text-sm font-medium">${settings.signatureName || 'Muhammad Nauman Majeed'}</p>
             <p class="text-xs text-gray-500">Authorized Signature</p>
           </div>
           <div class="text-right">
-            <p class="text-sm text-gray-500">Thank you for choosing Amb Auto Wheels!</p>
+            <p class="text-sm text-gray-500">Thank you for choosing ${settings.companyName || 'Auto Workshop'}!</p>
           </div>
         </div>
 
@@ -508,8 +611,9 @@ ${(invoice.notes || invoice.service?.notes) ? `
 
       </div>
 
-      <!-- ============ LETTERHEAD FOOTER ============ -->
-      <img src="/invoice_footer.png" class="letterhead-footer" alt="Amb Auto Wheels Letterhead Footer" />
+    <!--
+<img src="/invoice_footer.png" class="letterhead-footer" alt="Amb Auto Wheels Letterhead Footer" />
+-->
 
     </body>
     </html>
@@ -808,7 +912,7 @@ const filteredInvoices = invoices.filter(inv => {
                     </td>
                     <td>
                       <div>{invoice.vehicleNumber}</div>
-                      <div className="text-xs text-gray-500">{invoice.vehicleModel || 'N/A'}</div>
+                      <div className="text-xs text-gray-500">{invoice.service?.vehicleModel || 'N/A'}</div>
                     </td>
                     <td className="font-medium">PKR {invoice.totalAmount?.toLocaleString() || 0}</td>
                     <td className="text-green-600">PKR {invoice.paidAmount?.toLocaleString() || 0}</td>

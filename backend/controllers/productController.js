@@ -3,6 +3,7 @@ const Category = require("../models/categoryModel");
 const Transaction = require("../models/transactionModel");
 const { createNotification } = require("./notificationController");
 
+// ============ CREATE PRODUCT ============
 const createProduct = async (req, res) => {
     try {
         const {
@@ -21,28 +22,31 @@ const createProduct = async (req, res) => {
             status
         } = req.body;
 
-
-        // console.log("hn bhai create prod me hi: ",req.user);
-        
-        // Check if category exists
-        const categoryExists = await Category.findById(category);
+        // ✅ Check if category exists and belongs to workshop
+        const categoryExists = await Category.findOne({ 
+            _id: category, 
+            workshopId: req.user.workshopId 
+        });
         if (!categoryExists) {
             return res.status(400).json({
                 success: false,
-                message: "Category not found"
+                message: "Category not found in your workshop"
             });
         }
 
-        // Check if SKU already exists
-        const existingProduct = await Product.findOne({ sku });
+        // ✅ Check if SKU already exists in workshop
+        const existingProduct = await Product.findOne({ 
+            sku, 
+            workshopId: req.user.workshopId 
+        });
         if (existingProduct) {
             return res.status(400).json({
                 success: false,
-                message: "Product with this SKU already exists"
+                message: "Product with this SKU already exists in your workshop"
             });
         }
 
-        // Create product
+        // ✅ Create product with workshopId
         const product = await Product.create({
             name,
             slug,
@@ -56,39 +60,29 @@ const createProduct = async (req, res) => {
             supplier,
             location,
             unit,
-            status
+            status,
+            workshopId: req.user.workshopId  // ✅ ADD THIS
         });
 
+        // ✅ Create notification for new product
+        await createNotification(
+            req.user.id,
+            "📦 New Product Added",
+            `${name} (${sku}) added to inventory - PKR ${price}`,
+            "general",
+            "/products"
+        );
 
-
-
-        // ============ ✅ CREATE NOTIFICATION FOR NEW PRODUCT ============
-await createNotification(
-    req.user.id,
-    "New Product Added",
-    `${name} (${sku}) has been added to inventory - PKR ${price}`,
-    "general",  // or "inventory"
-    "/products"
-);
-
-
-
-
-        // ============ ADD THIS: CHECK INITIAL STOCK ============
-if (product.quantity <= product.minQuantity) {
-    const { createNotification } = require("./notificationController");
-    await createNotification(
-        req.user.id,
-        "Low Stock Alert",
-        `${product.name} has low initial stock (${product.quantity} units, Min: ${product.minQuantity})`,
-        "low-stock",
-        "/products"
-    );
-}
-
-
-        // console.log(req.user);
-        
+        // ✅ Check initial stock
+        if (product.quantity <= product.minQuantity) {
+            await createNotification(
+                req.user.id,
+                "⚠️ Low Stock Alert",
+                `${product.name} has low initial stock (${product.quantity} units, Min: ${product.minQuantity})`,
+                "low-stock",
+                "/products"
+            );
+        }
 
         // If quantity > 0, create initial transaction
         if (quantity > 0) {
@@ -100,10 +94,10 @@ if (product.quantity <= product.minQuantity) {
                 newQuantity: quantity,
                 reference: "Initial Stock",
                 notes: "Initial product creation",
-                // performedBy: req.user._id,
                 performedBy: req.user.id,
                 unitPrice: costPrice || price,
-                totalPrice: (costPrice || price) * quantity
+                totalPrice: (costPrice || price) * quantity,
+                workshopId: req.user.workshopId  // ✅ ADD THIS
             });
         }
 
@@ -121,22 +115,21 @@ if (product.quantity <= product.minQuantity) {
     }
 };
 
-
+// ============ GET ALL PRODUCTS ============
 const getAllProducts = async (req, res) => {
     try {
-        const { search } = req.query;  // ✅ Get search query from URL
+        const { search } = req.query;
         
-        let query = {};
+        let query = { workshopId: req.user.workshopId };  // ✅ ADD WORKSHOP FILTER
         
-        // ✅ If search parameter exists, add to query
+        // console.log(req.user.workshopId)
+
         if (search && search.trim() !== '') {
-            query = {
-                $or: [
-                    { name: { $regex: search, $options: 'i' } },
-                    { sku: { $regex: search, $options: 'i' } },
-                    { description: { $regex: search, $options: 'i' } }
-                ]
-            };
+            query.$or = [
+                { name: { $regex: search, $options: 'i' } },
+                { sku: { $regex: search, $options: 'i' } },
+                { description: { $regex: search, $options: 'i' } }
+            ];
         }
         
         const products = await Product.find(query).populate("category", "name slug");
@@ -145,7 +138,7 @@ const getAllProducts = async (req, res) => {
             success: true,
             total: products.length,
             products: products,
-            search: search || ''  // ✅ Return search term for reference
+            search: search || ''
         });
 
     } catch (error) {
@@ -156,10 +149,13 @@ const getAllProducts = async (req, res) => {
     }
 };
 
-
+// ============ GET PRODUCT BY ID ============
 const getProductById = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id).populate("category", "name slug");
+        const product = await Product.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        }).populate("category", "name slug");
         
         if (!product) {
             return res.status(404).json({
@@ -180,12 +176,13 @@ const getProductById = async (req, res) => {
     }
 };
 
-// @desc    Update product
-// @route   PUT /api/products/:id
-// @access  Private/Admin
+// ============ UPDATE PRODUCT ============
 const updateProduct = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -213,12 +210,13 @@ const updateProduct = async (req, res) => {
     }
 };
 
-// @desc    Delete product
-// @route   DELETE /api/products/:id
-// @access  Private/Admin
+// ============ DELETE PRODUCT ============
 const deleteProduct = async (req, res) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
         if (!product) {
             return res.status(404).json({
                 success: false,
@@ -240,13 +238,14 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-// @desc    Update product stock
-// @route   PUT /api/products/:id/stock
-// @access  Private/Admin
+// ============ UPDATE STOCK ============
 const updateStock = async (req, res) => {
     try {
         const { quantity, type, notes, reference, unitPrice } = req.body;
-        const product = await Product.findById(req.params.id);
+        const product = await Product.findOne({ 
+            _id: req.params.id, 
+            workshopId: req.user.workshopId 
+        });
 
         if (!product) {
             return res.status(404).json({
@@ -266,7 +265,6 @@ const updateStock = async (req, res) => {
         let newQuantity = product.quantity;
 
         switch(type) {
-            // Increase Stock
             case "purchase-in":
             case "return-in":
                 if (quantity < 0) {
@@ -278,7 +276,6 @@ const updateStock = async (req, res) => {
                 newQuantity = product.quantity + quantity;
                 break;
 
-            // Decrease Stock
             case "service-out":
             case "sale-out":
             case "wastage":
@@ -297,7 +294,6 @@ const updateStock = async (req, res) => {
                 newQuantity = product.quantity - quantity;
                 break;
 
-            // Adjustment - Can be positive or negative
             case "adjustment":
                 if (quantity < 0 && Math.abs(quantity) > product.quantity) {
                     return res.status(400).json({
@@ -318,21 +314,16 @@ const updateStock = async (req, res) => {
         product.quantity = newQuantity;
         await product.save();
 
-
-
-
-        // ============ ADD THIS: CHECK LOW STOCK ============
-if (newQuantity <= product.minQuantity) {
-    await createNotification(
-        req.user.id,
-        "Low Stock Alert",
-        `${product.name} is running low (${newQuantity} units left, Min: ${product.minQuantity})`,
-        "low-stock",
-        "/products"
-    );
-}
-
-
+        // ✅ Check low stock
+        if (newQuantity <= product.minQuantity) {
+            await createNotification(
+                req.user.id,
+                "⚠️ Low Stock Alert",
+                `${product.name} is running low (${newQuantity} units left, Min: ${product.minQuantity})`,
+                "low-stock",
+                "/products"
+            );
+        }
 
         await Transaction.create({
             product: product._id,
@@ -344,7 +335,8 @@ if (newQuantity <= product.minQuantity) {
             notes: notes || `${type} transaction`,
             performedBy: req.user.id,
             unitPrice: unitPrice || product.price,
-            totalPrice: (unitPrice || product.price) * Math.abs(quantity)
+            totalPrice: (unitPrice || product.price) * Math.abs(quantity),
+            workshopId: req.user.workshopId  // ✅ ADD THIS
         });
 
         res.status(200).json({
@@ -362,17 +354,15 @@ if (newQuantity <= product.minQuantity) {
     }
 };
 
-// @desc    Get low stock products
-// @route   GET /api/products/low-stock
-// @access  Private
+// ============ GET LOW STOCK PRODUCTS ============
 const getLowStockProducts = async (req, res) => {
     try {
         const products = await Product.find({
-  $expr: {
-    $lte: ["$quantity", "$minQuantity"]
-  }
-}).populate("category", "name");
-        // console.log("Low stock products fetched:", products);
+            workshopId: req.user.workshopId,  // ✅ ADD THIS
+            $expr: {
+                $lte: ["$quantity", "$minQuantity"]
+            }
+        }).populate("category", "name");
         
         res.status(200).json({
             success: true,
@@ -387,14 +377,6 @@ const getLowStockProducts = async (req, res) => {
         });
     }
 };
-
-
-
-
-
-
-
-
 
 module.exports = {
     createProduct,
