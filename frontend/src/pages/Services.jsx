@@ -693,6 +693,7 @@ const Services = () => {
     };
 
     const viewDetails = (service) => {
+        console.log("Viewing details for service: ", service);
         setSelectedService(service);
         setShowDetailsModal(true);
     };
@@ -770,7 +771,7 @@ const Services = () => {
                                     <th>Vehicle</th>
                                     <th>Services</th>
                                     <th>Total</th>
-                                    <th>Profit</th>
+                                    {/* <th>Profit</th> */}
                                     <th>Status</th>
                                     <th>Payment</th>
                                     <th>Actions</th>
@@ -792,7 +793,7 @@ const Services = () => {
                                             <div className="text-xs text-gray-500">{service.partsUsed?.length || 0} parts</div>
                                         </td>
                                         <td className="font-medium">PKR {service.billing?.totalAmount?.toLocaleString() || 0}</td>
-                                        <td className="font-medium">PKR {service.profit?.totalProfit?.toLocaleString() || 0}</td>
+                                        {/* <td className="font-medium">PKR {service.profit?.totalProfit?.toLocaleString() || 0}</td> */}
                                         {/* <td>
                                             <span className={`badge ${service.status === 'completed' ? 'badge-success' :
                                                 service.status === 'in-progress' ? 'badge-warning' :
@@ -1553,6 +1554,10 @@ const Services = () => {
                                 <div>
                                     <p className="text-sm text-gray-500">Total</p>
                                     <p className="font-semibold text-lg text-blue-600">PKR {selectedService.billing?.totalAmount?.toLocaleString() || 0}</p>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-500">Profit</p>
+                                    <p className="font-semibold text-lg text-blue-600">PKR {selectedService.profit?.totalProfit?.toLocaleString() || 0}</p>
                                 </div>
                                 <div>
                                     <p className="text-sm text-gray-500">Paid</p>
