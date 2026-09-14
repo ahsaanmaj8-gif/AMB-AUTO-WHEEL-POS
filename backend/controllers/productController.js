@@ -122,7 +122,7 @@ const getAllProducts = async (req, res) => {
         
         let query = { workshopId: req.user.workshopId };  // ✅ ADD WORKSHOP FILTER
         
-        // console.log(req.user.workshopId)
+        // console.log(req.user.workshopId) 
 
         if (search && search.trim() !== '') {
             query.$or = [

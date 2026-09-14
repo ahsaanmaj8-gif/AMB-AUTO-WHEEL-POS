@@ -305,16 +305,16 @@ const Revenue = () => {
                                 </div>
                             </div>
                             {/* ✅ Add Total Profit */}
-                            <div className="mt-2 pt-2 border-t border-gray-200">
-                                <p className="text-sm text-green-600 font-medium">
+                            {/* <div className="mt-2 pt-2 border-t border-gray-200"> */}
+                                {/* <p className="text-sm text-green-600 font-medium">
                                     Total Profit: PKR {revenueData.totalProfit?.toLocaleString() || 0}
-                                </p>
+                                </p> */}
                                 {/* {revenueData.totalRevenue > 0 && (
                                     <p className="text-xs text-gray-500">
                                         Margin: {((revenueData.totalProfit / revenueData.totalRevenue) * 100).toFixed(1)}%
                                     </p>
                                 )} */}
-                            </div>
+                            {/* </div> */}
                         </div>
 
 

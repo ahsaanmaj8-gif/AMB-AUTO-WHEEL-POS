@@ -26,24 +26,49 @@ const Expenses = () => {
         fetchExpenses();
     }, [dateFilter, startDate, endDate]);
 
-    const fetchExpenses = async () => {
-        setLoading(true);
-        try {
-            let params = {};
-            if (dateFilter === 'custom' && startDate && endDate) {
-                params.startDate = startDate;
-                params.endDate = endDate;
-            }
-
-            const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/expenses', { params });
-            setExpenses(response.data.expenses || []);
-            setTotalExpenses(response.data.totalExpenses || 0);
-        } catch (error) {
-            toast.error('Failed to fetch expenses');
-        } finally {
-            setLoading(false);
+   const fetchExpenses = async () => {
+    setLoading(true);
+    try {
+        let params = {};
+        
+        // ✅ Handle all date filters
+        const now = new Date();
+        
+        if (dateFilter === 'today') {
+            const start = new Date(now);
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+            params.startDate = start.toISOString().split('T')[0];
+            params.endDate = end.toISOString().split('T')[0];
+        } else if (dateFilter === 'week') {
+            const start = new Date(now);
+            start.setDate(now.getDate() - now.getDay());
+            start.setHours(0, 0, 0, 0);
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+            params.startDate = start.toISOString().split('T')[0];
+            params.endDate = end.toISOString().split('T')[0];
+        } else if (dateFilter === 'month') {
+            const start = new Date(now.getFullYear(), now.getMonth(), 1);
+            const end = new Date(now);
+            end.setHours(23, 59, 59, 999);
+            params.startDate = start.toISOString().split('T')[0];
+            params.endDate = end.toISOString().split('T')[0];
+        } else if (dateFilter === 'custom' && startDate && endDate) {
+            params.startDate = startDate;
+            params.endDate = endDate;
         }
-    };
+
+        const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/expenses', { params });
+        setExpenses(response.data.expenses || []);
+        setTotalExpenses(response.data.totalExpenses || 0);
+    } catch (error) {
+        toast.error('Failed to fetch expenses');
+    } finally {
+        setLoading(false);
+    }
+};
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
