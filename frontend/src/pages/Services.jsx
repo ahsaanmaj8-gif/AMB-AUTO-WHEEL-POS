@@ -13,6 +13,12 @@ const Services = () => {
     const [showModal, setShowModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedService, setSelectedService] = useState(null);
+
+    const [dateFilter, setDateFilter] = useState('all');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
+
     const [formData, setFormData] = useState({
         customerName: '',
         customerPhone: '',
@@ -22,7 +28,7 @@ const Services = () => {
         vehicleMake: '',
         mileage: '',
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
-        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', fromInventory: true }],
+        partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', showDropdown: false, fromInventory: true }],
         additionalCharges: [{
             description: '', amount: '', purchasePrice: '',
             sellingPrice: ''
@@ -448,9 +454,10 @@ const Services = () => {
 
 
         if (field === 'searchTerm') {
-        setFormData({ ...formData, partsUsed: updatedParts });
-        return;
-    }
+            updatedParts[index].showDropdown = true;
+            setFormData({ ...formData, partsUsed: updatedParts });
+            return;
+        }
 
         // If product is selected from dropdown, auto-fill productName and unitPrice
         if (field === 'product' && value) {
@@ -488,7 +495,7 @@ const Services = () => {
     const addPart = () => {
         setFormData({
             ...formData,
-            partsUsed: [...formData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', fromInventory: true }]
+            partsUsed: [...formData.partsUsed, { product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', showDropdown: false, fromInventory: true }]
         });
     };
 
@@ -616,6 +623,38 @@ const Services = () => {
         }
     };
 
+
+
+    // ============ FETCH CUSTOMER INFO BY VEHICLE NUMBER ============
+    const fetchCustomerInfoByVehicle = async (vehicleNumber) => {
+        if (!vehicleNumber || vehicleNumber.length < 3) return;
+
+        try {
+            const response = await axios.get(
+                `https://amb-auto-wheel-pos.onrender.com/api/services/vehicle/${vehicleNumber}`
+            );
+
+            if (response.data.success && response.data.service) {
+                const service = response.data.service;
+
+                // ✅ Auto-fill customer info
+                setFormData(prev => ({
+                    ...prev,
+                    customerName: service.customerName || prev.customerName,
+                    customerPhone: service.customerPhone || prev.customerPhone,
+                    customerAddress: service.customerAddress || prev.customerAddress,
+                    vehicleModel: service.vehicleModel || prev.vehicleModel,
+                    vehicleMake: service.vehicleMake || prev.vehicleMake,
+                    mileage: service.mileage || prev.mileage
+                }));
+
+                toast.success('Customer info loaded!');
+            }
+        } catch (error) {
+            console.log('New customer');
+        }
+    };
+
     const handleGenerateBill = async (id) => {
         try {
             // Show prompt to enter paid amount
@@ -698,10 +737,59 @@ const Services = () => {
         setShowDetailsModal(true);
     };
 
-    const filteredServices = services.filter(service =>
-        service.customerName.toLowerCase().includes(search.toLowerCase()) ||
-        service.vehicleNumber.toLowerCase().includes(search.toLowerCase())
-    );
+
+
+
+
+
+
+    // const filteredServices = services.filter(service =>
+    //     service.customerName.toLowerCase().includes(search.toLowerCase()) ||
+    //     service.vehicleNumber.toLowerCase().includes(search.toLowerCase())
+    // );
+
+
+
+
+    // ============ GET DATE FILTER ============
+    const getDateFilter = (serviceDate) => {
+        const date = new Date(serviceDate);
+        const today = new Date();
+        const weekStart = new Date(today);
+        weekStart.setDate(today.getDate() - today.getDay());
+        const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+
+        switch (dateFilter) {
+            case 'today':
+                return date.toDateString() === today.toDateString();
+            case 'week':
+                return date >= weekStart && date <= today;
+            case 'month':
+                return date >= monthStart && date <= today;
+            case 'custom':
+                if (startDate && endDate) {
+                    const start = new Date(startDate);
+                    start.setHours(0, 0, 0, 0);
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999);
+                    return date >= start && date <= end;
+                }
+                return true;
+            default:
+                return true;
+        }
+    };
+
+    // ============ FILTERED SERVICES ============
+    const filteredServices = services.filter(service => {
+        const matchesSearch =
+            service.customerName.toLowerCase().includes(search.toLowerCase()) ||
+            service.vehicleNumber.toLowerCase().includes(search.toLowerCase());
+
+        const matchesDate = getDateFilter(service.createdAt);
+
+        return matchesSearch && matchesDate;
+    });
 
 
 
@@ -745,15 +833,75 @@ const Services = () => {
             </div>
 
             {/* Search Bar */}
-            <div className="relative mb-6">
-                <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
-                <input
-                    type="text"
-                    placeholder="Search by customer name or vehicle number..."
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    className="input-field pl-10"
-                />
+            {/* Search & Filters */}
+            <div className="flex flex-wrap gap-4 mb-6">
+                {/* Search */}
+                <div className="flex-1 min-w-[200px]">
+                    <div className="relative">
+                        <FaSearch className="absolute left-3 top-3.5 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Search by customer name or vehicle number..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="input-field pl-10"
+                        />
+                    </div>
+                </div>
+
+                {/* Date Filter */}
+                <div className="w-48">
+                    <select
+                        value={dateFilter}
+                        onChange={(e) => setDateFilter(e.target.value)}
+                        className="input-field"
+                    >
+                        <option value="all">📅 All Dates</option>
+                        <option value="today">📅 Today</option>
+                        <option value="week">📅 This Week</option>
+                        <option value="month">📅 This Month</option>
+                        <option value="custom">📅 Custom Range</option>
+                    </select>
+                </div>
+
+                {/* Custom Date Range */}
+                {dateFilter === 'custom' && (
+                    <div className="flex gap-2 items-end">
+                        <div>
+                            <label className="text-xs text-gray-500">From</label>
+                            <input
+                                type="date"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                                className="input-field py-1 text-sm"
+                            />
+                        </div>
+                        <div>
+                            <label className="text-xs text-gray-500">To</label>
+                            <input
+                                type="date"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                                className="input-field py-1 text-sm"
+                            />
+                        </div>
+                        <button
+                            onClick={() => {
+                                setDateFilter('all');
+                                setStartDate('');
+                                setEndDate('');
+                            }}
+                            className="btn-outline btn-sm"
+                        >
+                            Clear
+                        </button>
+                    </div>
+                )}
+
+                {/* Count */}
+                <div className="text-sm text-gray-500 self-center">
+                    {filteredServices.length} services found
+                </div>
             </div>
 
             {/* Services Table */}
@@ -771,9 +919,10 @@ const Services = () => {
                                     <th>Vehicle</th>
                                     <th>Services</th>
                                     <th>Total</th>
-                                    {/* <th>Profit</th> */}
+                                    <th>Profit</th>
                                     <th>Status</th>
                                     <th>Payment</th>
+                                    <th>Date</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -793,7 +942,7 @@ const Services = () => {
                                             <div className="text-xs text-gray-500">{service.partsUsed?.length || 0} parts</div>
                                         </td>
                                         <td className="font-medium">PKR {service.billing?.totalAmount?.toLocaleString() || 0}</td>
-                                        {/* <td className="font-medium">PKR {service.profit?.totalProfit?.toLocaleString() || 0}</td> */}
+                                        <td className="font-medium">PKR {service.profit?.totalProfit?.toLocaleString() || 0}</td>
                                         {/* <td>
                                             <span className={`badge ${service.status === 'completed' ? 'badge-success' :
                                                 service.status === 'in-progress' ? 'badge-warning' :
@@ -844,6 +993,12 @@ const Services = () => {
                                                 </div>
                                             )}
                                         </td>
+
+
+                                        <td className="text-sm text-gray-500">
+                                            {new Date(service.createdAt).toLocaleDateString()}
+                                        </td>
+
                                         <td>
                                             <div className="flex items-center gap-2 flex-wrap">
                                                 {/* View Details */}
@@ -980,6 +1135,7 @@ const Services = () => {
                                     placeholder='e.g. LEA-1234'
                                     value={formData.vehicleNumber}
                                     onChange={handleChange}
+                                    onBlur={(e) => fetchCustomerInfoByVehicle(e.target.value)}
                                     className="input-field"
                                     required
                                 />
@@ -1101,55 +1257,122 @@ const Services = () => {
 
                                 {/* Product Selection - Only show when fromInventory is true */}
                                 {part.fromInventory ? (
-                                    <div className="col-span-2">
-                                        <label className="label text-xs">Product</label>
-                                        <input
-                                            type="text"
-                                            placeholder="Search products..."
-                                            className="input-field text-sm mb-1"
-                                            value={part.searchTerm || ''}
-                                            onChange={(e) => handlePartChange(index, 'searchTerm', e.target.value)}  // ✅ Use handlePartChange
-                                        />
-                                        <select
-                                            value={part.product}
-                                            onChange={(e) => handlePartChange(index, 'product', e.target.value)}
-                                            className="input-field text-sm"
-                                        >
-                                            <option value="">Select Product</option>
-                                            {products
-                                                .filter(p => {
-                                                    const search = part.searchTerm || '';
-                                                    if (!search) return true;
-                                                    return p.name.toLowerCase().includes(search.toLowerCase()) ||
-                                                        p.sku.toLowerCase().includes(search.toLowerCase());
-                                                })
-                                                .map((p) => (
-                                                    <option key={p._id} value={p._id}>
-                                                        {p.name} ({p.sku}) - PKR {p.price}
-                                                    </option>
-                                                ))}
-                                        </select>
-                                        {products.filter(p => {
-                                            const search = part.searchTerm || '';
-                                            if (!search) return true;
-                                            return p.name.toLowerCase().includes(search.toLowerCase()) ||
-                                                p.sku.toLowerCase().includes(search.toLowerCase());
-                                        }).length === 0 && part.searchTerm && (
-                                                <p className="text-xs text-red-500 mt-1">No products found</p>
-                                            )}
-                                    </div>
-                                ) : (
-                                    <div className="col-span-2">
-                                        <label className="label text-xs">Product Name (Manual)</label>
-                                        <input
-                                            type="text"
-                                            value={part.productName}
-                                            onChange={(e) => handlePartChange(index, 'productName', e.target.value)}
-                                            className="input-field text-sm"
-                                            placeholder="Enter custom product name"
-                                        />
-                                    </div>
-                                )}
+    <div className="col-span-2 relative">
+        <label className="label text-xs">Product</label>
+        
+        {/* Search Input */}
+        <input
+            type="text"
+            placeholder="🔍 Search products..."
+            className="input-field text-sm"
+            value={part.searchTerm || ''}
+            onChange={(e) => {
+                const updatedParts = [...formData.partsUsed];
+                updatedParts[index].searchTerm = e.target.value;
+                updatedParts[index].showDropdown = true;
+                setFormData({ ...formData, partsUsed: updatedParts });
+            }}
+            onFocus={() => {
+                const updatedParts = [...formData.partsUsed];
+                updatedParts[index].showDropdown = true;
+                setFormData({ ...formData, partsUsed: updatedParts });
+            }}
+            onBlur={() => {
+                setTimeout(() => {
+                    const updatedParts = [...formData.partsUsed];
+                    updatedParts[index].showDropdown = false;
+                    setFormData({ ...formData, partsUsed: updatedParts });
+                }, 200);
+            }}
+        />
+
+        {/* Selected Product Display */}
+        {part.product && (
+            <div className="mt-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded flex justify-between items-center">
+                <span>✓ {products.find(p => p._id === part.product)?.name}</span>
+                <button
+                    type="button"
+                    onClick={() => {
+                        const updatedParts = [...formData.partsUsed];
+                        updatedParts[index].product = '';
+                        updatedParts[index].productName = '';
+                        updatedParts[index].unitPrice = '';
+                        updatedParts[index].purchasePrice = '';
+                        updatedParts[index].searchTerm = '';
+                        setFormData({ ...formData, partsUsed: updatedParts });
+                    }}
+                    className="text-red-500 hover:text-red-700"
+                >
+                    ✕
+                </button>
+            </div>
+        )}
+
+        {/* Dropdown List */}
+        {part.showDropdown && (
+            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                {/* All products filter */}
+                {(() => {
+                    const filteredProducts = products.filter(p => {
+                        const search = part.searchTerm || '';
+                        if (!search) return true;
+                        return p.name.toLowerCase().includes(search.toLowerCase()) ||
+                               p.sku.toLowerCase().includes(search.toLowerCase());
+                    });
+
+                    if (filteredProducts.length === 0) {
+                        return (
+                            <div className="px-3 py-3 text-sm text-gray-500 text-center">
+                                No products found
+                            </div>
+                        );
+                    }
+
+                    return filteredProducts.slice(0, 20).map((p) => (
+                        <div
+                            key={p._id}
+                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0"
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                
+                                const updatedParts = [...formData.partsUsed];
+                                updatedParts[index].product = p._id;
+                                updatedParts[index].productName = p.name;
+                                updatedParts[index].unitPrice = p.price;
+                                updatedParts[index].purchasePrice = p.costPrice || p.price;
+                                updatedParts[index].showDropdown = false;
+                                updatedParts[index].searchTerm = '';
+                                setFormData({ ...formData, partsUsed: updatedParts });
+                            }}
+                        >
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <p className="font-medium text-gray-800">{p.name}</p>
+                                    <p className="text-xs text-gray-500">SKU: {p.sku}</p>
+                                </div>
+                                <div className="text-right">
+                                    <p className="font-semibold text-gray-800">PKR {p.price}</p>
+                                    <p className="text-xs text-gray-500">Stock: {p.quantity}</p>
+                                </div>
+                            </div>
+                        </div>
+                    ));
+                })()}
+            </div>
+        )}
+    </div>
+) : (
+    <div className="col-span-2">
+        <label className="label text-xs">Product Name (Manual)</label>
+        <input
+            type="text"
+            value={part.productName}
+            onChange={(e) => handlePartChange(index, 'productName', e.target.value)}
+            className="input-field text-sm"
+            placeholder="Enter custom product name"
+        />
+    </div>
+)}
 
                                 {/* Quantity */}
                                 <div>
@@ -1507,33 +1730,33 @@ const Services = () => {
 
 
                         {/* Additional Charges (Sublet) */}
-{selectedService.additionalCharges && selectedService.additionalCharges.length > 0 && (
-    <div>
-        <h5 className="font-semibold text-gray-700 mb-2">Additional Charges (Sublet)</h5>
-        <div className="table-container">
-            <table className="table">
-                <thead>
-                    <tr>
-                        <th>Description</th>
-                        <th>Amount</th>
-                        <th>Purchase Price</th>
-                        <th>Selling Price</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {selectedService.additionalCharges.map((charge, i) => (
-                        <tr key={i}>
-                            <td>{charge.description}</td>
-                            <td>PKR {charge.amount?.toLocaleString() || 0}</td>
-                            <td>PKR {charge.purchasePrice?.toLocaleString() || 0}</td>
-                            <td>PKR {charge.sellingPrice?.toLocaleString() || 0}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    </div>
-)}
+                        {selectedService.additionalCharges && selectedService.additionalCharges.length > 0 && (
+                            <div>
+                                <h5 className="font-semibold text-gray-700 mb-2">Additional Charges (Sublet)</h5>
+                                <div className="table-container">
+                                    <table className="table">
+                                        <thead>
+                                            <tr>
+                                                <th>Description</th>
+                                                <th>Amount</th>
+                                                <th>Purchase Price</th>
+                                                <th>Selling Price</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedService.additionalCharges.map((charge, i) => (
+                                                <tr key={i}>
+                                                    <td>{charge.description}</td>
+                                                    <td>PKR {charge.amount?.toLocaleString() || 0}</td>
+                                                    <td>PKR {charge.purchasePrice?.toLocaleString() || 0}</td>
+                                                    <td>PKR {charge.sellingPrice?.toLocaleString() || 0}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Billing Summary */}
                         <div className="bg-blue-50 p-4 rounded-lg">

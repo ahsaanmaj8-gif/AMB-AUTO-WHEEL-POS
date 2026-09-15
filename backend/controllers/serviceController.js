@@ -569,6 +569,46 @@ const getAllServices = async (req, res) => {
 };
 
 
+// ============ GET CUSTOMER BY VEHICLE NUMBER ============
+const getCustomerByVehicle = async (req, res) => {
+    try {
+        const { vehicleNumber } = req.params;
+
+        // ✅ Find service by vehicle number (latest first)
+        const service = await Service.findOne({
+            vehicleNumber: { $regex: new RegExp(`^${vehicleNumber}$`, 'i') },
+            workshopId: req.user.workshopId
+        }).sort({ createdAt: -1 });
+
+        if (!service) {
+            return res.status(404).json({
+                success: false,
+                message: "Vehicle not found"
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            service: {
+                customerName: service.customerName,
+                customerPhone: service.customerPhone,
+                customerAddress: service.customerAddress,
+                vehicleNumber: service.vehicleNumber,
+                vehicleModel: service.vehicleModel,
+                vehicleMake: service.vehicleMake,
+                mileage: service.mileage
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
+
+
 // @desc    Get today's services
 // @route   GET /api/services/today
 // @access  Private
@@ -1017,5 +1057,6 @@ module.exports = {
   getServiceStats,
   payRemaining,
   deleteService,
-  getCustomerByPhone
+  getCustomerByPhone,
+  getCustomerByVehicle
 };
