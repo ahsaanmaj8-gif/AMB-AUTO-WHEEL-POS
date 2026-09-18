@@ -4,13 +4,14 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 // Generate JWT Token
-const generateToken = (id, email, name, workshopId, role) => {
+const generateToken = (id, email, name, workshopId, role, tokenVersion = 0) => {
     return jwt.sign({ 
         id, 
         email: email, 
         name: name, 
         workshopId: workshopId,  // ✅ ADD workshopId IN TOKEN
-        role: role 
+        role: role,
+        tokenVersion
     }, process.env.JWT_SECRET, {
         expiresIn: "30d",
     });
@@ -156,7 +157,7 @@ const loginUser = async (req, res) => {
                 workshopId: user.workshopId,     // ✅ ADD THIS
                 workshopName: workshop?.name || 'N/A'  // ✅ ADD THIS
             },
-            token: generateToken(user._id, user.email, user.name, user.workshopId, user.role),
+            token: generateToken(user._id, user.email, user.name, user.workshopId, user.role, user.tokenVersion),
         });
 
     } catch (error) {
@@ -382,6 +383,37 @@ const updatePassword = async (req, res) => {
     }
 };
 
+
+
+// ============ FORCE LOGOUT USER ============
+const forceLogout = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found"
+            });
+        }
+
+        // ✅ Increment tokenVersion → all existing tokens become invalid
+        user.tokenVersion = (user.tokenVersion || 0) + 1;
+        await user.save();
+
+        res.status(200).json({
+            success: true,
+            message: "User force logged out from all devices"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     registerUser,
     loginUser,
@@ -390,5 +422,6 @@ module.exports = {
     updateProfile,
     updatePassword,
     checkEmail,
-    verifyAnswer
+    verifyAnswer,
+    forceLogout
 };

@@ -8,6 +8,7 @@ const {
     forgotPassword,
     checkEmail,
     verifyAnswer,
+    forceLogout,
     // getPendingUsers,
     // approveUser,
     // rejectUser,
@@ -31,6 +32,7 @@ router.get("/me", requireSignIn, getCurrentUser);
 router.post("/check-email", checkEmail);        
 router.post("/verify-answer", verifyAnswer);   
 
+router.post("/force-logout", requireSignIn, isAdmin, forceLogout);
 
 
 // router.get("/pending-users",  isAdmin, getPendingUsers);

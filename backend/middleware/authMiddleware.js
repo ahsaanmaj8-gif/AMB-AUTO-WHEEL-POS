@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 
 // ============ MIDDLEWARE TO VERIFY JWT TOKEN ============
-const requireSignIn = (req, res, next) => {
+const requireSignIn = async(req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -29,6 +29,17 @@ const requireSignIn = (req, res, next) => {
     // Verify the token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+
+
+     // ✅ CHECK TOKEN VERSION
+        const user = await userModel.findById(decoded.id);
+        if (user && user.tokenVersion !== decoded.tokenVersion) {
+            return res.status(401).send({
+                success: false,
+                message: "Session expired. Please login again.",
+            });
+        }
+
     // ✅ Attach user info to request object
     req.user = decoded;
     next();

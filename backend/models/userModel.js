@@ -49,6 +49,12 @@ const userSchema = mongoose.Schema({
         ref: "workshop",
         required: true
     },
+
+    //for logout demo version when i need
+    tokenVersion: {
+        type: Number,
+        default: 0
+    },
     permissions: {
         type: [String],
         default: []
