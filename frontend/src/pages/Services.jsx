@@ -1103,9 +1103,9 @@ const Services = () => {
             className="input-field"
             required
         />
-        <p className="text-xs text-gray-500 mt-1">
+        {/* <p className="text-xs text-gray-500 mt-1">
             Change this to backdate the service or invoice
-        </p>
+        </p> */}
     </div>
 </div>
 
