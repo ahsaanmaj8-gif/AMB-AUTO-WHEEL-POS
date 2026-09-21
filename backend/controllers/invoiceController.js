@@ -8,7 +8,7 @@ const getInvoices = async (req, res) => {
             workshopId: req.user.workshopId 
         })
             .populate("service", "customerAddress vehicleModel vehicleMake mileage notes")
-            .sort({ createdAt: -1 });
+           .sort({ invoiceNumber: 1 }); 
         
         res.status(200).json({
             success: true,

@@ -42,9 +42,12 @@ const [endDate, setEndDate] = useState('');
   const fetchInvoices = async () => {
     try {
       const response = await axios.get('https://amb-auto-wheel-pos.onrender.com/api/invoices');
-      const sortedInvoices = response.data.invoices.sort((a, b) => 
-        new Date(a.createdAt) - new Date(b.createdAt)
-      );
+      const sortedInvoices = response.data.invoices.sort((a, b) => {
+            // Extract number from invoice number (e.g., INV-2026-00071)
+            const numA = parseInt(a.invoiceNumber?.split('-')[2]) || 0;
+            const numB = parseInt(b.invoiceNumber?.split('-')[2]) || 0;
+            return numB - numA;  // Descending order
+        });
 
       // console.log("Fetched invoices: ", sortedInvoices)
       setInvoices(sortedInvoices || []);
@@ -931,7 +934,7 @@ const filteredInvoices = invoices.filter(inv => {
 
 
 <td className="text-sm text-gray-500">
-    {new Date(invoice.createdAt).toLocaleDateString()}
+    {new Date(invoice.issuedDate).toLocaleDateString()}
 </td>
 
 

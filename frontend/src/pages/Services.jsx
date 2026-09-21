@@ -27,6 +27,7 @@ const Services = () => {
         vehicleModel: '',
         vehicleMake: '',
         mileage: '',
+        serviceDate: new Date().toISOString().split('T')[0],
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
         partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', showDropdown: false, fromInventory: true }],
         additionalCharges: [{
@@ -57,6 +58,7 @@ const Services = () => {
         vehicleModel: '',
         vehicleMake: '',
         mileage: '',
+        serviceDate: new Date().toISOString().split('T')[0],
         services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
         partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', purchasePrice: '', searchTerm: '', fromInventory: true }],
         additionalCharges: [{ description: '', amount: '' }],
@@ -88,6 +90,11 @@ const Services = () => {
             vehicleModel: service.vehicleModel || '',
             vehicleMake: service.vehicleMake || '',
             mileage: service.mileage || '',
+             serviceDate: service.serviceDate 
+            ? new Date(service.serviceDate).toISOString().split('T')[0]
+            : service.createdAt 
+                ? new Date(service.createdAt).toISOString().split('T')[0]
+                : new Date().toISOString().split('T')[0],
             services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
             partsUsed: service.partsUsed || [{
                 product: '',
@@ -715,6 +722,7 @@ const Services = () => {
             vehicleModel: '',
             vehicleMake: '',
             mileage: '',
+            serviceDate: new Date().toISOString().split('T')[0],
             services: [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
             partsUsed: [{ product: '', productName: '', quantity: '1', unitPrice: '', fromInventory: true }],
             additionalCharges: [{ description: '', amount: '' }],
@@ -732,12 +740,13 @@ const Services = () => {
     };
 
     const viewDetails = (service) => {
-        console.log("Viewing details for service: ", service);
+        // console.log("Viewing details for service: ", service);
         setSelectedService(service);
         setShowDetailsModal(true);
     };
 
 
+   
 
 
 
@@ -996,7 +1005,7 @@ const Services = () => {
 
 
                                         <td className="text-sm text-gray-500">
-                                            {new Date(service.createdAt).toLocaleDateString()}
+                                            {new Date(service.serviceDate?service.serviceDate:service.createdAt).toLocaleDateString()}
                                         </td>
 
                                         <td>
@@ -1079,6 +1088,27 @@ const Services = () => {
                 confirmText="Create Service"
             >
                 <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+
+
+{/* Service Date */}
+<div className="border-b border-gray-400 pb-4">
+    <h4 className="font-semibold text-gray-700 mb-3">Service Date</h4>
+    <div>
+        <label className="label">Date</label>
+        <input
+            type="date"
+            name="serviceDate"
+            value={formData.serviceDate}
+            onChange={handleChange}
+            className="input-field"
+            required
+        />
+        <p className="text-xs text-gray-500 mt-1">
+            Change this to backdate the service or invoice
+        </p>
+    </div>
+</div>
+
                     {/* Customer Information */}
                     <div className="border-b border-gray-400 pb-4">
                         <h4 className="font-semibold text-gray-700 mb-3">Customer Information</h4>
@@ -1835,6 +1865,27 @@ const Services = () => {
                 confirmText="Update Service"
             >
                 <form onSubmit={handleEditSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
+
+                    {/* Service Date */}
+<div className="border-b border-gray-400 pb-4">
+    <h4 className="font-semibold text-gray-700 mb-3">Service Date</h4>
+    <div>
+        <label className="label">Date</label>
+        <input
+            type="date"
+            name="serviceDate"
+            value={editFormData.serviceDate}
+            onChange={handleEditChange}
+            className="input-field"
+            required
+        />
+        <p className="text-xs text-gray-500 mt-1">
+            Change this to backdate the service or invoice
+        </p>
+    </div>
+</div>
+
+
                     {/* Customer Information */}
                     <div className="border-b border-gray-400 pb-4">
                         <h4 className="font-semibold text-gray-700 mb-3">Customer Information</h4>

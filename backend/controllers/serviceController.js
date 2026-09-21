@@ -76,6 +76,39 @@ const calculateBilling = (
 
 // ============ SERVICE CONTROLLERS ============
 
+
+
+
+// ============ GENERATE UNIQUE INVOICE NUMBER ============
+// ============ GENERATE UNIQUE INVOICE NUMBER (Per Workshop) ============
+const generateInvoiceNumber = async (workshopId) => {
+    const year = new Date().getFullYear();
+    
+    // ✅ Find ALL invoices for THIS workshop only
+    const invoices = await Invoice.find({
+        workshopId: workshopId,   // ✅ FILTER BY WORKSHOP
+        invoiceNumber: { $regex: `^INV-${year}-` }
+    }).select('invoiceNumber');
+    
+    // ✅ Find highest number
+    let maxNumber = 0;
+    invoices.forEach(inv => {
+        const parts = inv.invoiceNumber.split("-");
+        const num = parseInt(parts[2]);
+        if (num > maxNumber) maxNumber = num;
+    });
+    
+    const nextNumber = maxNumber + 1;
+    const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(5, "0")}`;
+    
+    // console.log(`Workshop ${workshopId}: Next invoice = ${invoiceNumber}`);
+    
+    return invoiceNumber;
+};
+
+
+
+
 // @desc    Create new service
 // @route   POST /api/services
 // @access  Private
@@ -89,6 +122,7 @@ const createService = async (req, res) => {
       vehicleModel,
       vehicleMake,
       mileage,
+      serviceDate,
       services,
       partsUsed,
       additionalCharges,
@@ -158,6 +192,14 @@ const createService = async (req, res) => {
       vehicleModel,
       vehicleMake,
       mileage,
+
+
+
+          // ✅ Use custom date if provided
+            serviceDate: serviceDate ? new Date(serviceDate) : new Date(),
+            createdAt: serviceDate ? new Date(serviceDate) : new Date(),  // ✅ Override createdAt too
+
+
       services: services || [],
       partsUsed: processedParts, // ✅ Use processed parts
       additionalCharges: processedCharges || [],
@@ -245,16 +287,21 @@ const createService = async (req, res) => {
     );
 
     // Generate Invoice Number
-    const year = new Date().getFullYear();
-    const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 });
-    let nextNumber = 1;
+    // const year = new Date().getFullYear();
+    // const lastInvoice = await Invoice.findOne().sort({ createdAt: -1 });
+    // let nextNumber = 1;
 
-    if (lastInvoice) {
-      const parts = lastInvoice.invoiceNumber.split("-");
-      nextNumber = parseInt(parts[2]) + 1;
-    }
+    // if (lastInvoice) {
+    //   const parts = lastInvoice.invoiceNumber.split("-");
+    //   nextNumber = parseInt(parts[2]) + 1;
+    // }
 
-    const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(5, "0")}`;
+    // const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(5, "0")}`;
+
+
+
+    // ✅ NEW
+const invoiceNumber = await generateInvoiceNumber(req.user.workshopId);
 
     // Generate invoice
     const invoice = new Invoice({
@@ -299,6 +346,8 @@ const createService = async (req, res) => {
       balance: service.billing.balance,
       paymentStatus: service.billing.paymentStatus,
       paymentMethod: service.billing.paymentMethod,
+         createdAt: serviceDate ? new Date(serviceDate) : new Date(),
+            issuedDate: serviceDate ? new Date(serviceDate) : new Date(),
       issuedBy: req.user._id ? req.user._id : req.user.id,
       status: "issued",
       notes: service.notes
@@ -722,6 +771,17 @@ const updateService = async (req, res) => {
             });
         }
 
+
+        const updateData = req.body;
+
+
+        // console.log("Update data received:", updateData);
+
+          // ✅ If serviceDate is provided, update createdAt too
+        if (updateData.serviceDate) {
+            updateData.createdAt = new Date(updateData.serviceDate);
+        }
+
         // Update service
         const updatedService = await Service.findByIdAndUpdate(
             req.params.id,
@@ -777,6 +837,15 @@ const updateService = async (req, res) => {
             invoice.paymentStatus = updatedService.billing.paymentStatus;
             invoice.paymentMethod = updatedService.billing.paymentMethod;
             invoice.notes = updatedService.notes;
+
+
+             // ✅ Update invoice dates
+            if (updateData.serviceDate) {
+              // console.log("yess")
+                invoice.createdAt = new Date(updateData.serviceDate);
+                invoice.issuedDate = new Date(updateData.serviceDate);
+            }
+
 
             // Update invoice status
             invoice.status = updatedService.billing.balance <= 0 ? "paid" : "issued";
@@ -910,6 +979,11 @@ const generateBill = async (req, res) => {
         issuedBy: req.user.id,
         status: service.billing.balance <= 0 ? "paid" : "issued",
         notes: service.notes,
+
+
+        createdAt: service.serviceDate || service.createdAt,  // ✅ Use service date
+    issuedDate: service.serviceDate || service.createdAt, 
+
         workshopId: req.user.workshopId 
       });
       
