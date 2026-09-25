@@ -541,6 +541,7 @@ const handlePrint = async(invoice) => {
             <div><span class="font-medium">Total Parts:</span> PKR ${invoice.items?.filter(i => i.type === 'part').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
             <div><span class="font-medium">Total Labor:</span> PKR ${invoice.items?.filter(i => i.type === 'service').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
             <div><span class="font-medium">Sublet:</span> PKR ${invoice.items?.filter(i => i.type === 'charge').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString() || 0}</div>
+            <div><span class="font-medium">Discount:</span> PKR ${invoice.discount?.toLocaleString() || 0}</div>
             <div class="font-bold text-red-600 text-lg"><span class="font-medium">Grand Total:</span> PKR ${invoice.totalAmount?.toLocaleString() || 0}</div>
           </div>
         </div>
@@ -601,9 +602,26 @@ ${(invoice.notes || invoice.service?.notes) ? `
         </div>
 
         <!-- ============ GENERATED NOTE ============ -->
-        <div class="footer-note">
-          <p>Generated on: ${new Date().toLocaleString()}</p>
-        </div>
+       <div class="footer-note">
+
+        <p class="mt-2">Generated on: ${new Date().toLocaleString()}</p>
+  ${settings.companyPhone || settings.companyEmail || settings.companyAddress ? `
+    <p class="text-xs mt-1">
+      ${settings.companyPhone ? `📞 ${settings.companyPhone}` : ''}
+      ${settings.companyEmail ? ` | ✉️ ${settings.companyEmail}` : ''}
+      ${settings.companyAddress ? ` | 📍 ${settings.companyAddress}` : ''}
+    </p>
+  ` : `<div class="text-xs mt-1 flex flex-col items-start gap-2">
+  <p>📞 0302-5434437 || 0311-4234211</p>
+
+  <p>✉️ noumanbajwa418@gmail.com</p>
+
+  <p>📍 Main Band Road, 1 Minar Wali Masjid, Opposite Attock Petrol Pump, Sandha, Lahore</p>
+</div>
+
+`}
+ 
+</div>
 
         <!-- ============ PRINT BUTTON ============ -->
         <div class="text-center mt-6 mb-6 no-print">
