@@ -40,6 +40,10 @@ const Services = () => {
             discountType: 'fixed',
             paidAmount: '0'
         },
+        // ✅ REMINDER FIELDS
+        setReminder: false,           // Checkbox - customer ko reminder bhejna hai?
+        reminderAfterDays: 30,        // Kitne din baad (default 1 month)
+
         notes: '',
         status: 'pending',
         assignedTo: '',
@@ -69,6 +73,10 @@ const Services = () => {
             paidAmount: '0',
             // paymentMethod: 'cash' 
         },
+            // ✅ REMINDER FIELDS
+    setReminder: false,           // Checkbox - customer ko reminder bhejna hai?
+    reminderAfterDays: 30,        // Kitne din baad (default 1 month)
+
         notes: '',
         assignedTo: ''
     });
@@ -90,11 +98,11 @@ const Services = () => {
             vehicleModel: service.vehicleModel || '',
             vehicleMake: service.vehicleMake || '',
             mileage: service.mileage || '',
-             serviceDate: service.serviceDate 
-            ? new Date(service.serviceDate).toISOString().split('T')[0]
-            : service.createdAt 
-                ? new Date(service.createdAt).toISOString().split('T')[0]
-                : new Date().toISOString().split('T')[0],
+            serviceDate: service.serviceDate
+                ? new Date(service.serviceDate).toISOString().split('T')[0]
+                : service.createdAt
+                    ? new Date(service.createdAt).toISOString().split('T')[0]
+                    : new Date().toISOString().split('T')[0],
             services: service.services || [{ serviceName: '', servicePrice: '', laborHours: '1', laborRate: '500' }],
             partsUsed: service.partsUsed || [{
                 product: '',
@@ -118,6 +126,9 @@ const Services = () => {
                 paidAmount: service.billing?.paidAmount?.toString() || '0',
                 paymentMethod: service.billing?.paymentMethod || 'cash'
             },
+            // ✅ Load reminder from service
+        setReminder: service.setReminder || false,
+        reminderAfterDays: service.reminderAfterDays || 30,
             notes: service.notes || '',
             assignedTo: service.assignedTo || ''
         });
@@ -733,6 +744,9 @@ const Services = () => {
                 paidAmount: '0',
                 // paymentMethod: 'cash'
             },
+            // ✅ RESET REMINDER
+        setReminder: false,
+        reminderAfterDays: 30,
             notes: '',
             status: 'pending',
             assignedTo: ''
@@ -746,7 +760,7 @@ const Services = () => {
     };
 
 
-   
+
 
 
 
@@ -758,6 +772,11 @@ const Services = () => {
     // );
 
 
+
+
+
+    const userLogedInName = localStorage.getItem('workshopName') ;
+    console.log("userLogedInName: ", userLogedInName);
 
 
     // ============ GET DATE FILTER ============
@@ -1005,7 +1024,7 @@ const Services = () => {
 
 
                                         <td className="text-sm text-gray-500">
-                                            {new Date(service.serviceDate?service.serviceDate:service.createdAt).toLocaleDateString()}
+                                            {new Date(service.serviceDate ? service.serviceDate : service.createdAt).toLocaleDateString()}
                                         </td>
 
                                         <td>
@@ -1090,24 +1109,24 @@ const Services = () => {
                 <form onSubmit={handleSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
 
 
-{/* Service Date */}
-<div className="border-b border-gray-400 pb-4">
-    <h4 className="font-semibold text-gray-700 mb-3">Service Date</h4>
-    <div>
-        <label className="label">Date</label>
-        <input
-            type="date"
-            name="serviceDate"
-            value={formData.serviceDate}
-            onChange={handleChange}
-            className="input-field"
-            required
-        />
-        {/* <p className="text-xs text-gray-500 mt-1">
+                    {/* Service Date */}
+                    <div className="border-b border-gray-400 pb-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Service Date</h4>
+                        <div>
+                            <label className="label">Date</label>
+                            <input
+                                type="date"
+                                name="serviceDate"
+                                value={formData.serviceDate}
+                                onChange={handleChange}
+                                className="input-field"
+                                required
+                            />
+                            {/* <p className="text-xs text-gray-500 mt-1">
             Change this to backdate the service or invoice
         </p> */}
-    </div>
-</div>
+                        </div>
+                    </div>
 
                     {/* Customer Information */}
                     <div className="border-b border-gray-400 pb-4">
@@ -1287,122 +1306,122 @@ const Services = () => {
 
                                 {/* Product Selection - Only show when fromInventory is true */}
                                 {part.fromInventory ? (
-    <div className="col-span-2 relative">
-        <label className="label text-xs">Product</label>
-        
-        {/* Search Input */}
-        <input
-            type="text"
-            placeholder="🔍 Search products..."
-            className="input-field text-sm"
-            value={part.searchTerm || ''}
-            onChange={(e) => {
-                const updatedParts = [...formData.partsUsed];
-                updatedParts[index].searchTerm = e.target.value;
-                updatedParts[index].showDropdown = true;
-                setFormData({ ...formData, partsUsed: updatedParts });
-            }}
-            onFocus={() => {
-                const updatedParts = [...formData.partsUsed];
-                updatedParts[index].showDropdown = true;
-                setFormData({ ...formData, partsUsed: updatedParts });
-            }}
-            onBlur={() => {
-                setTimeout(() => {
-                    const updatedParts = [...formData.partsUsed];
-                    updatedParts[index].showDropdown = false;
-                    setFormData({ ...formData, partsUsed: updatedParts });
-                }, 200);
-            }}
-        />
+                                    <div className="col-span-2 relative">
+                                        <label className="label text-xs">Product</label>
 
-        {/* Selected Product Display */}
-        {part.product && (
-            <div className="mt-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded flex justify-between items-center">
-                <span>✓ {products.find(p => p._id === part.product)?.name}</span>
-                <button
-                    type="button"
-                    onClick={() => {
-                        const updatedParts = [...formData.partsUsed];
-                        updatedParts[index].product = '';
-                        updatedParts[index].productName = '';
-                        updatedParts[index].unitPrice = '';
-                        updatedParts[index].purchasePrice = '';
-                        updatedParts[index].searchTerm = '';
-                        setFormData({ ...formData, partsUsed: updatedParts });
-                    }}
-                    className="text-red-500 hover:text-red-700"
-                >
-                    ✕
-                </button>
-            </div>
-        )}
+                                        {/* Search Input */}
+                                        <input
+                                            type="text"
+                                            placeholder="🔍 Search products..."
+                                            className="input-field text-sm"
+                                            value={part.searchTerm || ''}
+                                            onChange={(e) => {
+                                                const updatedParts = [...formData.partsUsed];
+                                                updatedParts[index].searchTerm = e.target.value;
+                                                updatedParts[index].showDropdown = true;
+                                                setFormData({ ...formData, partsUsed: updatedParts });
+                                            }}
+                                            onFocus={() => {
+                                                const updatedParts = [...formData.partsUsed];
+                                                updatedParts[index].showDropdown = true;
+                                                setFormData({ ...formData, partsUsed: updatedParts });
+                                            }}
+                                            onBlur={() => {
+                                                setTimeout(() => {
+                                                    const updatedParts = [...formData.partsUsed];
+                                                    updatedParts[index].showDropdown = false;
+                                                    setFormData({ ...formData, partsUsed: updatedParts });
+                                                }, 200);
+                                            }}
+                                        />
 
-        {/* Dropdown List */}
-        {part.showDropdown && (
-            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-52 overflow-y-auto">
-                {/* All products filter */}
-                {(() => {
-                    const filteredProducts = products.filter(p => {
-                        const search = part.searchTerm || '';
-                        if (!search) return true;
-                        return p.name.toLowerCase().includes(search.toLowerCase()) ||
-                               p.sku.toLowerCase().includes(search.toLowerCase());
-                    });
+                                        {/* Selected Product Display */}
+                                        {part.product && (
+                                            <div className="mt-1 text-xs text-green-600 bg-green-50 px-2 py-1 rounded flex justify-between items-center">
+                                                <span>✓ {products.find(p => p._id === part.product)?.name}</span>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        const updatedParts = [...formData.partsUsed];
+                                                        updatedParts[index].product = '';
+                                                        updatedParts[index].productName = '';
+                                                        updatedParts[index].unitPrice = '';
+                                                        updatedParts[index].purchasePrice = '';
+                                                        updatedParts[index].searchTerm = '';
+                                                        setFormData({ ...formData, partsUsed: updatedParts });
+                                                    }}
+                                                    className="text-red-500 hover:text-red-700"
+                                                >
+                                                    ✕
+                                                </button>
+                                            </div>
+                                        )}
 
-                    if (filteredProducts.length === 0) {
-                        return (
-                            <div className="px-3 py-3 text-sm text-gray-500 text-center">
-                                No products found
-                            </div>
-                        );
-                    }
+                                        {/* Dropdown List */}
+                                        {part.showDropdown && (
+                                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-52 overflow-y-auto">
+                                                {/* All products filter */}
+                                                {(() => {
+                                                    const filteredProducts = products.filter(p => {
+                                                        const search = part.searchTerm || '';
+                                                        if (!search) return true;
+                                                        return p.name.toLowerCase().includes(search.toLowerCase()) ||
+                                                            p.sku.toLowerCase().includes(search.toLowerCase());
+                                                    });
 
-                    return filteredProducts.slice(0, 20).map((p) => (
-                        <div
-                            key={p._id}
-                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0"
-                            onMouseDown={(e) => {
-                                e.preventDefault();
-                                
-                                const updatedParts = [...formData.partsUsed];
-                                updatedParts[index].product = p._id;
-                                updatedParts[index].productName = p.name;
-                                updatedParts[index].unitPrice = p.price;
-                                updatedParts[index].purchasePrice = p.costPrice || p.price;
-                                updatedParts[index].showDropdown = false;
-                                updatedParts[index].searchTerm = '';
-                                setFormData({ ...formData, partsUsed: updatedParts });
-                            }}
-                        >
-                            <div className="flex justify-between items-center">
-                                <div>
-                                    <p className="font-medium text-gray-800">{p.name}</p>
-                                    <p className="text-xs text-gray-500">SKU: {p.sku}</p>
-                                </div>
-                                <div className="text-right">
-                                    <p className="font-semibold text-gray-800">PKR {p.price}</p>
-                                    <p className="text-xs text-gray-500">Stock: {p.quantity}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ));
-                })()}
-            </div>
-        )}
-    </div>
-) : (
-    <div className="col-span-2">
-        <label className="label text-xs">Product Name (Manual)</label>
-        <input
-            type="text"
-            value={part.productName}
-            onChange={(e) => handlePartChange(index, 'productName', e.target.value)}
-            className="input-field text-sm"
-            placeholder="Enter custom product name"
-        />
-    </div>
-)}
+                                                    if (filteredProducts.length === 0) {
+                                                        return (
+                                                            <div className="px-3 py-3 text-sm text-gray-500 text-center">
+                                                                No products found
+                                                            </div>
+                                                        );
+                                                    }
+
+                                                    return filteredProducts.slice(0, 20).map((p) => (
+                                                        <div
+                                                            key={p._id}
+                                                            className="px-3 py-2 hover:bg-blue-50 cursor-pointer text-sm border-b last:border-b-0"
+                                                            onMouseDown={(e) => {
+                                                                e.preventDefault();
+
+                                                                const updatedParts = [...formData.partsUsed];
+                                                                updatedParts[index].product = p._id;
+                                                                updatedParts[index].productName = p.name;
+                                                                updatedParts[index].unitPrice = p.price;
+                                                                updatedParts[index].purchasePrice = p.costPrice || p.price;
+                                                                updatedParts[index].showDropdown = false;
+                                                                updatedParts[index].searchTerm = '';
+                                                                setFormData({ ...formData, partsUsed: updatedParts });
+                                                            }}
+                                                        >
+                                                            <div className="flex justify-between items-center">
+                                                                <div>
+                                                                    <p className="font-medium text-gray-800">{p.name}</p>
+                                                                    <p className="text-xs text-gray-500">SKU: {p.sku}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="font-semibold text-gray-800">PKR {p.price}</p>
+                                                                    <p className="text-xs text-gray-500">Stock: {p.quantity}</p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    ));
+                                                })()}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="col-span-2">
+                                        <label className="label text-xs">Product Name (Manual)</label>
+                                        <input
+                                            type="text"
+                                            value={part.productName}
+                                            onChange={(e) => handlePartChange(index, 'productName', e.target.value)}
+                                            className="input-field text-sm"
+                                            placeholder="Enter custom product name"
+                                        />
+                                    </div>
+                                )}
 
                                 {/* Quantity */}
                                 <div>
@@ -1652,6 +1671,65 @@ const Services = () => {
 
 
 
+{/* ============ REMINDER SECTION ============ */}
+
+{
+    userLogedInName !== 'AMB Auto Wheel' && (
+
+
+<div className="border-b border-gray-400 pb-4">
+    <h4 className="font-semibold text-gray-700 mb-3">🔔 WhatsApp Reminder</h4>
+    
+    <div className="bg-blue-50 p-4 rounded-lg">
+        {/* Checkbox */}
+        <div className="flex items-start gap-3 mb-3">
+            <input
+                type="checkbox"
+                id="setReminder"
+                name="setReminder"
+                checked={formData.setReminder}
+                onChange={(e) => setFormData({
+                    ...formData,
+                    setReminder: e.target.checked
+                })}
+                className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="setReminder" className="text-sm text-gray-700 cursor-pointer">
+                <span className="font-medium">Set WhatsApp Reminder</span>
+                <p className="text-xs text-gray-500 mt-0.5">
+                    Customer ko oil change ka reminder WhatsApp pe bhejna hai?
+                </p>
+            </label>
+        </div>
+
+        {/* Days Input (shows only when checkbox checked) */}
+        {formData.setReminder && (
+            <div className="mt-3 pl-7">
+                <label className="label text-xs">Reminder After (Days)</label>
+                <input
+                    type="number"
+                    name="reminderAfterDays"
+                    value={formData.reminderAfterDays}
+                    onChange={(e) => setFormData({
+                        ...formData,
+                        reminderAfterDays: e.target.value
+                    })}
+                    className="input-field text-sm"
+                    placeholder="30"
+                    min="1"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                    💡 Recommended: 30 days (1 month) for oil change
+                </p>
+            </div>
+        )}
+    </div>
+</div>
+    )
+}
+
+
+
 
                     {/* Notes */}
                     <div>
@@ -1867,23 +1945,23 @@ const Services = () => {
                 <form onSubmit={handleEditSubmit} className="space-y-6 max-h-[70vh] overflow-y-auto px-1">
 
                     {/* Service Date */}
-<div className="border-b border-gray-400 pb-4">
-    <h4 className="font-semibold text-gray-700 mb-3">Service Date</h4>
-    <div>
-        <label className="label">Date</label>
-        <input
-            type="date"
-            name="serviceDate"
-            value={editFormData.serviceDate}
-            onChange={handleEditChange}
-            className="input-field"
-            required
-        />
-        <p className="text-xs text-gray-500 mt-1">
-            Change this to backdate the service or invoice
-        </p>
-    </div>
-</div>
+                    <div className="border-b border-gray-400 pb-4">
+                        <h4 className="font-semibold text-gray-700 mb-3">Service Date</h4>
+                        <div>
+                            <label className="label">Date</label>
+                            <input
+                                type="date"
+                                name="serviceDate"
+                                value={editFormData.serviceDate}
+                                onChange={handleEditChange}
+                                className="input-field"
+                                required
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                                Change this to backdate the service or invoice
+                            </p>
+                        </div>
+                    </div>
 
 
                     {/* Customer Information */}
@@ -2358,6 +2436,65 @@ const Services = () => {
 
 
 
+
+
+{/* ============ REMINDER SECTION ============ */}
+
+
+{
+    userLogedInName !== 'AMB Auto Wheel' && (
+
+
+<div className="border-b border-gray-400 pb-4">
+    <h4 className="font-semibold text-gray-700 mb-3">🔔 WhatsApp Reminder</h4>
+    
+    <div className="bg-blue-50 p-4 rounded-lg">
+        {/* Checkbox */}
+        <div className="flex items-start gap-3 mb-3">
+            <input
+                type="checkbox"
+                id="setReminder"
+                name="setReminder"
+                checked={editFormData.setReminder}
+                onChange={(e) => setFormData({
+                    ...editFormData,
+                    setReminder: e.target.checked
+                })}
+                className="mt-1 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+            />
+            <label htmlFor="setReminder" className="text-sm text-gray-700 cursor-pointer">
+                <span className="font-medium">Set WhatsApp Reminder</span>
+                <p className="text-xs text-gray-500 mt-0.5">
+                    Customer ko oil change ka reminder WhatsApp pe bhejna hai?
+                </p>
+            </label>
+        </div>
+
+        {/* Days Input (shows only when checkbox checked) */}
+        {editFormData.setReminder && (
+            <div className="mt-3 pl-7">
+                <label className="label text-xs">Reminder After (Days)</label>
+                <input
+                    type="number"
+                    name="reminderAfterDays"
+                    value={editFormData.reminderAfterDays}
+                    onChange={(e) => setFormData({
+                        ...editFormData,
+                        reminderAfterDays: e.target.value
+                    })}
+                    className="input-field text-sm"
+                    placeholder="30"
+                    min="1"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                    💡 Recommended: 30 days (1 month) for oil change
+                </p>
+            </div>
+        )}
+    </div>
+</div>
+    )
+}
 
                     {/* Notes */}
                     <div>

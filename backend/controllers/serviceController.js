@@ -3,6 +3,8 @@ const Product = require("../models/productModel");
 const Transaction = require("../models/transactionModel");
 const Invoice = require("../models/invoiceModel");
 const { createNotification } = require("./notificationController");
+const Reminder = require("../models/reminderModel");
+
 
 // ============ HELPER FUNCTIONS ============
 
@@ -127,6 +129,8 @@ const createService = async (req, res) => {
       partsUsed,
       additionalCharges,
       billing,
+        setReminder,          // ✅ Add this
+            reminderAfterDays, 
       notes,
       assignedTo,
     } = req.body;
@@ -218,6 +222,8 @@ const createService = async (req, res) => {
       notes: notes || "",
       assignedTo: assignedTo || req.user._id || "Staff",
       performedBy: req.user._id ? req.user._id : req.user.id,
+      setReminder: setReminder || false,           // ✅ Save flag
+            reminderAfterDays: reminderAfterDays || 30,  // ✅ Save days
       workshopId: req.user.workshopId
     });
 
@@ -276,6 +282,36 @@ const createService = async (req, res) => {
 
     // Save service
     await service.save();
+
+
+      // ✅ CREATE REMINDER ONLY IF setReminder IS TRUE
+        if (setReminder === true || setReminder === "true") {
+            try {
+                const baseDate = serviceDate ? new Date(serviceDate) : new Date();
+                const days = parseInt(reminderAfterDays) || 30;
+                const reminderDate = new Date(baseDate);
+                reminderDate.setDate(reminderDate.getDate() + days);
+
+                await Reminder.create({
+                    customerName: service.customerName,
+                    customerPhone: service.customerPhone,
+                    vehicleNumber: service.vehicleNumber,
+                    vehicleModel: service.vehicleModel,
+                    lastOilChangeDate: baseDate,
+                    reminderDate: reminderDate,
+                    reminderAfterDays: days,
+                    status: "pending",
+                    workshopId: req.user.workshopId,
+                    serviceId: service._id
+                });
+
+                console.log(`📅 Reminder set for ${service.customerName} on ${reminderDate.toDateString()}`);
+            } catch (reminderError) {
+                console.error("⚠️ Reminder creation failed:", reminderError.message);
+            }
+        } else {
+            console.log(`⏭️ Reminder skipped for ${service.customerName} (user opted out)`);
+        }
 
     // Create notification for new service
     await createNotification(
@@ -365,6 +401,10 @@ const invoiceNumber = await generateInvoiceNumber(req.user.workshopId);
       "invoice",
       "/invoices"
     );
+
+
+
+
 
     res.status(201).json({
       success: true,
@@ -788,6 +828,62 @@ const updateService = async (req, res) => {
             req.body,
             { returnDocument: 'after', runValidators: true },
         );
+
+
+
+
+        // ✅ Handle reminder update
+        // Case 1: setReminder true kiya, aur pehle reminder nahi tha → Create
+        // Case 2: setReminder false kiya → Delete existing reminder
+        // Case 3: reminderAfterDays change kiya → Update reminder date
+
+        const existingReminder = await Reminder.findOne({
+            serviceId: service._id,
+            status: "pending"
+        });
+
+        const setReminderValue = updateData.setReminder === true || updateData.setReminder === "true";
+
+        if (setReminderValue) {
+            const baseDate = updateData.serviceDate ? new Date(updateData.serviceDate) : new Date();
+            const days = parseInt(updateData.reminderAfterDays) || 30;
+            const reminderDate = new Date(baseDate);
+            reminderDate.setDate(reminderDate.getDate() + days);
+
+            if (existingReminder) {
+                // Update existing
+                existingReminder.reminderDate = reminderDate;
+                existingReminder.reminderAfterDays = days;
+                existingReminder.lastOilChangeDate = baseDate;
+                await existingReminder.save();
+                console.log(`📅 Reminder updated for ${service.customerName}`);
+            } else {
+                // Create new
+                await Reminder.create({
+                    customerName: updatedService.customerName,
+                    customerPhone: updatedService.customerPhone,
+                    vehicleNumber: updatedService.vehicleNumber,
+                    vehicleModel: updatedService.vehicleModel,
+                    lastOilChangeDate: baseDate,
+                    reminderDate: reminderDate,
+                    reminderAfterDays: days,
+                    status: "pending",
+                    workshopId: req.user.workshopId,
+                    serviceId: service._id
+                });
+                console.log(`📅 Reminder created for ${service.customerName}`);
+            }
+        } else {
+            // setReminder false → Delete pending reminder
+            if (existingReminder) {
+                await Reminder.deleteOne({ _id: existingReminder._id });
+                console.log(`🗑️ Reminder removed for ${service.customerName}`);
+            }
+        }
+
+
+
+
 
         // ============ ✅ UPDATE INVOICE COMPLETELY ============
         let invoice = await Invoice.findOne({ service: service._id , workshopId: req.user.workshopId  });

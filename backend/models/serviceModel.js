@@ -174,6 +174,16 @@ const serviceSchema = mongoose.Schema(
       default: "pending",
     },
 
+
+    // ✅ REMINDER FLAGS
+    setReminder: {
+        type: Boolean,
+        default: false
+    },
+    reminderAfterDays: {
+        type: Number,
+        default: 30
+    },
     // ---------- NOTES ----------
     notes: {
       type: String,

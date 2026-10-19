@@ -80,6 +80,7 @@ function App() {
           <Route path="transactions" element={<Transactions />} />
           <Route path="profile" element={<Profile />} />
           <Route path="settings" element={<Settings />} />
+          
         </Route>
 
         {/* 404 */}

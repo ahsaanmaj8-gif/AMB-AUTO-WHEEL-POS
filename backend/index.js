@@ -1,5 +1,8 @@
 const express = require("express");
 const cors = require("cors");
+const { connectToWhatsApp } = require("./whatsapp/whatsappClient");
+const { startReminderCron } = require("./whatsapp/reminderCron");
+
 
 const path = require("path")
 
@@ -39,6 +42,12 @@ const expenseRoutes = require("./routes/expenseRoutes");
 const workshopRoutes = require("./routes/workshopRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
 
+// server.js mein temporary
+// const { processPendingReminders } = require("./whatsapp/reminderCron");
+// app.get("/test-reminders", async (req, res) => {
+//     await processPendingReminders();
+//     res.json({ success: true });
+// });
 
 // ============ ROUTES ============
 app.use("/api/auth", authRoutes);
@@ -93,10 +102,36 @@ app.use((err, req, res, next) => {
 
 
 
+
 // ============ START SERVER ============
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+app.listen(PORT, async() => {
     console.log(`🚀 Server running on port ${PORT}`);
+
+
+    
+     // ✅ WhatsApp connect karo
+    try {
+        await connectToWhatsApp();
+        console.log("📱 WhatsApp client starting...");
+    } catch (error) {
+        console.error("❌ WhatsApp connection failed:", error.message);
+    }
+
+    // ✅ Reminder cron start karo
+    try {
+        startReminderCron();
+    } catch (error) {
+        console.error("❌ Cron start failed:", error.message);
+    }
+
+     // ✅ TEST: 2 second baad auto-run
+    // setTimeout(async () => {
+    //     console.log("\n🧪 AUTO TEST REMINDER RUNNING...");
+    //     const { processPendingReminders } = require("./whatsapp/reminderCron");
+    //     await processPendingReminders();
+    // }, 2000); // 2 seconds
+
     // console.log(`📦 Database: ${process.env.MONGO_URI}`);
     console.log(`🔗 API: http://localhost:${PORT}/api`);
 });
