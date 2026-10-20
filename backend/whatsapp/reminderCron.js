@@ -4,11 +4,14 @@ const Reminder = require("../models/reminderModel");
 const { sendSingleReminder } = require("./sendReminder");
 const { getConnectionStatus } = require("./whatsappClient");
 
+
+
 let isProcessing = false;
 
 const processPendingReminders = async () => {
     if (isProcessing) {
-        // console.log("Reminder check already running. Skipping.");
+        // console.log(" ⏭️ Previous batch still running. Skipping this run.");
+       
         return;
     }
 
@@ -63,8 +66,8 @@ const processPendingReminders = async () => {
 };
 
 const startReminderCron = () => {
-    cron.schedule("0 * * * *", () => {
-        // console.log("Hourly reminder check started.");
+    cron.schedule("*/5 * * * *", () => {
+        // console.log("Every 5 minutes reminder check started.");
         processPendingReminders();
     });
 
