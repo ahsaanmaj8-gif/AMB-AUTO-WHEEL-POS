@@ -2,7 +2,14 @@ const express = require("express");
 const cors = require("cors");
 const { connectToWhatsApp } = require("./whatsapp/whatsappClient");
 const { startReminderCron } = require("./whatsapp/reminderCron");
+const crypto = require("crypto");
+const QRCode = require("qrcode");
 
+
+const {
+  getLatestQR,
+  getConnectionStatus
+} = require("./whatsapp/whatsappClient");
 
 const path = require("path")
 
@@ -41,6 +48,7 @@ const revenueRoutes = require("./routes/revenueRoutes");
 const expenseRoutes = require("./routes/expenseRoutes");
 const workshopRoutes = require("./routes/workshopRoutes");
 const settingsRoutes = require("./routes/settingsRoutes");
+const { requireSignIn, isAdmin } = require("./middleware/authMiddleware");
 
 // server.js mein temporary
 // const { processPendingReminders } = require("./whatsapp/reminderCron");
@@ -63,18 +71,48 @@ app.use("/api/expenses", expenseRoutes);
 app.use("/api/workshop", workshopRoutes);
 app.use("/api/settings", settingsRoutes);
 
-// ============ TEST ROUTE ============
-// app.get("/", (req, res) => {
-//     res.send({
-//         success: true,
-//         message: "Auto Workshop Inventory API is running",
-//     });
-// });
 
 
 
 
-//for deployement
+
+
+app.get("/api/whatsapp/qr", requireSignIn, isAdmin, async (req, res) => {
+  res.set("Cache-Control", "no-store");
+
+  try {
+    if (getConnectionStatus()) {
+      return res.json({ connected: true });
+    }
+
+    const qr = getLatestQR();
+
+    if (!qr) {
+      return res.json({
+        connected: false,
+        message: "QR not ready yet. Please wait.",
+      });
+    }
+
+    const qrDataUrl = await QRCode.toDataURL(qr, {
+      errorCorrectionLevel: "H",
+      margin: 4,
+      width: 420,
+    });
+
+    return res.json({
+      connected: false,
+      qr: qrDataUrl,
+    });
+  } catch (error) {
+    console.error("WhatsApp QR API error:", error);
+    return res.status(500).json({
+      message: "Unable to generate WhatsApp QR code",
+    });
+  }
+});
+
+
 app.use(express.static(path.join(__dirname, "../frontend/dist")));
 
 app.get(/.*/, (_, res) => {

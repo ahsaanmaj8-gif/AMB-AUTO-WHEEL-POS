@@ -20,6 +20,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import Revenue from './pages/Revenue';
 import Expenses from './pages/Expenses';
 import Settings from './pages/Settings';
+import WhatsAppSetup from './pages/WhatsAppSetup';
 
 
 function App() {
@@ -59,8 +60,11 @@ function App() {
             isAuthenticated ? <Navigate to="/dashboard" replace /> : <Login />
           }
         />
+
+
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+
 
         {/* Protected Routes with Layout */}
         <Route
@@ -69,6 +73,7 @@ function App() {
             isAuthenticated ? <Layout /> : <Navigate to="/login" replace />
           }
         >
+          <Route path="/whatsapp-setup" element={<WhatsAppSetup />} />
           <Route index element={<Dashboard />} />
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="products" element={<Products />} />

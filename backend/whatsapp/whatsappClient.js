@@ -1,91 +1,110 @@
-// ============================================================
-// WHATSAPP CLIENT - Baileys se connect karta hai
-// Pehli baar QR scan karna hoga, phir session save ho jayega
-// ============================================================
 
 const makeWASocket = require("@whiskeysockets/baileys").default;
+
 const {
     useMultiFileAuthState,
     DisconnectReason,
     fetchLatestBaileysVersion,
 } = require("@whiskeysockets/baileys");
-const qrcode = require("qrcode-terminal");
+
 const pino = require("pino");
 
-// Session save karne ki jagah
+// Auth session folder — do not delete after pairing
 const SESSION_FOLDER = "./whatsapp/auth_info";
 
-// Global variable jismein WhatsApp socket rahega
 let sock = null;
 let isConnected = false;
+let latestQR = null;
+let isConnecting = false;
 
-// ============================================================
-// CONNECT TO WHATSAPP
-// ============================================================
 const connectToWhatsApp = async () => {
-    // Auth state load karo (purana session ya naya)
-    const { state, saveCreds } = await useMultiFileAuthState(SESSION_FOLDER);
-    const { version } = await fetchLatestBaileysVersion();
+    // Prevent duplicate connection attempts
+    if (isConnecting) return sock;
 
-    // Socket banao
-    sock = makeWASocket({
-        version,
-        logger: pino({ level: "silent" }), // Logs band
-        printQRInTerminal: false, // Hum khud QR print karenge
-        auth: state,
-        browser: ["Auto Workshop", "Chrome", "1.0.0"],
-    });
+    isConnecting = true;
 
-    // ============================================================
-    // QR CODE - Pehli baar scan karna hoga
-    // ============================================================
-    sock.ev.on("connection.update", (update) => {
-        const { connection, lastDisconnect, qr } = update;
+    try {
+        const { state, saveCreds } =
+            await useMultiFileAuthState(SESSION_FOLDER);
 
-        // QR aaya to terminal pe print karo
-        if (qr) {
-            // console.log("\n📱 WHATSAPP QR CODE - SCAN THIS:");
-            qrcode.generate(qr, { small: true });
-            // console.log("\n👆 Open WhatsApp → Linked Devices → Link a Device\n");
-        }
+        const { version } = await fetchLatestBaileysVersion();
 
-        // Connection open ho gaya
-        if (connection === "open") {
-            isConnected = true;
-            console.log("✅ WhatsApp Connected Successfully!");
-        }
+        sock = makeWASocket({
+            version,
+            logger: pino({ level: "silent" }),
+            printQRInTerminal: false,
+            auth: state,
+            browser: ["Auto Workshop", "Chrome", "1.0.0"],
+        });
 
-        // Connection close ho gaya
-        if (connection === "close") {
-            isConnected = false;
-            const statusCode = lastDisconnect?.error?.output?.statusCode;
-            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+        sock.ev.on("creds.update", saveCreds);
 
-            console.log("❌ WhatsApp Disconnected. Reconnecting:", shouldReconnect);
+        sock.ev.on("connection.update", (update) => {
+            const { connection, lastDisconnect, qr } = update;
 
-            // Agar user ne logout nahi kiya, to reconnect karo
-            if (shouldReconnect) {
-                setTimeout(connectToWhatsApp, 5000);
-            } else {
-                console.log("🚫 Logged out from WhatsApp. Delete auth_info folder and restart.");
+            if (qr) {
+                latestQR = qr;
+                console.log(
+                    "WhatsApp QR generated. Open the protected setup page."
+                );
             }
-        }
-    });
 
-    // Credentials save karo (session save)
-    sock.ev.on("creds.update", saveCreds);
+            if (connection === "open") {
+                isConnected = true;
+                latestQR = null;
 
-    return sock;
+                console.log("WhatsApp Connected Successfully!");
+            }
+
+            if (connection === "close") {
+                isConnected = false;
+                latestQR = null;
+                sock = null;
+
+                const statusCode =
+                    lastDisconnect?.error?.output?.statusCode;
+
+                const shouldReconnect =
+                    statusCode !== DisconnectReason.loggedOut;
+
+                console.log(
+                    "WhatsApp disconnected. Reconnecting:",
+                    shouldReconnect
+                );
+
+                if (shouldReconnect) {
+                    setTimeout(() => {
+                        connectToWhatsApp().catch((error) => {
+                            console.error(
+                                "WhatsApp reconnect failed:",
+                                error.message
+                            );
+                        });
+                    }, 5000);
+                } else {
+                    console.log(
+                        "WhatsApp logged out. A new pairing is required."
+                    );
+                }
+            }
+        });
+
+        return sock;
+    } catch (error) {
+        sock = null;
+        throw error;
+    } finally {
+        isConnecting = false;
+    }
 };
 
-// ============================================================
-// GET SOCKET - Bahar se access karne ke liye
-// ============================================================
 const getSocket = () => sock;
 const getConnectionStatus = () => isConnected;
+const getLatestQR = () => latestQR;
 
 module.exports = {
     connectToWhatsApp,
     getSocket,
     getConnectionStatus,
+    getLatestQR,
 };
