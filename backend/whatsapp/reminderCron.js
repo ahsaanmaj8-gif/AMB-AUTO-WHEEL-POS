@@ -28,6 +28,7 @@ const processPendingReminders = async () => {
         const now = new Date();
         const retryBefore = new Date(Date.now() - 60 * 60 * 1000);
 
+        console.log("Before reminder . find")
         const reminders = await Reminder.find({
             status: { $in: ["pending", "failed"] },
             reminderDate: { $lte: now },
