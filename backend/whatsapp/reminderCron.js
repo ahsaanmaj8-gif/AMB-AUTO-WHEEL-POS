@@ -10,7 +10,7 @@ let isProcessing = false;
 
 const processPendingReminders = async () => {
     if (isProcessing) {
-        // console.log(" ⏭️ Previous batch still running. Skipping this run.");
+        console.log(" ⏭️ Previous batch still running. Skipping this run.");
        
         return;
     }
@@ -18,7 +18,7 @@ const processPendingReminders = async () => {
     isProcessing = true;
 
     try {
-        // console.log("Checking due reminders...");
+        console.log("Checking due reminders...");
 
         if (!getConnectionStatus()) {
             // console.log("WhatsApp disconnected. Will retry on a later check.");
@@ -41,7 +41,7 @@ const processPendingReminders = async () => {
             .limit(20)
             .populate("workshopId", "invoiceSettings");
 
-        // console.log(`Found ${reminders.length} reminders to process.`);
+        console.log(`Found ${reminders.length} reminders to process.`);
 
         for (const reminder of reminders) {
             if (!getConnectionStatus()) {
@@ -50,10 +50,10 @@ const processPendingReminders = async () => {
             }
 
             const result = await sendSingleReminder(reminder);
-            // console.log(
-            //     `Reminder for ${reminder.customerName}:`,
-            //     result.success ? "Sent" : "Failed; will retry"
-            // );
+            console.log(
+                `Reminder for ${reminder.customerName}:`,
+                result.success ? "Sent" : "Failed; will retry"
+            );
 
             // Delay between messages
             await new Promise(resolve => setTimeout(resolve, 5000));
@@ -71,7 +71,7 @@ const startReminderCron = () => {
         processPendingReminders();
     });
 
-    // console.log("Reminder cron started.");
+    console.log("Reminder cron started.");
 
     // First check 30 seconds after server startup
     setTimeout(() => {

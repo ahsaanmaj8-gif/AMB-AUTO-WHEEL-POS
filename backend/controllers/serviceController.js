@@ -310,7 +310,7 @@ const createService = async (req, res) => {
                 console.error("⚠️ Reminder creation failed:", reminderError.message);
             }
         } else {
-            // console.log(`⏭️ Reminder skipped for ${service.customerName} (user opted out)`);
+            console.log(`⏭️ Reminder skipped for ${service.customerName} (user opted out)`);
         }
 
     // Create notification for new service
