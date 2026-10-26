@@ -14,6 +14,7 @@ const Home = () => {
           <h3 className="text-xl font-semibold mb-2">Manage Products</h3>
           <p className="text-gray-600">Add, update, and track your inventory</p>
         </div>
+          
         <div className="bg-white p-6 rounded-lg shadow-md">
           <h3 className="text-xl font-semibold mb-2">Service Records</h3>
           <p className="text-gray-600">Track customer services and billing</p>

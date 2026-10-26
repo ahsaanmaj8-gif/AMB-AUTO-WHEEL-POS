@@ -30,7 +30,7 @@ const connectToWhatsApp = async () => {
         const { version } = await fetchLatestBaileysVersion();
 
         sock = makeWASocket({
-            version,
+            version,  
             logger: pino({ level: "silent" }),
             printQRInTerminal: false,
             auth: state,
@@ -39,6 +39,7 @@ const connectToWhatsApp = async () => {
 
         sock.ev.on("creds.update", saveCreds);
 
+        console.log("before connection.update")
         sock.ev.on("connection.update", (update) => {
             const { connection, lastDisconnect, qr } = update;
 
