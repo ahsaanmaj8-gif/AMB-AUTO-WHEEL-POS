@@ -151,7 +151,7 @@ app.listen(PORT, async() => {
      // ✅ WhatsApp connect karo
     try {
         await connectToWhatsApp();
-        console.log("📱 WhatsApp client starting...");
+        // console.log("📱 WhatsApp client starting...");
     } catch (error) {
         console.error("❌ WhatsApp connection failed:", error.message);
     }
@@ -171,5 +171,5 @@ app.listen(PORT, async() => {
     // }, 2000); // 2 seconds
 
     // console.log(`📦 Database: ${process.env.MONGO_URI}`);
-    console.log(`🔗 API: http://localhost:${PORT}/api`);
+    // console.log(`🔗 API: http://localhost:${PORT}/api`);
 });

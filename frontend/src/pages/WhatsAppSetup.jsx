@@ -16,7 +16,7 @@ export default function WhatsAppSetup() {
         // axios khud JSON parse karta hai, data response.data mein hota hai
         const { data } = await axios.get(`${API_URL}/api/whatsapp/qr`);
 
-        console.log("WhatsApp QR API response:", data);
+        // console.log("WhatsApp QR API response:", data);
 
         if (!active) return;
 

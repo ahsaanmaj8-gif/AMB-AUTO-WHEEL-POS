@@ -102,7 +102,7 @@ await reminder.save();
         reminder.errorMessage = "";
         await reminder.save();
 
-        console.log(`✅ Reminder sent to ${reminder.customerName} (${phone})`);
+        // console.log(`✅ Reminder sent to ${reminder.customerName} (${phone})`);
 
         return {
             success: true,

@@ -305,12 +305,12 @@ const createService = async (req, res) => {
                     serviceId: service._id
                 });
 
-                console.log(`📅 Reminder set for ${service.customerName} on ${reminderDate.toDateString()}`);
+                // console.log(`📅 Reminder set for ${service.customerName} on ${reminderDate.toDateString()}`);
             } catch (reminderError) {
                 console.error("⚠️ Reminder creation failed:", reminderError.message);
             }
         } else {
-            console.log(`⏭️ Reminder skipped for ${service.customerName} (user opted out)`);
+            // console.log(`⏭️ Reminder skipped for ${service.customerName} (user opted out)`);
         }
 
     // Create notification for new service
@@ -856,7 +856,7 @@ const updateService = async (req, res) => {
                 existingReminder.reminderAfterDays = days;
                 existingReminder.lastOilChangeDate = baseDate;
                 await existingReminder.save();
-                console.log(`📅 Reminder updated for ${service.customerName}`);
+                // console.log(`📅 Reminder updated for ${service.customerName}`);
             } else {
                 // Create new
                 await Reminder.create({
@@ -871,13 +871,13 @@ const updateService = async (req, res) => {
                     workshopId: req.user.workshopId,
                     serviceId: service._id
                 });
-                console.log(`📅 Reminder created for ${service.customerName}`);
+                // console.log(`📅 Reminder created for ${service.customerName}`);
             }
         } else {
             // setReminder false → Delete pending reminder
             if (existingReminder) {
                 await Reminder.deleteOne({ _id: existingReminder._id });
-                console.log(`🗑️ Reminder removed for ${service.customerName}`);
+                // console.log(`🗑️ Reminder removed for ${service.customerName}`);
             }
         }
 
