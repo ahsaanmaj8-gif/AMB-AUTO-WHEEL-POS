@@ -66,8 +66,8 @@ const processPendingReminders = async () => {
 };
 
 const startReminderCron = () => {
-    cron.schedule("*/1 * * * *", () => {
-        console.log("Every 1 minutes reminder check started.");
+    cron.schedule("*/5 * * * *", () => {
+        console.log("Every 5 minutes reminder check started.");
         processPendingReminders();
     });
 
