@@ -11,7 +11,8 @@ import {
     FaSignOutAlt,
     FaFileInvoice,
     FaMoneyBillWave,
-    FaCog   
+    FaCog,   
+    FaWhatsapp
 } from 'react-icons/fa';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
