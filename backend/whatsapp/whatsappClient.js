@@ -1,61 +1,39 @@
-
 const makeWASocket = require("@whiskeysockets/baileys").default;
-
-const {
-    useMultiFileAuthState,
-    DisconnectReason,
-    fetchLatestBaileysVersion,
-} = require("@whiskeysockets/baileys");
-
+const { useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require("@whiskeysockets/baileys");
 const pino = require("pino");
 const path = require("path");
 const fs = require("fs");
 
-// Always resolve the session folder relative to this file.
-// Expected location: backend/whatsapp/auth_info
-const SESSION_FOLDER = path.join(__dirname, "auth_info");
+const SESSIONS_ROOT = path.join(__dirname, "sessions");
 
-let sock = null;
-let isConnected = false;
-let latestQR = null;
-let isConnecting = false;
-let reconnectTimer = null;
+// ✅ Per-workshop state (Map use karo)
+const sockets = new Map();          // workshopId → sock
+const connectionStatus = new Map(); // workshopId → boolean
+const latestQRs = new Map();        // workshopId → QR string
+const connecting = new Map();       // workshopId → boolean
+const reconnectTimers = new Map();  // workshopId → timer
 
-const connectToWhatsApp = async () => {
-    // Prevent duplicate connection attempts.
-    if (isConnecting) {
-        // console.log("[WhatsApp] Connection attempt already in progress.");
-        return sock;
-    }
+// Session folder per workshop
+const getSessionFolder = (workshopId) => {
+    const folder = path.join(SESSIONS_ROOT, workshopId.toString());
+    fs.mkdirSync(folder, { recursive: true });
+    return folder;
+};
 
-    // Don't create another socket if already connected.
-    if (sock && isConnected) {
-        // console.log("[WhatsApp] Already connected.");
-        return sock;
-    }
+const connectToWhatsApp = async (workshopId) => {
+    const wid = workshopId.toString();
 
-    isConnecting = true;
+    if (connecting.get(wid)) return sockets.get(wid);
+    if (sockets.get(wid) && connectionStatus.get(wid)) return sockets.get(wid);
+
+    connecting.set(wid, true);
 
     try {
-        // console.log("[WhatsApp] Starting connection...");
-        // console.log("[WhatsApp] Session folder:", SESSION_FOLDER);
-
-        // Create the directory if it doesn't exist.
-        fs.mkdirSync(SESSION_FOLDER, { recursive: true });
-
-        const { state, saveCreds } =
-            await useMultiFileAuthState(SESSION_FOLDER);
-
-        // console.log("[WhatsApp] Authentication state loaded.");
-
+        const sessionFolder = getSessionFolder(wid);
+        const { state, saveCreds } = await useMultiFileAuthState(sessionFolder);
         const { version } = await fetchLatestBaileysVersion();
 
-        // console.log(
-        //     "[WhatsApp] Using Baileys version:",
-        //     version.join(".")
-        // );
-
-        sock = makeWASocket({
+        const sock = makeWASocket({
             version,
             logger: pino({ level: "silent" }),
             printQRInTerminal: false,
@@ -63,126 +41,114 @@ const connectToWhatsApp = async () => {
             browser: ["Auto Workshop", "Chrome", "1.0.0"],
         });
 
-        const currentSocket = sock;
+        sockets.set(wid, sock);
 
-        currentSocket.ev.on("creds.update", async () => {
-            try {
-                await saveCreds();
-                // console.log("[WhatsApp] Authentication credentials saved.");
-            } catch (error) {
-                console.error(
-                    "[WhatsApp] Failed to save credentials:",
-                    error.message
-                );
-            }
-        });
+        sock.ev.on("creds.update", saveCreds);
 
-        currentSocket.ev.on("connection.update", (update) => {
+        sock.ev.on("connection.update", (update) => {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr) {
-                latestQR = qr;
-                // console.log(
-                //     "[WhatsApp] QR generated. Open the protected setup page."
-                // );
-            }
-
-            if (connection === "connecting") {
-                // console.log("[WhatsApp] Connecting to WhatsApp...");
+                latestQRs.set(wid, qr);
+                console.log(`[WhatsApp ${wid}] QR generated`);
             }
 
             if (connection === "open") {
-                isConnected = true;
-                latestQR = null;
+                connectionStatus.set(wid, true);
+                latestQRs.delete(wid);
+                console.log(`[WhatsApp ${wid}] Connected ✅`);
 
-                console.log(
-                    "[WhatsApp] Connected successfully!"
-                );
+                // Workshop model update karo
+                const Workshop = require("../models/workshopModel");
+                Workshop.findByIdAndUpdate(wid, {
+                    "whatsapp.connected": true,
+                    "whatsapp.connectedAt": new Date()
+                }).catch(err => console.error("Workshop update error:", err));
             }
 
             if (connection === "close") {
-                // Ignore close events from an outdated socket.
-                if (sock !== currentSocket) {
-                    // console.log(
-                    //     "[WhatsApp] Ignoring close event from an old socket."
-                    // );
-                    return;
-                }
+                if (sockets.get(wid) !== sock) return;
 
-                isConnected = false;
-                latestQR = null;
-                sock = null;
+                connectionStatus.set(wid, false);
+                latestQRs.delete(wid);
+                sockets.delete(wid);
 
-                const error = lastDisconnect?.error;
-                const statusCode = error?.output?.statusCode;
-                const errorMessage = error?.message || "Unknown error";
-
-                const shouldReconnect =
-                    statusCode !== DisconnectReason.loggedOut;
-
-                // console.error(
-                //     "[WhatsApp] Connection closed:",
-                //     JSON.stringify({
-                //         statusCode: statusCode ?? null,
-                //         errorMessage,
-                //         shouldReconnect,
-                //         loggedOut:
-                //             statusCode === DisconnectReason.loggedOut,
-                //     })
-                // );
+                const statusCode = lastDisconnect?.error?.output?.statusCode;
+                const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
 
                 if (shouldReconnect) {
-                    if (reconnectTimer) {
-                        clearTimeout(reconnectTimer);
-                    }
-
-                    // console.log(
-                    //     "[WhatsApp] Reconnecting in 5 seconds..."
-                    // );
-
-                    reconnectTimer = setTimeout(() => {
-                        reconnectTimer = null;
-
-                        connectToWhatsApp().catch((reconnectError) => {
-                            console.error(
-                                "[WhatsApp] Reconnection failed:",
-                                reconnectError.message
-                            );
-                        });
+                    const timer = setTimeout(() => {
+                        reconnectTimers.delete(wid);
+                        connectToWhatsApp(wid).catch(err => 
+                            console.error(`[WhatsApp ${wid}] Reconnect failed:`, err.message)
+                        );
                     }, 5000);
+                    reconnectTimers.set(wid, timer);
                 } else {
-                    console.error(
-                        "[WhatsApp] Session logged out. A new QR pairing is required."
-                    );
+                    console.log(`[WhatsApp ${wid}] Logged out — QR needed`);
+                    // Workshop model update
+                    const Workshop = require("../models/workshopModel");
+                    Workshop.findByIdAndUpdate(wid, {
+                        "whatsapp.connected": false
+                    }).catch(() => {});
                 }
             }
         });
 
         return sock;
     } catch (error) {
-        sock = null;
-        isConnected = false;
-
-        console.error(
-            "[WhatsApp] Connection startup failed:",
-            error.stack || error.message
-        );
-
+        sockets.delete(wid);
+        connectionStatus.set(wid, false);
+        console.error(`[WhatsApp ${wid}] Startup failed:`, error.message);
         throw error;
     } finally {
-        isConnecting = false;
+        connecting.set(wid, false);
     }
 };
 
-const getSocket = () => sock;
+// ✅ Helpers — workshopId parameter ke saath
+const getSocket = (workshopId) => sockets.get(workshopId.toString());
+const getConnectionStatus = (workshopId) => connectionStatus.get(workshopId.toString()) || false;
+const getLatestQR = (workshopId) => latestQRs.get(workshopId.toString());
 
-const getConnectionStatus = () => isConnected;
+// ✅ Disconnect specific workshop
+const disconnectWorkshop = async (workshopId) => {
+    const wid = workshopId.toString();
+    const sock = sockets.get(wid);
+    if (sock) {
+        try {
+            await sock.logout();
+        } catch (e) { /* ignore */ }
+        sockets.delete(wid);
+        connectionStatus.delete(wid);
+        latestQRs.delete(wid);
+    }
+    // Session folder delete karo
+    const folder = path.join(SESSIONS_ROOT, wid);
+    if (fs.existsSync(folder)) {
+        fs.rmSync(folder, { recursive: true, force: true });
+    }
+};
 
-const getLatestQR = () => latestQR;
+// ✅ Sabhi workshops reconnect karo (server start pe)
+const connectAllEnabledWorkshops = async () => {
+    const Workshop = require("../models/workshopModel");
+    const workshops = await Workshop.find({ "whatsapp.enabled": true });
+    
+    for (const w of workshops) {
+        try {
+            await connectToWhatsApp(w._id);
+        } catch (err) {
+            console.error(`Failed to connect workshop ${w._id}:`, err.message);
+        }
+    }
+};
 
 module.exports = {
     connectToWhatsApp,
     getSocket,
     getConnectionStatus,
     getLatestQR,
+    disconnectWorkshop,
+    connectAllEnabledWorkshops,
 };

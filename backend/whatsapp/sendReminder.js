@@ -64,63 +64,37 @@ ${companyPhone ? `📞 ${companyPhone}` : ""}`;
 // ============================================================
 const sendSingleReminder = async (reminder) => {
     try {
-        // WhatsApp connected hai?
-        if (!getConnectionStatus()) {
-            return {
-                success: false,
-                error: "WhatsApp not connected"
-            };
+        const workshopId = reminder.workshopId?._id || reminder.workshopId;
+        
+        if (!getConnectionStatus(workshopId)) {
+            return { success: false, error: "Workshop WhatsApp not connected" };
         }
 
-        const sock = getSocket();
+        const sock = getSocket(workshopId);
         if (!sock) {
-            return {
-                success: false,
-                error: "WhatsApp socket not available"
-            };
+            return { success: false, error: "Socket not available" };
         }
 
-        // Phone number format karo
         const phone = formatPhone(reminder.customerPhone);
-        const jid = `${phone}@s.whatsapp.net`; // WhatsApp JID format
-
-        // Message banao
+        const jid = `${phone}@s.whatsapp.net`;
         const message = reminder.customMessage || buildDefaultMessage(reminder);
 
-
-
         reminder.lastAttemptAt = new Date();
-reminder.retryCount = (reminder.retryCount || 0) + 1;
-await reminder.save();
-
-        // Message bhejo
-        await sock.sendMessage(jid, { text: message });
-
-        // Database update karo
-        reminder.status = "sent";
-        reminder.sentAt = new Date();
-        reminder.errorMessage = "";
+        reminder.retryCount = (reminder.retryCount || 0) + 1;
         await reminder.save();
 
-        // console.log(`✅ Reminder sent to ${reminder.customerName} (${phone})`);
+        await sock.sendMessage(jid, { text: message });
 
-        return {
-            success: true,
-            phone
-        };
+        reminder.status = "sent";
+        reminder.sentAt = new Date();
+        await reminder.save();
 
+        return { success: true, phone };
     } catch (error) {
-        console.error(`❌ Failed to send to ${reminder.customerName}:`, error.message);
-
-        // Database update karo (failed)
         reminder.status = "failed";
         reminder.errorMessage = error.message;
         await reminder.save();
-
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
 };
 

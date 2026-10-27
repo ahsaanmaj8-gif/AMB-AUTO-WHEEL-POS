@@ -14,7 +14,11 @@ export default function WhatsAppSetup() {
     const checkWhatsApp = async () => {
       try {
         // axios khud JSON parse karta hai, data response.data mein hota hai
-        const { data } = await axios.get(`${API_URL}/api/whatsapp/qr`);
+       const { data } = await axios.get(`${API_URL}/api/whatsapp/qr`, {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+    }
+});
 
         // console.log("WhatsApp QR API response:", data);
 

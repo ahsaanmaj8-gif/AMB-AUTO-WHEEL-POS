@@ -1,5 +1,14 @@
 
 .env
 node_modules/
+
+# WhatsApp sessions (multi-tenant)
+whatsapp/sessions/
+whatsapp/sessions/**/*
+
+# WhatsApp old sessions (legacy)
 whatsapp/auth_info/
 auth_info/
+
+
+migrate-session.js

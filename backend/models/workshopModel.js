@@ -73,6 +73,23 @@ const workshopSchema = mongoose.Schema({
 
 
 
+    whatsapp: {
+    connected: {
+        type: Boolean,
+        default: false
+    },
+    phoneNumber: {
+        type: String,
+        default: ""
+    },
+    enabled: {
+        type: Boolean,
+        default: false  // Admin enable kare tab connect ho
+    },
+    connectedAt: {
+        type: Date
+    }
+},
     
 
     createdBy: {

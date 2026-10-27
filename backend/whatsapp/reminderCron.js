@@ -45,9 +45,11 @@ const processPendingReminders = async () => {
         console.log(`Found ${reminders.length} reminders to process.`);
 
         for (const reminder of reminders) {
+            const workshopId = reminder.workshopId?._id || reminder.workshopId;
             if (!getConnectionStatus()) {
                 // console.log("WhatsApp disconnected during batch. Stopping.");
-                break;
+                continue;
+                // break;
             }
 
             const result = await sendSingleReminder(reminder);
