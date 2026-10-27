@@ -35,7 +35,10 @@ const Sidebar = () => {
         { path: '/transactions', icon: FaHistory, label: 'Transactions' },
         { path: '/profile', icon: FaUser, label: 'Profile' },
          ...(user.workshopName !== "AMB Auto Wheel"
-    ? [{ path: '/settings', icon: FaCog, label: 'Settings' }]
+    ?(
+    [{ path: '/whatsapp-setup', icon: FaWhatsapp, label: 'WhatsApp Setup' }, 
+     { path: '/settings', icon: FaCog, label: 'Settings' }])
+
     : []),
     ];
 
