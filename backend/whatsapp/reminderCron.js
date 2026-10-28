@@ -63,6 +63,7 @@ const processPendingReminders = async () => {
         }
     } catch (error) {
         console.error("Reminder cron error:", error);
+         console.error("Stack trace:", error.stack);
     } finally {
         isProcessing = false;
     }
