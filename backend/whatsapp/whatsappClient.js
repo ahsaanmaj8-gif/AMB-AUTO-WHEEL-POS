@@ -108,7 +108,12 @@ const connectToWhatsApp = async (workshopId) => {
 
 // ✅ Helpers — workshopId parameter ke saath
 const getSocket = (workshopId) => sockets.get(workshopId.toString());
-const getConnectionStatus = (workshopId) => connectionStatus.get(workshopId.toString()) || false;
+const getConnectionStatus = (workshopId) => {
+    if (!workshopId) return false;
+
+    return connectionStatus.get(workshopId.toString()) || false;
+};
+// const getConnectionStatus = (workshopId) => connectionStatus.get(workshopId.toString()) || false;
 const getLatestQR = (workshopId) => latestQRs.get(workshopId.toString());
 
 // ✅ Disconnect specific workshop
