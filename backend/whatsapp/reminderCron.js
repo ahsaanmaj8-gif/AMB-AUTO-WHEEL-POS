@@ -21,7 +21,7 @@ const processPendingReminders = async () => {
         console.log("Checking due reminders...");
 
         if (!getConnectionStatus()) {
-            // console.log("WhatsApp disconnected. Will retry on a later check.");
+            console.log("WhatsApp disconnected. Will retry on a later check.");
             return;
         }
 
