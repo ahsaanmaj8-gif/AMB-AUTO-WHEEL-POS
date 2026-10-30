@@ -11,7 +11,6 @@ let isProcessing = false;
 const processPendingReminders = async () => {
     if (isProcessing) {
         console.log(" ⏭️ Previous batch still running. Skipping this run.");
-       
         return;
     }
 
@@ -20,15 +19,15 @@ const processPendingReminders = async () => {
     try {
         console.log("Checking due reminders...");
 
-        if (!getConnectionStatus()) {
-            console.log("WhatsApp disconnected. Will retry on a later check.");
-            return;
-        }
+        // ❌ REMOVE THIS - global connection check
+        // if (!getConnectionStatus()) {
+        //     console.log("WhatsApp disconnected. Will retry on a later check.");
+        //     return;
+        // }
 
         const now = new Date();
         const retryBefore = new Date(Date.now() - 60 * 60 * 1000);
 
-        console.log("Before reminder . find")
         const reminders = await Reminder.find({
             status: { $in: ["pending", "failed"] },
             reminderDate: { $lte: now },
@@ -46,10 +45,11 @@ const processPendingReminders = async () => {
 
         for (const reminder of reminders) {
             const workshopId = reminder.workshopId?._id || reminder.workshopId;
-            if (!getConnectionStatus()) {
-                // console.log("WhatsApp disconnected during batch. Stopping.");
+
+            // ✅ Per-workshop connection check
+            if (!getConnectionStatus(workshopId)) {
+                console.log(`⏭️ Workshop ${workshopId} not connected. Skipping reminder for ${reminder.customerName}`);
                 continue;
-                // break;
             }
 
             const result = await sendSingleReminder(reminder);
@@ -58,12 +58,11 @@ const processPendingReminders = async () => {
                 result.success ? "Sent" : "Failed; will retry"
             );
 
-            // Delay between messages
             await new Promise(resolve => setTimeout(resolve, 5000));
         }
     } catch (error) {
         console.error("Reminder cron error:", error);
-         console.error("Stack trace:", error.stack);
+        console.error("Stack trace:", error.stack);
     } finally {
         isProcessing = false;
     }
